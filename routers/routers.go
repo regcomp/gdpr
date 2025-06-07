@@ -3,8 +3,8 @@ package routers
 import (
 	"net/http"
 
-	"github.com/daneofmanythings/gdpr_compliance/handlers"
 	"github.com/go-chi/chi/v5"
+	"github.com/regcomp/gdpr/handlers"
 )
 
 const (

@@ -12,10 +12,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/daneofmanythings/gdpr_compliance/config"
-	"github.com/daneofmanythings/gdpr_compliance/handlers"
-	"github.com/daneofmanythings/gdpr_compliance/routers"
 	"github.com/joho/godotenv"
+	"github.com/regcomp/gdpr/config"
+	"github.com/regcomp/gdpr/handlers"
+	"github.com/regcomp/gdpr/routers"
 )
 
 const (

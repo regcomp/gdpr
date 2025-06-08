@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+
+	"github.com/regcomp/gdpr/templates/pages"
 )
 
 func (stx *ServiceContext) HandleTest(w http.ResponseWriter, r *http.Request) {
@@ -9,11 +11,6 @@ func (stx *ServiceContext) HandleTest(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusInternalServerError, "No testing value initiated")
 	}
 
-	payload := struct {
-		Result string `json:"result"`
-	}{
-		Result: stx.Testing,
-	}
-
-	RespondWithJSON(w, http.StatusOK, payload)
+	page := pages.Page(stx.Testing, "this is a test")
+	page.Render(r.Context(), w)
 }

@@ -11,7 +11,7 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 	// other context setup goes here, like getting certs/keys
 
 	return &ServiceContext{
-		Testing: "This is the service context",
+		Testing: "CONTEXT",
 	}
 }
 

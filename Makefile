@@ -2,11 +2,11 @@ BUILD_TARGETS=./.bin
 SOURCE=./cmd/server/*.go
 TARGET=server
 
-build-api:
+build-local:
 	@ mkdir $(BUILD_TARGETS) -p
 	@ go build -o $(BUILD_TARGETS)/$(TARGET) $(SOURCE)
 
-run-api: build-api
+run-local: build-local
 	@ $(BUILD_TARGETS)/$(TARGET)
 
 clean:

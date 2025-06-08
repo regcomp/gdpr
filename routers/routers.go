@@ -46,7 +46,7 @@ func mountRouters(main *chi.Mux, subrouters ...SubRouter) {
 func CreateOpsRouter() SubRouter {
 	router := chi.NewRouter()
 
-	router.Get("/context", handlers.STX.HandleTest)
+	router.Get("/hello", handlers.STX.HandleTest)
 
 	return SubRouter{Path: opsPathPrefix, Router: router}
 }

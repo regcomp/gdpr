@@ -1,0 +1,17 @@
+package pages
+
+import "github.com/regcomp/gdpr/templates/components"
+
+templ Login() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			@components.HeadContents("Login")
+		</head>
+		<body>
+			<div hx-post="/login">
+				<button>Click me!</button>
+			</div>
+		</body>
+	</html>
+}

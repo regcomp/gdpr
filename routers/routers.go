@@ -20,13 +20,15 @@ type SubRouter struct {
 func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 	router := chi.NewRouter()
 
-	// TODO: Add service-wide middleware. eg, auth, logging, ect
-	router.Use(handlers.STX.HasAuth)
+	// TODO: Add service-wide middleware.
 
 	router.Handle("/static/*", http.StripPrefix("/static/",
 		http.FileServer(http.Dir("./static/"))))
 
 	router.Get("/healthz", healthz)
+
+	router.Get("/login", handlers.STX.GetLogin)
+	router.Post("/login", handlers.STX.PostLogin)
 
 	mountRouters(router, subRouters...)
 
@@ -44,17 +46,21 @@ func mountRouters(main *chi.Mux, subrouters ...SubRouter) {
 }
 
 func CreateOpsRouter() SubRouter {
-	router := chi.NewRouter()
+	ops := chi.NewRouter()
 
-	router.Get("/hello", handlers.STX.HandleTest)
+	ops.Use(handlers.STX.HasAuth)
 
-	return SubRouter{Path: opsPathPrefix, Router: router}
+	ops.Get("/dashboard", handlers.STX.GetDashboard)
+
+	return SubRouter{Path: opsPathPrefix, Router: ops}
 }
 
 func CreateApiRouter() SubRouter {
-	router := chi.NewRouter()
+	api := chi.NewRouter()
 
-	return SubRouter{Path: apiPathPrefix, Router: router}
+	api.Use(handlers.STX.HasAuth)
+
+	return SubRouter{Path: apiPathPrefix, Router: api}
 }
 
 func healthz(w http.ResponseWriter, r *http.Request) {

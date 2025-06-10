@@ -1,0 +1,15 @@
+package pages
+
+import "github.com/regcomp/gdpr/templates/components"
+
+templ Dashboard(access_token, refresh_token string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		@components.HeadContents("Dashboard")
+		<body>
+			<div>
+				{ access_token }, { refresh_token }
+			</div>
+		</body>
+	</html>
+}

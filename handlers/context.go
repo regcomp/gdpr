@@ -1,17 +1,24 @@
 package handlers
 
+import "github.com/regcomp/gdpr/auth"
+
 var STX *ServiceContext
 
 type ServiceContext struct {
-	Testing string
-	// db, certs, and keys
+	AuthProvider         auth.Provider
+	AccessTokenDuration  int
+	RefreshTokenDuration int
 }
 
 func CreateServiceContext(getenv func(string) string) *ServiceContext {
 	// other context setup goes here, like getting certs/keys
+	authProvider, err := auth.GetProvider(getenv)
+	if err != nil {
+		// TODO: handle
+	}
 
 	return &ServiceContext{
-		Testing: "CONTEXT",
+		AuthProvider: authProvider,
 	}
 }
 

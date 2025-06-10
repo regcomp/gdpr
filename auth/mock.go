@@ -11,7 +11,7 @@ func createMockProvider() *MockProvider {
 func (mp *MockProvider) AuthenticateUser(r *http.Request) (Credentials, error) {
 	return Credentials{
 		UserId:       "user-id",
-		AccessToken:  "access-token",
-		RefreshToken: "refresh-token",
+		AccessToken:  "acCess-token",
+		RefreshToken: "refResh-token",
 	}, nil
 }

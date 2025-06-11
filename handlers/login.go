@@ -23,10 +23,9 @@ func (stx *ServiceContext) PostLogin(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
 		Value:    credentials.AccessToken,
-		HttpOnly: true, // Can't be accessed by JavaScript
-		Secure:   true, // HTTPS only
-		SameSite: http.SameSiteStrictMode,
-		Path:     "/",
+		HttpOnly: true,                    // Stops XSS
+		Secure:   true,                    // HTTPS only
+		SameSite: http.SameSiteStrictMode, // Partially mitigates CSRF
 		MaxAge:   stx.AccessTokenDuration,
 	})
 
@@ -36,10 +35,8 @@ func (stx *ServiceContext) PostLogin(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
-		Path:     "/",
 		MaxAge:   stx.RefreshTokenDuration,
 	})
 
-	// redirect(w, "/dashboard")
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	http.Redirect(w, r, DashboardPath, http.StatusSeeOther)
 }

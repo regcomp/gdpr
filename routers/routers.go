@@ -7,11 +7,6 @@ import (
 	"github.com/regcomp/gdpr/handlers"
 )
 
-const (
-	opsPathPrefix = "/"
-	apiPathPrefix = "/api"
-)
-
 type SubRouter struct {
 	Path   string
 	Router *chi.Mux
@@ -25,10 +20,12 @@ func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 	router.Handle("/static/*", http.StripPrefix("/static/",
 		http.FileServer(http.Dir("./static/"))))
 
-	router.Get("/healthz", healthz)
+	router.Get(handlers.HealthzPath, healthz)
 
-	router.Get("/login", handlers.STX.GetLogin)
-	router.Post("/login", handlers.STX.PostLogin)
+	router.Get(handlers.LoginPath, handlers.STX.GetLogin)
+	router.Post(handlers.LoginPath, handlers.STX.PostLogin)
+
+	router.Get(handlers.Test, handlers.STX.TestEndpoint)
 
 	mountRouters(router, subRouters...)
 
@@ -45,14 +42,14 @@ func mountRouters(main *chi.Mux, subrouters ...SubRouter) {
 	}
 }
 
-func CreateOpsRouter() SubRouter {
-	ops := chi.NewRouter()
+func CreateClientRouter() SubRouter {
+	client := chi.NewRouter()
 
-	ops.Use(handlers.STX.HasAuth)
+	client.Use(handlers.STX.HasAuth)
 
-	ops.Get("/dashboard", handlers.STX.GetDashboard)
+	client.Get(handlers.DashboardPath, handlers.STX.GetDashboard)
 
-	return SubRouter{Path: opsPathPrefix, Router: ops}
+	return SubRouter{Path: handlers.ClientRouterPathPrefix, Router: client}
 }
 
 func CreateApiRouter() SubRouter {
@@ -60,7 +57,7 @@ func CreateApiRouter() SubRouter {
 
 	api.Use(handlers.STX.HasAuth)
 
-	return SubRouter{Path: apiPathPrefix, Router: api}
+	return SubRouter{Path: handlers.ApiRouterPathPrefix, Router: api}
 }
 
 func healthz(w http.ResponseWriter, r *http.Request) {

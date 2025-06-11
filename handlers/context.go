@@ -8,8 +8,9 @@ import (
 var STX *ServiceContext
 
 type ServiceContext struct {
-	Logger               logging.Logger
-	AuthProvider         auth.Provider
+	Logger       logging.Logger
+	AuthProvider auth.Provider
+
 	AccessTokenDuration  int
 	RefreshTokenDuration int
 }

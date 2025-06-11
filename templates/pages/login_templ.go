@@ -39,7 +39,7 @@ func Login() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</head><body><form action=\"/login\" method=\"POST\"><input type=\"hidden\" name=\"action\" value=\"button_clicked\"> <button type=\"submit\" class=\"bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600\">Submit Form</button></form></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</head><body><form action=\"/login\" method=\"POST\"><div class=\"container-fluid min-vh-100 d-flex align-items-center justify-content-center\"><div class=\"text-center\"><h1 class=\"fw-bold text-body mb-4 fade-transition\">Mock OAuth Login</h1><button class=\"btn btn-primary btn-lg px-4 py-2\">Login</button></div></div></form></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

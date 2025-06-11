@@ -40,7 +40,6 @@ func (stx *ServiceContext) PostLogin(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   stx.RefreshTokenDuration,
 	})
 
-	// http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
-	w.Header().Set("HX-Redirect", "/dashboard")
-	w.WriteHeader(http.StatusOK)
+	// redirect(w, "/dashboard")
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }

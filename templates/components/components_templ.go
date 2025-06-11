@@ -42,7 +42,7 @@ func HeadContents(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/css/bootstrap.css\"><script src=\"/static/js/htmx.min.js\"></script><script src=\"/static/js/bootstrap.bundle.js\" defer></script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/css/bootstrap.css\"><script defer src=\"/static/js/alpine-ajax.min.js\"></script><script defer src=\"/static/js/alpine.min.js\"></script><script defer src=\"/static/js/bootstrap.bundle.js\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

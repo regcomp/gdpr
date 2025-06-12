@@ -10,6 +10,12 @@ endpoints to ensure GDPR compliance. The current GDPR scope:
 and compiled into the binary.
 - Each integration will likely require a bespoke solution for secure connectivity.
 
+- Will need integrations for:
+1. Auth providers
+2. Email providers
+3. Logging/Analytics
+4. 
+
 #### Storage
 There are my current thoughts on the different storage needs.
 1. Record database that holds all transactions.

@@ -45,7 +45,7 @@ func mountRouters(main *chi.Mux, subrouters ...SubRouter) {
 func CreateClientRouter() SubRouter {
 	client := chi.NewRouter()
 
-	client.Use(handlers.STX.HasAuth)
+	client.Use(handlers.STX.IsAuthenticated)
 
 	client.Get(handlers.DashboardPath, handlers.STX.GetDashboard)
 
@@ -55,7 +55,7 @@ func CreateClientRouter() SubRouter {
 func CreateApiRouter() SubRouter {
 	api := chi.NewRouter()
 
-	api.Use(handlers.STX.HasAuth)
+	api.Use(handlers.STX.IsAuthenticated)
 
 	return SubRouter{Path: handlers.ApiRouterPathPrefix, Router: api}
 }

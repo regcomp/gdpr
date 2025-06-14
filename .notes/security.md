@@ -23,6 +23,7 @@ Controls (will we need anything beyond CRUD?):
 - delete
 - view
 
+Note that this heirarchical RBA system isnt a flexible or scalable option and the permissions model may need to be configurable towards the users existing solution (ie ABAC, ReBAC, or possibly a bespoke solution)
 
 
 ### In-Memory Tokens
@@ -59,3 +60,7 @@ An actor is able to send certs from a different client/uri than they were sent t
 
 ### XSS
 A malicious actor is able to input .js into the page and it executes giving them access to the internals of the DOM
+
+### TLS
+
+Getting TLS on the service has a few configurable factors that are likely to be customer dependent. If the service sits behind a reverse proxy, there is no need for TLS. Does the service inherit a cert or generate its own?

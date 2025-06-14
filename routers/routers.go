@@ -15,7 +15,7 @@ type SubRouter struct {
 func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 	router := chi.NewRouter()
 
-	// TODO: Add service-wide middleware.
+	router.Use(handlers.STX.Logging)
 
 	router.Handle("/static/*", http.StripPrefix("/static/",
 		http.FileServer(http.Dir("./static/"))))
@@ -24,22 +24,17 @@ func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 
 	router.Get(handlers.LoginPath, handlers.STX.GetLogin)
 	router.Post(handlers.LoginPath, handlers.STX.PostLogin)
+	// router.Route(handlers.LoginCallbackPath, func(r chi.Router) {
+	// 	r.Get("/", handlers.STX.LoginCallback)
+	// 	r.Post("/", handlers.STX.LoginCallback)
+	// })
+	router.Post(handlers.LoginCallbackPath, handlers.STX.LoginCallback)
 
 	router.Get(handlers.Test, handlers.STX.TestEndpoint)
 
 	mountRouters(router, subRouters...)
 
 	return router
-}
-
-func mountRouters(main *chi.Mux, subrouters ...SubRouter) {
-	if len(subrouters) < 1 {
-		return
-	}
-
-	for _, subrouter := range subrouters {
-		main.Mount(subrouter.Path, subrouter.Router)
-	}
 }
 
 func CreateClientRouter() SubRouter {
@@ -58,6 +53,16 @@ func CreateApiRouter() SubRouter {
 	api.Use(handlers.STX.IsAuthenticated)
 
 	return SubRouter{Path: handlers.ApiRouterPathPrefix, Router: api}
+}
+
+func mountRouters(main *chi.Mux, subrouters ...SubRouter) {
+	if len(subrouters) < 1 {
+		return
+	}
+
+	for _, subrouter := range subrouters {
+		main.Mount(subrouter.Path, subrouter.Router)
+	}
 }
 
 func healthz(w http.ResponseWriter, r *http.Request) {

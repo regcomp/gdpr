@@ -8,8 +8,9 @@ const (
 
 // endpoints
 const (
-	HealthzPath   = "/healthz"
-	LoginPath     = "/login"
-	DashboardPath = "/dashboard"
-	Test          = "/test"
+	HealthzPath       = "/healthz"
+	LoginPath         = "/login"
+	LoginCallbackPath = "/logincallback"
+	DashboardPath     = "/dashboard"
+	Test              = "/test"
 )

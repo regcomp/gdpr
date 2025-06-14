@@ -1,31 +1,40 @@
 package handlers
 
 import (
+	"log/slog"
+	"os"
+
 	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/logging"
+	"github.com/regcomp/gdpr/sessions"
 )
 
 var STX *ServiceContext
 
 type ServiceContext struct {
-	Logger       logging.Logger
-	AuthProvider auth.Provider
+	AuthProvider   auth.Provider
+	SessionManager *sessions.SessionManager
 
+	RequestLogger *slog.Logger
+
+	HostPath             string
 	AccessTokenDuration  int
 	RefreshTokenDuration int
 }
 
 func CreateServiceContext(getenv func(string) string) *ServiceContext {
 	// other context setup goes here, like getting certs/keys
-	logger := &logging.MockLogger{}
 	authProvider, err := auth.GetProvider(getenv)
 	if err != nil {
-		// TODO: handle
+		// TODO:
 	}
 
+	requestlogger := logging.NewRequestLogger(os.Stdout)
+
 	return &ServiceContext{
-		Logger:       logger,
-		AuthProvider: authProvider,
+		AuthProvider:  authProvider,
+		RequestLogger: requestlogger,
+		HostPath:      "localhost:8080",
 	}
 }
 

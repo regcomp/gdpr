@@ -1,42 +1,53 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 
+	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/templates/pages"
 )
 
 func (stx *ServiceContext) GetLogin(w http.ResponseWriter, r *http.Request) {
-	stx.Logger.Info("GetLogin", nil)
 	page := pages.Login()
 	page.Render(r.Context(), w)
 }
 
 func (stx *ServiceContext) PostLogin(w http.ResponseWriter, r *http.Request) {
-	stx.Logger.Info("PostLogin", nil)
-	// Authenticate user
-	credentials, err := stx.AuthProvider.AuthenticateUser(r)
+	callbackURL := NewURL("https:", stx.HostPath, LoginCallbackPath)
+	stx.AuthProvider.AuthenticateUser(w, r, callbackURL)
+}
+
+func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request) {
+	var credentials auth.Credentials
+
+	switch stx.AuthProvider.GetProviderType() {
+	default:
+		err := json.NewDecoder(r.Body).Decode(&credentials)
+		if err != nil {
+			// TODO:
+		}
+	}
+	accessSession, err := stx.SessionManager.RefreshStore.Get(r, "access-token")
 	if err != nil {
-		// TODO: handle
+		// TODO:
+	}
+	accessSession.Values["access-token"] = credentials.AccessToken
+	err = accessSession.Save(r, w)
+	if err != nil {
+		// TODO:
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "access_token",
-		Value:    credentials.AccessToken,
-		HttpOnly: true,                    // Stops XSS
-		Secure:   true,                    // HTTPS only
-		SameSite: http.SameSiteStrictMode, // Partially mitigates CSRF
-		MaxAge:   stx.AccessTokenDuration,
-	})
+	refreshSession, err := stx.SessionManager.RefreshStore.Get(r, "refresh-token")
+	if err != nil {
+		// TODO:
+	}
+	refreshSession.Values["access-token"] = credentials.RefreshToken
+	err = refreshSession.Save(r, w)
+	if err != nil {
+		// TODO:
+	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    credentials.RefreshToken,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-		MaxAge:   stx.RefreshTokenDuration,
-	})
-
+	// NOTE: This redirect may want to instead reference where a user was when a refresh token expired.
 	http.Redirect(w, r, DashboardPath, http.StatusSeeOther)
 }

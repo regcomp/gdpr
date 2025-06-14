@@ -7,7 +7,6 @@ import (
 )
 
 func (stx *ServiceContext) GetDashboard(w http.ResponseWriter, r *http.Request) {
-	stx.Logger.Info("Dashboard", nil)
 	dashboard := pages.Dashboard()
 	dashboard.Render(r.Context(), w)
 }

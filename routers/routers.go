@@ -24,11 +24,11 @@ func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 
 	router.Get(handlers.LoginPath, handlers.STX.GetLogin)
 	router.Post(handlers.LoginPath, handlers.STX.PostLogin)
-	// router.Route(handlers.LoginCallbackPath, func(r chi.Router) {
-	// 	r.Get("/", handlers.STX.LoginCallback)
-	// 	r.Post("/", handlers.STX.LoginCallback)
-	// })
-	router.Post(handlers.LoginCallbackPath, handlers.STX.LoginCallback)
+	router.Route(handlers.LoginCallbackPath, func(r chi.Router) {
+		r.Get("/", handlers.STX.LoginCallback)
+		r.Post("/", handlers.STX.LoginCallback)
+	})
+	// router.Post(handlers.LoginCallbackPath, handlers.STX.LoginCallback)
 
 	router.Get(handlers.Test, handlers.STX.TestEndpoint)
 

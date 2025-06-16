@@ -15,9 +15,9 @@ func (stx *ServiceContext) Logging(next http.Handler) http.Handler {
 
 func (stx *ServiceContext) IsAuthenticated(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !stx.AuthProvider.HasValidAuthentication(r) {
-			http.Redirect(w, r, LoginPath, http.StatusSeeOther)
-		}
+		// if !stx.AuthProvider.HasValidAuthentication(r) {
+		// 	http.Redirect(w, r, LoginPath, http.StatusSeeOther)
+		// }
 
 		next.ServeHTTP(w, r)
 	})

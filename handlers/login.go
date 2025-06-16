@@ -14,14 +14,15 @@ func (stx *ServiceContext) GetLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (stx *ServiceContext) PostLogin(w http.ResponseWriter, r *http.Request) {
-	callbackURL := NewURL("https:", stx.HostPath, LoginCallbackPath)
+	callbackURL := NewURL("http", stx.HostPath, LoginCallbackPath)
 	stx.AuthProvider.AuthenticateUser(w, r, callbackURL)
 }
 
 func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request) {
-	var credentials auth.Credentials
+	credentials := auth.Credentials{}
 
 	switch stx.AuthProvider.GetProviderType() {
+	// TODO: implementations go here
 	default:
 		err := json.NewDecoder(r.Body).Decode(&credentials)
 		if err != nil {
@@ -49,5 +50,5 @@ func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request)
 	}
 
 	// NOTE: This redirect may want to instead reference where a user was when a refresh token expired.
-	http.Redirect(w, r, DashboardPath, http.StatusSeeOther)
+	http.Redirect(w, r, DashboardPath, http.StatusMovedPermanently)
 }

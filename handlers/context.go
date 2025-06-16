@@ -28,13 +28,15 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 	if err != nil {
 		// TODO:
 	}
+	sessionManager := sessions.CreateSessionManager()
 
 	requestlogger := logging.NewRequestLogger(os.Stdout)
 
 	return &ServiceContext{
-		AuthProvider:  authProvider,
-		RequestLogger: requestlogger,
-		HostPath:      "localhost:8080",
+		AuthProvider:   authProvider,
+		SessionManager: sessionManager,
+		RequestLogger:  requestlogger,
+		HostPath:       "localhost:8080",
 	}
 }
 

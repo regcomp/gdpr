@@ -19,9 +19,9 @@ const (
 // The shape of this may change. This is the struct that Auth responses will be converted into for the
 // service to manage auth
 type Credentials struct {
-	UserId       string
-	RefreshToken string
-	AccessToken  string
+	UserId       string `json:"user_id"`
+	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"access_token"`
 }
 
 type Provider interface {

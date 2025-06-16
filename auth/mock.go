@@ -3,7 +3,6 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/url"
 )
@@ -15,13 +14,11 @@ const (
 )
 
 type MockProvider struct {
-	Client *http.Client
+	Proxy *http.Server
 }
 
 func createMockAuthProvider() *MockProvider {
-	return &MockProvider{
-		Client: &http.Client{},
-	}
+	return &MockProvider{}
 }
 
 func (mp *MockProvider) GetProviderType() ProviderType {
@@ -29,9 +26,9 @@ func (mp *MockProvider) GetProviderType() ProviderType {
 }
 
 func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request, callback url.URL) {
-	// TODO: respond
-	log.Println("AuthenticateUser hit...")
-	// -----
+	// spin up a mock auth proxy
+
+	// send temporaryredirect to the auth proxy
 
 	payload := struct {
 		AccessToken  string `json:"access_token"`
@@ -47,17 +44,16 @@ func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request,
 	if err != nil {
 		// TODO:
 	}
-	log.Printf("callback url: %s", callback.String())
 
 	body := bytes.NewReader(data)
 
-	req, err := http.NewRequest(http.MethodPost, url.QueryEscape(callback.String()), body)
+	req, err := http.NewRequest(http.MethodPost, callback.String(), body)
 	if err != nil {
 		// TODO:
 	}
-	_, err = mp.Client.Do(req)
+	_, err = http.DefaultClient.Do(req)
 	if err != nil {
-		log.Panic("DefaultClient request failed\n")
+		// TODO:
 	}
 }
 

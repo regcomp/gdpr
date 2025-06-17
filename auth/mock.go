@@ -3,19 +3,18 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/url"
 )
 
 const (
-	accessToken  = "access-token"
-	refreshToken = "refresh-token"
-	userID       = "user-id"
+	accessToken  = "foo"
+	refreshToken = "bar"
+	userID       = "baz"
 )
 
-type MockProvider struct {
-	Proxy *http.Server
-}
+type MockProvider struct{}
 
 func createMockAuthProvider() *MockProvider {
 	return &MockProvider{}
@@ -26,10 +25,6 @@ func (mp *MockProvider) GetProviderType() ProviderType {
 }
 
 func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request, callback url.URL) {
-	// spin up a mock auth proxy
-
-	// send temporaryredirect to the auth proxy
-
 	payload := struct {
 		AccessToken  string `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
@@ -45,16 +40,12 @@ func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request,
 		// TODO:
 	}
 
-	body := bytes.NewReader(data)
+	r.Body = io.NopCloser(bytes.NewBuffer(data))
+	r.ContentLength = int64(len(data))
 
-	req, err := http.NewRequest(http.MethodPost, callback.String(), body)
-	if err != nil {
-		// TODO:
-	}
-	_, err = http.DefaultClient.Do(req)
-	if err != nil {
-		// TODO:
-	}
+	r.Header.Set("Content-Type", "application/json")
+
+	http.Redirect(w, r, callback.String(), http.StatusTemporaryRedirect)
 }
 
 func (mp *MockProvider) HasValidAuthentication(r *http.Request) bool {

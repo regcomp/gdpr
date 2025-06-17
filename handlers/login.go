@@ -29,7 +29,7 @@ func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request)
 			// TODO:
 		}
 	}
-	accessSession, err := stx.SessionManager.RefreshStore.Get(r, "access-token")
+	accessSession, err := stx.SessionManager.AccessStore.Get(r, "access-token")
 	if err != nil {
 		// TODO:
 	}

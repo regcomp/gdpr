@@ -33,12 +33,11 @@ func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request,
 
 	data, err := json.Marshal(payload)
 	if err != nil {
+		// TODO:
 		log.Panicf("could not marshal credentials in mock provider: %s", err.Error())
 	}
 
 	r2, _ := http.NewRequest("GET", r.URL.String(), bytes.NewReader(data))
-	r2.ContentLength = int64(len(data))
-
 	r2.Header.Set("Content-Type", "application/json")
 
 	http.Redirect(w, r2, callback.String(), http.StatusTemporaryRedirect)

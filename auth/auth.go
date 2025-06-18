@@ -44,6 +44,6 @@ func GetProvider(getenv func(string) string) (Provider, error) {
 func FillCredentialsFromRequestBody(r *http.Request, credentials *Credentials) {
 	err := json.NewDecoder(r.Body).Decode(credentials)
 	if err != nil {
-		log.Panicf("could not decode request body in callback: %s", err.Error())
+		log.Panicf("could not decode request body: %s", err.Error())
 	}
 }

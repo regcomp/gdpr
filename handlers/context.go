@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/gorilla/securecookie"
-	"github.com/gorilla/sessions"
 	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/logging"
 )
@@ -16,7 +15,7 @@ type ServiceContext struct {
 	AuthProvider  auth.Provider
 	RequestLogger *slog.Logger
 	CookieKeys    *securecookie.SecureCookie
-	SessionStore  *sessions.CookieStore
+	SessionStore  *auth.SessionStore
 
 	HostPath        string
 	SessionDuration int

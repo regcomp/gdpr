@@ -2,45 +2,38 @@ package auth
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/securecookie"
-	"github.com/gorilla/sessions"
 )
 
+// reusable module level keys
 var (
-	hashKey  []byte = nil
-	blockKey []byte = nil
+	hashKey        []byte = nil
+	blockKey       []byte = nil
+	hasInitialized        = false
 )
 
 const (
 	AccessTokenString  = "access-token"
 	RefreshTokenString = "refresh-token"
+	SessionIDString    = "session-id"
 )
 
+type cookieOption func(*http.Cookie)
+
 func createSecrets() {
+	if hasInitialized {
+		return
+	}
 	hashKey = securecookie.GenerateRandomKey(64)
 	blockKey = securecookie.GenerateRandomKey(32)
+	hasInitialized = true
 }
 
 func CreateCookieKeys() *securecookie.SecureCookie {
-	if hashKey == nil {
-		createSecrets()
-	}
+	createSecrets()
 	return securecookie.New(hashKey, blockKey)
-}
-
-func CreateSessionStore() *sessions.CookieStore {
-	if hashKey == nil {
-		createSecrets()
-	}
-	return sessions.NewCookieStore(hashKey, blockKey)
-}
-
-func GenerateSessionID() string {
-	return uuid.NewString()
 }
 
 func DecodeCookie(
@@ -55,70 +48,92 @@ func DecodeCookie(
 	return value, nil
 }
 
-func CreateAccessCookie(accessToken string, sc *securecookie.SecureCookie) *http.Cookie {
-	value := map[string]string{
-		AccessTokenString: accessToken,
+func createCookie(
+	name, value string,
+	sc *securecookie.SecureCookie,
+	options ...cookieOption,
+) (*http.Cookie, error) {
+	values := map[string]string{
+		name: value,
 	}
-	encoded, err := sc.Encode(AccessTokenString, value)
+
+	encoded, err := sc.Encode(name, values)
 	if err != nil {
-		// TODO:
-		log.Panicf("encoding access token cookie: %s", err.Error())
+		return nil, fmt.Errorf("could not encode cookie values: %s, %s=%s", name, value, err.Error())
 	}
-	return &http.Cookie{
-		Name:  AccessTokenString,
+
+	cookie := &http.Cookie{
+		Name:  name,
 		Value: encoded,
-		// TODO: Configure
 	}
+
+	for _, option := range options {
+		option(cookie)
+	}
+
+	return cookie, nil
+}
+
+func getTokenFromCookie(
+	name string,
+	r *http.Request,
+	sc *securecookie.SecureCookie,
+) (string, error) {
+	cookie, err := r.Cookie(name)
+	if err != nil {
+		return "", fmt.Errorf("could not find %s cookie=%s", name, err.Error())
+	}
+	decodedValues, err := DecodeCookie(name, sc, cookie)
+	if err != nil {
+		return "", fmt.Errorf("could not decode %s cookie=%s", name, err.Error())
+	}
+
+	token, ok := decodedValues[name]
+	if !ok {
+		return "", fmt.Errorf("could not find %s token=%s", name, err.Error())
+	}
+
+	return token, nil
+}
+
+func CreateAccessCookie(accessToken string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
+	return createCookie(
+		AccessTokenString,
+		accessToken,
+		sc,
+		// TODO: Configure
+		nil,
+	)
 }
 
 func GetAccessToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
-	accessCookie, err := r.Cookie(AccessTokenString)
-	if err != nil {
-		return "", fmt.Errorf("no access cookie")
-	}
-	accessValues, err := DecodeCookie(AccessTokenString, sc, accessCookie)
-	if err != nil {
-		log.Panicf("error decoding access cookie: %s", err.Error())
-	}
-
-	token, ok := accessValues[AccessTokenString]
-	if !ok {
-		return "", fmt.Errorf("blank access token")
-	}
-
-	return token, nil
+	return getTokenFromCookie(AccessTokenString, r, sc)
 }
 
-func CreateRefreshCookie(refreshToken string, sc *securecookie.SecureCookie) *http.Cookie {
-	value := map[string]string{
-		RefreshTokenString: refreshToken,
-	}
-	encoded, err := sc.Encode(RefreshTokenString, value)
-	if err != nil {
-		// TODO:
-		log.Panicf("encoding refresh token cookie: %s", err.Error())
-	}
-	return &http.Cookie{
-		Name:  RefreshTokenString,
-		Value: encoded,
+func CreateRefreshCookie(refreshToken string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
+	return createCookie(
+		RefreshTokenString,
+		refreshToken,
+		sc,
 		// TODO: Configure
-	}
+		nil,
+	)
 }
 
 func GetRefreshToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
-	accessCookie, err := r.Cookie(RefreshTokenString)
-	if err != nil {
-		return "", fmt.Errorf("no access cookie")
-	}
-	accessValues, err := DecodeCookie(RefreshTokenString, sc, accessCookie)
-	if err != nil {
-		log.Panicf("error decoding refresh cookie: %s", err.Error())
-	}
+	return getTokenFromCookie(RefreshTokenString, r, sc)
+}
 
-	token, ok := accessValues[RefreshTokenString]
-	if !ok {
-		return "", fmt.Errorf("blank access token")
-	}
+func CreateSessionCookie(sc *securecookie.SecureCookie) (*http.Cookie, error) {
+	return createCookie(
+		SessionIDString,
+		generateSessionID(),
+		sc,
+		// TODO: Configure
+		nil,
+	)
+}
 
-	return token, nil
+func GetSessionToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
+	return getTokenFromCookie(SessionIDString, r, sc)
 }

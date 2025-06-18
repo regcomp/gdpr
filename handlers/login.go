@@ -22,22 +22,30 @@ func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request)
 
 	switch stx.AuthProvider.GetProviderType() {
 	// TODO: Vendor implementations go here
+	case auth.MOCK:
+		credentials.AccessToken = r.URL.Query().Get("access")
+		credentials.RefreshToken = r.URL.Query().Get("refresh")
 	default:
-		auth.FillCredentialsFromRequestBody(r, &credentials)
+		http.Error(w, "auth provider not implemented", http.StatusInternalServerError)
 	}
 
-	accessCookie := auth.CreateAccessCookie(credentials.AccessToken, stx.CookieKeys)
+	accessCookie, err := auth.CreateAccessCookie(credentials.AccessToken, stx.CookieKeys)
+	if err != nil {
+		// TODO:
+	}
 	http.SetCookie(w, accessCookie)
 
-	refreshCookie := auth.CreateRefreshCookie(credentials.RefreshToken, stx.CookieKeys)
+	refreshCookie, err := auth.CreateRefreshCookie(credentials.RefreshToken, stx.CookieKeys)
+	if err != nil {
+		// TODO:
+	}
 	http.SetCookie(w, refreshCookie)
 
-	sessionCookie, err := stx.SessionStore.Get(r, "session-id")
+	sessionCookie, err := auth.CreateSessionCookie(stx.CookieKeys)
 	if err != nil {
-		// TODO: 500
+		// TODO:
 	}
-	sessionCookie.Values["session-id"] = auth.GenerateSessionID()
-	sessionCookie.Save(r, w)
+	http.SetCookie(w, sessionCookie)
 
 	// NOTE: This redirect may want to instead reference where a user was when a refresh token expired.
 	http.Redirect(w, r, DashboardPath, http.StatusSeeOther)

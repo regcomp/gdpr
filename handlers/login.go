@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/regcomp/gdpr/auth"
@@ -22,33 +21,24 @@ func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request)
 	credentials := auth.Credentials{}
 
 	switch stx.AuthProvider.GetProviderType() {
-	// TODO: implementations go here
+	// TODO: Vendor implementations go here
 	default:
-		err := json.NewDecoder(r.Body).Decode(&credentials)
-		if err != nil {
-			// TODO:
-		}
-	}
-	accessSession, err := stx.SessionManager.AccessStore.Get(r, "access-token")
-	if err != nil {
-		// TODO:
-	}
-	accessSession.Values["access-token"] = credentials.AccessToken
-	err = accessSession.Save(r, w)
-	if err != nil {
-		// TODO:
+		auth.FillCredentialsFromRequestBody(r, &credentials)
 	}
 
-	refreshSession, err := stx.SessionManager.RefreshStore.Get(r, "refresh-token")
+	accessCookie := auth.CreateAccessCookie(credentials.AccessToken, stx.CookieKeys)
+	http.SetCookie(w, accessCookie)
+
+	refreshCookie := auth.CreateRefreshCookie(credentials.RefreshToken, stx.CookieKeys)
+	http.SetCookie(w, refreshCookie)
+
+	sessionCookie, err := stx.SessionStore.Get(r, "session-id")
 	if err != nil {
-		// TODO:
+		// TODO: 500
 	}
-	refreshSession.Values["access-token"] = credentials.RefreshToken
-	err = refreshSession.Save(r, w)
-	if err != nil {
-		// TODO:
-	}
+	sessionCookie.Values["session-id"] = auth.GenerateSessionID()
+	sessionCookie.Save(r, w)
 
 	// NOTE: This redirect may want to instead reference where a user was when a refresh token expired.
-	http.Redirect(w, r, DashboardPath, http.StatusMovedPermanently)
+	http.Redirect(w, r, DashboardPath, http.StatusSeeOther)
 }

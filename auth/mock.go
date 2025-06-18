@@ -3,15 +3,15 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
-	"io"
+	"log"
 	"net/http"
 	"net/url"
 )
 
 const (
-	accessToken  = "foo"
+	sessionID    = "baz"
 	refreshToken = "bar"
-	userID       = "baz"
+	accessToken  = "foo"
 )
 
 type MockProvider struct{}
@@ -25,30 +25,29 @@ func (mp *MockProvider) GetProviderType() ProviderType {
 }
 
 func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request, callback url.URL) {
-	payload := struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-		UserID       string `json:"user_id"`
-	}{
-		AccessToken:  accessToken,
+	payload := Credentials{
+		SessionID:    sessionID,
 		RefreshToken: refreshToken,
-		UserID:       userID,
+		AccessToken:  accessToken,
 	}
 
 	data, err := json.Marshal(payload)
 	if err != nil {
-		// TODO:
+		log.Panicf("could not marshal credentials in mock provider: %s", err.Error())
 	}
 
-	r.Body = io.NopCloser(bytes.NewBuffer(data))
-	r.ContentLength = int64(len(data))
+	r2, _ := http.NewRequest("GET", r.URL.String(), bytes.NewReader(data))
+	r2.ContentLength = int64(len(data))
 
-	r.Header.Set("Content-Type", "application/json")
+	r2.Header.Set("Content-Type", "application/json")
 
-	http.Redirect(w, r, callback.String(), http.StatusTemporaryRedirect)
+	http.Redirect(w, r2, callback.String(), http.StatusTemporaryRedirect)
 }
 
-func (mp *MockProvider) HasValidAuthentication(r *http.Request) bool {
-	_, err := r.Cookie("access_token")
-	return err == nil
+func (mp *MockProvider) IsValidAccessToken(token string) bool {
+	return true
+}
+
+func (mp *MockProvider) GetNewAccessToken(refreshToken string) (string, error) {
+	return accessToken, nil
 }

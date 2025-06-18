@@ -4,22 +4,22 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
 	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/logging"
-	"github.com/regcomp/gdpr/sessions"
 )
 
 var STX *ServiceContext
 
 type ServiceContext struct {
-	AuthProvider   auth.Provider
-	SessionManager *sessions.SessionManager
-
+	AuthProvider  auth.Provider
 	RequestLogger *slog.Logger
+	CookieKeys    *securecookie.SecureCookie
+	SessionStore  *sessions.CookieStore
 
-	HostPath             string
-	AccessTokenDuration  int
-	RefreshTokenDuration int
+	HostPath        string
+	SessionDuration int
 }
 
 func CreateServiceContext(getenv func(string) string) *ServiceContext {
@@ -28,15 +28,18 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 	if err != nil {
 		// TODO:
 	}
-	sessionManager := sessions.CreateSessionManager()
 
 	requestlogger := logging.NewRequestLogger(os.Stdout)
 
+	cookieKeys := auth.CreateCookieKeys()
+	sessionStore := auth.CreateSessionStore()
+
 	return &ServiceContext{
-		AuthProvider:   authProvider,
-		SessionManager: sessionManager,
-		RequestLogger:  requestlogger,
-		HostPath:       "localhost:8080",
+		AuthProvider:  authProvider,
+		RequestLogger: requestlogger,
+		CookieKeys:    cookieKeys,
+		SessionStore:  sessionStore,
+		HostPath:      "localhost:8080",
 	}
 }
 

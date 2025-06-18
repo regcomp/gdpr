@@ -20,10 +20,12 @@ func CreateSessionManager() *SessionManager {
 }
 
 func createAccessStore(authenticationKey, encryptionKey []byte) gsessions.CookieStore {
+	// TODO: configure settings
 	return *gsessions.NewCookieStore(authenticationKey, encryptionKey)
 }
 
 func createRefreshStore(authenticationKey, encryptionKey []byte) gsessions.CookieStore {
+	// TODO: contigure settings. This should only be sent on a specific route
 	return *gsessions.NewCookieStore(authenticationKey, encryptionKey)
 }
 

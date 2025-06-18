@@ -1,21 +1,28 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
+	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/templates/pages"
 )
 
 func (stx *ServiceContext) GetDashboard(w http.ResponseWriter, r *http.Request) {
 	// WARN: TEMPORARY!!
 
-	ac, _ := r.Cookie("access-token")
-	at := ac.Value
-	rc, _ := r.Cookie("refresh-token")
-	rt := rc.Value
-	user := "Baz"
+	accessToken, err := auth.GetAccessToken(r, stx.CookieKeys)
+	if err != nil {
+		log.Panicf("%s", err.Error())
+	}
+	refreshToken, err := auth.GetRefreshToken(r, stx.CookieKeys)
+	if err != nil {
+		log.Panicf("%s", err.Error())
+	}
 
-	pages.Dashboard(at, rt, user).Render(r.Context(), w)
+	sessionID := ""
+
+	pages.Dashboard(accessToken, refreshToken, sessionID).Render(r.Context(), w)
 	// -----
 
 	// dashboard := pages.Dashboard()

@@ -2,7 +2,7 @@ package pages
 
 import "github.com/regcomp/gdpr/templates/components"
 
-templ Dashboard(at, rt, user string) {
+templ Dashboard(accessToken, refreshToken, sessionID string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -101,9 +101,9 @@ templ Dashboard(at, rt, user string) {
 						<main class="p-4">
 							<div class="mb-4">
 								<h2 class="mb-1">Dashboard</h2>
-								<div>access token: { at } </div>
-								<div>refresh token: { rt } </div>
-								<div>user: { user } </div>
+								<div>access token: { accessToken } </div>
+								<div>refresh token: { refreshToken } </div>
+								<div>session id: { sessionID } </div>
 							</div>
 						</main>
 					</div>

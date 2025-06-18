@@ -34,7 +34,10 @@ func (stx *ServiceContext) IsAuthenticated(next http.Handler) http.Handler {
 			if err != nil {
 				// TODO: Unable to refresh, kill cookies, kick to login
 			}
-			accessCookie := auth.CreateAccessCookie(accessToken, stx.CookieKeys)
+			accessCookie, err := auth.CreateAccessCookie(accessToken, stx.CookieKeys)
+			if err != nil {
+				// TODO:
+			}
 			http.SetCookie(w, accessCookie)
 		}
 

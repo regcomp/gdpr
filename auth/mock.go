@@ -1,17 +1,13 @@
 package auth
 
 import (
-	"bytes"
-	"encoding/json"
-	"log"
 	"net/http"
 	"net/url"
 )
 
 const (
-	sessionID    = "baz"
-	refreshToken = "bar"
 	accessToken  = "foo"
+	refreshToken = "bar"
 )
 
 type MockProvider struct{}
@@ -25,22 +21,17 @@ func (mp *MockProvider) GetProviderType() ProviderType {
 }
 
 func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request, callback url.URL) {
-	payload := Credentials{
-		SessionID:    sessionID,
-		RefreshToken: refreshToken,
-		AccessToken:  accessToken,
-	}
-
-	data, err := json.Marshal(payload)
+	redirectURL, err := url.Parse(callback.String())
 	if err != nil {
 		// TODO:
-		log.Panicf("could not marshal credentials in mock provider: %s", err.Error())
 	}
 
-	r2, _ := http.NewRequest("GET", r.URL.String(), bytes.NewReader(data))
-	r2.Header.Set("Content-Type", "application/json")
+	params := url.Values{}
+	params.Add("access", accessToken)
+	params.Add("refresh", refreshToken)
 
-	http.Redirect(w, r2, callback.String(), http.StatusTemporaryRedirect)
+	redirectURL.RawQuery = params.Encode()
+	http.Redirect(w, r, redirectURL.String(), http.StatusTemporaryRedirect)
 }
 
 func (mp *MockProvider) IsValidAccessToken(token string) bool {

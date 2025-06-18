@@ -20,7 +20,10 @@ func (stx *ServiceContext) GetDashboard(w http.ResponseWriter, r *http.Request) 
 		log.Panicf("%s", err.Error())
 	}
 
-	sessionID := ""
+	sessionID, err := auth.GetSessionID(r, stx.CookieKeys)
+	if err != nil {
+		log.Panicf("%s", err.Error())
+	}
 
 	pages.Dashboard(accessToken, refreshToken, sessionID).Render(r.Context(), w)
 	// -----

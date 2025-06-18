@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/securecookie"
 )
 
-// reusable module level keys
+// WARN: reusable module level keys. does not appear to have a use anymore
 var (
 	hashKey        []byte = nil
 	blockKey       []byte = nil
@@ -102,7 +102,6 @@ func CreateAccessCookie(accessToken string, sc *securecookie.SecureCookie) (*htt
 		accessToken,
 		sc,
 		// TODO: Configure
-		nil,
 	)
 }
 
@@ -116,7 +115,6 @@ func CreateRefreshCookie(refreshToken string, sc *securecookie.SecureCookie) (*h
 		refreshToken,
 		sc,
 		// TODO: Configure
-		nil,
 	)
 }
 
@@ -130,10 +128,9 @@ func CreateSessionCookie(sc *securecookie.SecureCookie) (*http.Cookie, error) {
 		generateSessionID(),
 		sc,
 		// TODO: Configure
-		nil,
 	)
 }
 
-func GetSessionToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
+func GetSessionID(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
 	return getTokenFromCookie(SessionIDString, r, sc)
 }

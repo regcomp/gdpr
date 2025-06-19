@@ -46,7 +46,7 @@ func run(
 
 	router := routers.CreateRouter(
 		routers.CreateApiRouter(),
-		routers.CreateOpsRouter(),
+		routers.CreateClientRouter(),
 	)
 
 	server := &http.Server{

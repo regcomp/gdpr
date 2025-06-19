@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
@@ -28,4 +29,12 @@ func RespondWithError(w http.ResponseWriter, code int, msg string) {
 	RespondWithJSON(w, code, errorResponse{
 		Error: msg,
 	})
+}
+
+func NewURL(scheme, host, path string) url.URL {
+	return url.URL{
+		Scheme: scheme,
+		Host:   host,
+		Path:   path,
+	}
 }

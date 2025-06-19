@@ -7,11 +7,6 @@ import (
 	"github.com/regcomp/gdpr/handlers"
 )
 
-const (
-	opsPathPrefix = "/"
-	apiPathPrefix = "/api"
-)
-
 type SubRouter struct {
 	Path   string
 	Router *chi.Mux
@@ -20,17 +15,44 @@ type SubRouter struct {
 func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 	router := chi.NewRouter()
 
-	// TODO: Add service-wide middleware. eg, auth, logging, ect
-	router.Use(handlers.STX.HasAuth)
+	router.Use(handlers.STX.Logging)
 
 	router.Handle("/static/*", http.StripPrefix("/static/",
 		http.FileServer(http.Dir("./static/"))))
 
-	router.Get("/healthz", healthz)
+	router.Get(handlers.HealthzPath, healthz)
+
+	router.Get(handlers.LoginPath, handlers.STX.GetLogin)
+	router.Post(handlers.LoginPath, handlers.STX.PostLogin)
+	router.Route(handlers.LoginCallbackPath, func(r chi.Router) {
+		r.Get("/", handlers.STX.LoginCallback)
+		r.Post("/", handlers.STX.LoginCallback)
+	})
+	// router.Post(handlers.LoginCallbackPath, handlers.STX.LoginCallback)
+
+	router.Get(handlers.Test, handlers.STX.TestEndpoint)
 
 	mountRouters(router, subRouters...)
 
 	return router
+}
+
+func CreateClientRouter() SubRouter {
+	client := chi.NewRouter()
+
+	client.Use(handlers.STX.IsAuthenticated)
+
+	client.Get(handlers.DashboardPath, handlers.STX.GetDashboard)
+
+	return SubRouter{Path: handlers.ClientRouterPathPrefix, Router: client}
+}
+
+func CreateApiRouter() SubRouter {
+	api := chi.NewRouter()
+
+	api.Use(handlers.STX.IsAuthenticated)
+
+	return SubRouter{Path: handlers.ApiRouterPathPrefix, Router: api}
 }
 
 func mountRouters(main *chi.Mux, subrouters ...SubRouter) {
@@ -41,20 +63,6 @@ func mountRouters(main *chi.Mux, subrouters ...SubRouter) {
 	for _, subrouter := range subrouters {
 		main.Mount(subrouter.Path, subrouter.Router)
 	}
-}
-
-func CreateOpsRouter() SubRouter {
-	router := chi.NewRouter()
-
-	router.Get("/hello", handlers.STX.HandleTest)
-
-	return SubRouter{Path: opsPathPrefix, Router: router}
-}
-
-func CreateApiRouter() SubRouter {
-	router := chi.NewRouter()
-
-	return SubRouter{Path: apiPathPrefix, Router: router}
 }
 
 func healthz(w http.ResponseWriter, r *http.Request) {

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/regcomp/gdpr/auth"
@@ -9,38 +10,41 @@ import (
 
 func (stx *ServiceContext) Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logging.LogRequest(stx.RequestLogger, r)
+		if r.URL.Path != "/favicon.ico" {
+			logging.LogRequest(stx.RequestLogger, r)
+		}
 		next.ServeHTTP(w, r)
 	})
 }
+
+// TODO: Figure out where this should go
+
+type ContextKey string
+
+const claimsContextKey ContextKey = "claims"
+
+// -----
 
 func (stx *ServiceContext) IsAuthenticated(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		accessToken, err := auth.GetAccessToken(r, stx.CookieKeys)
 		if err != nil {
-			// TODO: No access token cookie, kill all cookies, kick to login
+			auth.DestroyAllCookies(r)
+			http.Error(w, "access token required", http.StatusUnauthorized)
+			return
 		}
 
-		// WARN: This whole section is suspect. Not all requests should include the refresh
-		// token in cookies. If the access token is invalid, a response should be issued
-		// that triggers a request to the endpoint which refresh tokens are sent to
-		if !stx.AuthProvider.IsValidAccessToken(accessToken) {
-			refreshToken, err := auth.GetRefreshToken(r, stx.CookieKeys)
-			if err != nil {
-				// TODO: A RESPONSE TO THE CLIENT TO BE SENT THAT SHOULD TRIGGER
-				// A REQUEST TO THE YET TO BE DEFINED REFRESH ENDPOINT
-			}
-			accessToken, err := stx.AuthProvider.GetNewAccessToken(refreshToken)
-			if err != nil {
-				// TODO: Unable to refresh, kill cookies, kick to login
-			}
-			accessCookie, err := auth.CreateAccessCookie(accessToken, stx.CookieKeys)
-			if err != nil {
-				// TODO:
-			}
-			http.SetCookie(w, accessCookie)
+		claims, err := stx.AuthProvider.ValidateAccessToken(accessToken)
+		if err != nil {
+			auth.DestroyAllCookies(r)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
 		}
 
-		next.ServeHTTP(w, r)
+		// TODO: Add the claims to the request context
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, claimsContextKey, claims)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

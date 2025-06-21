@@ -14,6 +14,7 @@ var (
 	hasInitialized        = false
 )
 
+// Cookies
 const (
 	AccessTokenString  = "access-token"
 	RefreshTokenString = "refresh-token"
@@ -72,6 +73,26 @@ func createCookie(
 	}
 
 	return cookie, nil
+}
+
+func DestroyAllCookies(r *http.Request) {
+	cookieNames := []string{
+		AccessTokenString,
+		RefreshTokenString,
+		SessionIDString,
+	}
+
+	for _, cookieName := range cookieNames {
+		cookie, err := r.Cookie(cookieName)
+		if err != nil {
+			// TODO:
+		}
+		destroyCookie(cookie)
+	}
+}
+
+func destroyCookie(cookie *http.Cookie) {
+	cookie.MaxAge = -1
 }
 
 func getTokenFromCookie(

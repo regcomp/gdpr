@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -29,15 +30,20 @@ type Credentials struct {
 type Provider interface {
 	GetProviderType() ProviderType
 	AuthenticateUser(http.ResponseWriter, *http.Request, url.URL) // NOTE: This may require more fields
-	IsValidAccessToken(string) bool
-	GetNewAccessToken(string) (string, error)
+	ValidateAccessToken(string) (*CustomClaims, error)
+
+	// NOTE: This likely doesnt need the request as information can be passed from
+	// the access token
+	GetNewAccessToken(string, *http.Request) (string, error)
 }
 
 func GetProvider(getenv func(string) string) (Provider, error) {
 	provider := getenv(providerConfigString)
 	switch provider {
-	default:
+	case "MOCK":
 		return createMockAuthProvider(), nil
+	default:
+		return nil, fmt.Errorf("unknown auth provider=%s", provider)
 	}
 }
 

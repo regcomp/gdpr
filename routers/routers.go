@@ -12,6 +12,11 @@ type SubRouter struct {
 	Router *chi.Mux
 }
 
+// TODO: Reorganize the routers into the level of security needed for the
+// registered routes.
+// needs nothing:
+//    login
+
 func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 	router := chi.NewRouter()
 

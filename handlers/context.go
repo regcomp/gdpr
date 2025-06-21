@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"log/slog"
 	"os"
 
@@ -25,7 +26,7 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 	// other context setup goes here, like getting certs/keys
 	authProvider, err := auth.GetProvider(getenv)
 	if err != nil {
-		// TODO:
+		log.Panicf("%s", err.Error())
 	}
 
 	requestlogger := logging.NewRequestLogger(os.Stdout)

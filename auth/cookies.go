@@ -85,7 +85,7 @@ func DestroyAllCookies(r *http.Request) {
 	for _, cookieName := range cookieNames {
 		cookie, err := r.Cookie(cookieName)
 		if err != nil {
-			// TODO:
+			continue
 		}
 		destroyCookie(cookie)
 	}

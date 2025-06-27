@@ -3,7 +3,6 @@ package auth
 import (
 	"crypto/rsa"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -63,7 +62,6 @@ func (mp *MockProvider) GetProviderType() ProviderType {
 func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request, callback url.URL) {
 	// NOTE: This assumes that there has been valid authentication and issues credentials
 
-	log.Println("hit authenticate user")
 	redirectURL, err := url.Parse(callback.String())
 	if err != nil {
 		// TODO:

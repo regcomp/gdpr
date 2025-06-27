@@ -2,6 +2,9 @@ BUILD_TARGETS=./.bin
 SOURCE=./cmd/server/*.go
 TARGET=server
 
+gen-certs:
+	@ ${MAKE} -C ./auth/local_certs/ gen_certs
+
 build-local:
 	@ templ generate
 	@ mkdir $(BUILD_TARGETS) -p

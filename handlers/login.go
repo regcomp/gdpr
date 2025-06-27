@@ -13,7 +13,7 @@ func (stx *ServiceContext) GetLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (stx *ServiceContext) PostLogin(w http.ResponseWriter, r *http.Request) {
-	callbackURL := NewURL("http", stx.HostPath, LoginCallbackPath)
+	callbackURL := NewURL("https", stx.HostPath, LoginCallbackPath)
 	stx.AuthProvider.AuthenticateUser(w, r, callbackURL)
 }
 
@@ -49,4 +49,23 @@ func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request)
 
 	// NOTE: This redirect may want to instead reference where a user was when a refresh token expired.
 	http.Redirect(w, r, DashboardPath, http.StatusSeeOther)
+}
+
+func (stx *ServiceContext) PostRefresh(w http.ResponseWriter, r *http.Request) {
+	refreshToken, err := auth.GetRefreshToken(r, stx.CookieKeys)
+	if err != nil {
+		// TODO:
+	}
+	accessToken, err := stx.AuthProvider.GetNewAccessToken(refreshToken, r)
+	if err != nil {
+		// TODO:
+	}
+
+	accessCookie, err := auth.CreateAccessCookie(accessToken, stx.CookieKeys)
+	if err != nil {
+		// TODO:
+	}
+
+	http.SetCookie(w, accessCookie)
+	w.WriteHeader(http.StatusOK)
 }

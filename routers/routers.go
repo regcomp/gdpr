@@ -7,6 +7,8 @@ import (
 	"github.com/regcomp/gdpr/handlers"
 )
 
+const swAuthRetry = "/static/sw/auth_retry.js"
+
 type SubRouter struct {
 	Path   string
 	Router *chi.Mux
@@ -20,10 +22,18 @@ type SubRouter struct {
 func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 	router := chi.NewRouter()
 
-	router.Use(handlers.STX.Logging)
+	router.Use(
+		handlers.STX.Logging,
+		handlers.STX.VerifyServiceWorkerIsRunning(swAuthRetry, "X-Token-Retry-Running"),
+		handlers.STX.SetHSTSPolicy,
+	)
 
-	router.Handle("/static/*", http.StripPrefix("/static/",
-		http.FileServer(http.Dir("./static/"))))
+	// may want to make this its own router
+	router.Route("/static", func(r chi.Router) {
+		r.Use(handlers.ScopeServiceWorkerContext(swAuthRetry, "/"))
+		r.Handle("/*", http.StripPrefix("/static/",
+			http.FileServer(http.Dir("./static/"))))
+	})
 
 	router.Get(handlers.HealthzPath, healthz)
 
@@ -33,7 +43,7 @@ func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 		r.Get("/", handlers.STX.LoginCallback)
 		r.Post("/", handlers.STX.LoginCallback)
 	})
-	// router.Post(handlers.LoginCallbackPath, handlers.STX.LoginCallback)
+	router.Post(handlers.RefreshPath, handlers.STX.PostRefresh)
 
 	router.Get(handlers.Test, handlers.STX.TestEndpoint)
 
@@ -52,7 +62,7 @@ func CreateClientRouter() SubRouter {
 	return SubRouter{Path: handlers.ClientRouterPathPrefix, Router: client}
 }
 
-func CreateApiRouter() SubRouter {
+func CreateAPIRouter() SubRouter {
 	api := chi.NewRouter()
 
 	api.Use(handlers.STX.IsAuthenticated)

@@ -11,6 +11,7 @@ const (
 	HealthzPath       = "/healthz"
 	LoginPath         = "/login"
 	LoginCallbackPath = "/logincallback"
+	RefreshPath       = "/auth/refresh"
 	DashboardPath     = "/dashboard"
 	Test              = "/test"
 )

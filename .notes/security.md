@@ -6,7 +6,7 @@ The users of this service will need to add role and permission elements to their
 
 Roles:
 - admin
-- moderator
+- developer
 - user
 - auditor
 

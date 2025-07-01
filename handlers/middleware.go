@@ -18,11 +18,15 @@ func (stx *ServiceContext) Logging(next http.Handler) http.Handler {
 	})
 }
 
-func (stx *ServiceContext) VerifyServiceWorkerIsRunning(swPath, swHeader string) func(http.Handler) http.Handler {
+func (stx *ServiceContext) VerifyServiceWorkerIsRunning(swPath, swScope, swHeader string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.HasPrefix(r.URL.Path, "/static/sw/") {
+				next.ServeHTTP(w, r)
+				return
+			}
 			if r.Header.Get(swHeader) == "" {
-				BootstrapServiceWorker(swPath).ServeHTTP(w, r)
+				RegisterServiceWorker(swPath, swScope).ServeHTTP(w, r)
 				return
 			}
 			next.ServeHTTP(w, r)
@@ -49,7 +53,7 @@ func (stx *ServiceContext) IsAuthenticated(next http.Handler) http.Handler {
 
 		claims, err := stx.AuthProvider.ValidateAccessToken(accessToken)
 		if err != nil {
-			w.Header().Add("X-Token-Retry", "true")
+			w.Header().Add("Refresh-Access-Token", "true")
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -62,11 +66,10 @@ func (stx *ServiceContext) IsAuthenticated(next http.Handler) http.Handler {
 	})
 }
 
-func ScopeServiceWorkerContext(swPath, accessPath string) func(http.Handler) http.Handler {
+func ScopeServiceWorkerAccess(swPath, accessPath string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// TODO: Fix this condition. Getting false positives and may get false negatives
-			if strings.HasPrefix(r.URL.Path, accessPath) {
+			if r.URL.Path == swPath {
 				w.Header().Add("Service-Worker-Allowed", accessPath)
 			}
 			next.ServeHTTP(w, r)

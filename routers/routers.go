@@ -7,33 +7,34 @@ import (
 	"github.com/regcomp/gdpr/handlers"
 )
 
-const swAuthRetry = "/static/sw/auth_retry.js"
+const (
+	swAuthRetryPath  = "/static/sw/auth_retry.js"
+	swAuthRetryScope = "/"
+	swBootstrap      = "/static/sw/bootstrap_sw.js"
+)
 
 type SubRouter struct {
 	Path   string
 	Router *chi.Mux
 }
 
-// TODO: Reorganize the routers into the level of security needed for the
-// registered routes.
-// needs nothing:
-//    login
-
 func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(
-		handlers.STX.Logging,
-		handlers.STX.VerifyServiceWorkerIsRunning(swAuthRetry, "X-Token-Retry-Running"),
 		handlers.STX.SetHSTSPolicy,
+		handlers.STX.Logging,
+		handlers.STX.VerifyServiceWorkerIsRunning(
+			swAuthRetryPath,
+			swAuthRetryScope,
+			"SW-Auth-Retry-Running",
+		),
+		handlers.ScopeServiceWorkerAccess(swAuthRetryPath, swAuthRetryScope),
 	)
 
 	// may want to make this its own router
-	router.Route("/static", func(r chi.Router) {
-		r.Use(handlers.ScopeServiceWorkerContext(swAuthRetry, "/"))
-		r.Handle("/*", http.StripPrefix("/static/",
-			http.FileServer(http.Dir("./static/"))))
-	})
+	router.Handle("/static/*", http.StripPrefix("/static/",
+		http.FileServer(http.Dir("./static/"))))
 
 	router.Get(handlers.HealthzPath, healthz)
 

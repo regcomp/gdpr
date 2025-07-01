@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
@@ -36,5 +37,10 @@ func NewURL(scheme, host, path string) url.URL {
 		Scheme: scheme,
 		Host:   host,
 		Path:   path,
+	}
+}
+
+func exemptServiceWorker(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.URL.Path, "/static/sw/") {
 	}
 }

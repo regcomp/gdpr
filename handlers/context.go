@@ -15,6 +15,7 @@ var STX *ServiceContext
 type ServiceContext struct {
 	AuthProvider  auth.Provider
 	RequestLogger *slog.Logger
+	RequestTracer logging.Tracer
 	CookieKeys    *securecookie.SecureCookie
 	SessionStore  *auth.SessionStore
 
@@ -30,6 +31,7 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 	}
 
 	requestlogger := logging.NewRequestLogger(os.Stdout)
+	requestTracer := logging.NewTracer(getenv)
 
 	cookieKeys := auth.CreateCookieKeys()
 	sessionStore := auth.CreateSessionStore()
@@ -37,6 +39,7 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 	return &ServiceContext{
 		AuthProvider:  authProvider,
 		RequestLogger: requestlogger,
+		RequestTracer: requestTracer,
 		CookieKeys:    cookieKeys,
 		SessionStore:  sessionStore,
 		HostPath:      "localhost:8080",

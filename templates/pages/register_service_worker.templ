@@ -9,25 +9,46 @@ templ RegisterServiceWorker(swPath, swScope string, req any) {
 			@templ.JSONScript("requestData", req)
 			<script>
         const originalRequest = JSON.parse(document.getElementById('requestData').textContent);
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker
-            .register({{ swPath }}, { scope: {{ swScope }}})
-            .catch(error => {
-              console.error('SW registration failed:', error);
+        
+        async function registerAndWaitForServiceWorker() {
+          if (!('serviceWorker' in navigator)) {
+            return false;
+          }
+          try {
+            const registration = await navigator.serviceWorker.register({{ swPath }}, { 
+              scope: {{ swScope }} 
             });
-        };
+            
+            await navigator.serviceWorker.ready;
+            
+            return true;
+            
+          } catch (error) {
+            console.error('SW registration failed:', error);
+            return false;
+          }
+        }
 
-        window.location.reload(); // flimsy way to attach the worker
+        async function resendRequest() {
+          const isReady = await registerAndWaitForServiceWorker();
+          
+          if (isReady) {
+            window.location.reload();
+            try {
+              const response = await fetch(originalRequest.url, {
+                method: originalRequest.method,
+                headers: originalRequest.header,
+                body: originalRequest.method === 'GET' || originalRequest.method === 'HEAD' 
+                  ? null 
+                  : originalRequest.body,
+              });
+            } catch (error) {
+              console.error('Request failed:', error);
+            }
+          }
+        }
 
-        // TODO: This may need more context for more complicated requests.
-        // EDGE CASE
-        fetch(originalRequest.url, {
-          method: originalRequest.method,
-          headers: originalRequest.header,
-          body: originalRequest.method === 'GET' || originalRequest.method === 'HEAD' 
-            ? null 
-            : originalRequest.body,
-          });
+        resendRequest();
       </script>
 		</body>
 	</html>

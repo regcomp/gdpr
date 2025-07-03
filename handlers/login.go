@@ -8,16 +8,19 @@ import (
 )
 
 func (stx *ServiceContext) GetLogin(w http.ResponseWriter, r *http.Request) {
+	stx.RequestTracer.UpdateActiveTrace("GetLogin")
 	page := pages.Login()
 	page.Render(r.Context(), w)
 }
 
 func (stx *ServiceContext) PostLogin(w http.ResponseWriter, r *http.Request) {
+	stx.RequestTracer.UpdateActiveTrace("PostLogin")
 	callbackURL := NewURL("https", stx.HostPath, LoginCallbackPath)
 	stx.AuthProvider.AuthenticateUser(w, r, callbackURL)
 }
 
 func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request) {
+	stx.RequestTracer.UpdateActiveTrace("LoginCallback")
 	credentials := auth.Credentials{}
 
 	switch stx.AuthProvider.GetProviderType() {
@@ -52,6 +55,8 @@ func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request)
 }
 
 func (stx *ServiceContext) PostRefresh(w http.ResponseWriter, r *http.Request) {
+	stx.RequestTracer.UpdateActiveTrace("PostRefresh")
+
 	refreshToken, err := auth.GetRefreshToken(r, stx.CookieKeys)
 	if err != nil {
 		// TODO:
@@ -67,5 +72,11 @@ func (stx *ServiceContext) PostRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, accessCookie)
+	w.WriteHeader(http.StatusOK)
+}
+
+func (stx *ServiceContext) Logout(w http.ResponseWriter, r *http.Request) {
+	stx.RequestTracer.UpdateActiveTrace("Logout")
+	auth.DestroyAllCookies(r)
 	w.WriteHeader(http.StatusOK)
 }

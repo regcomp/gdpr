@@ -70,7 +70,7 @@ func run(
 	defer stop()
 
 	go func() {
-		fmt.Fprintf(outStream, "listening on %s\n", server.Addr)
+		fmt.Fprintf(outStream, "listening on %s\n\n", server.Addr)
 		if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 			fmt.Fprintf(outStream, "error listening and serving: %s\n", err)
 		}

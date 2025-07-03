@@ -9,6 +9,8 @@ import (
 )
 
 func (stx *ServiceContext) GetDashboard(w http.ResponseWriter, r *http.Request) {
+	stx.RequestTracer.UpdateActiveTrace("GetDashboard")
+
 	// WARN: TEMPORARY!!
 
 	accessToken, err := auth.GetAccessToken(r, stx.CookieKeys)

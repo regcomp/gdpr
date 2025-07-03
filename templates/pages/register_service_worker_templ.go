@@ -37,31 +37,31 @@ func RegisterServiceWorker(swPath, swScope string, req any) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script>\n        const originalRequest = JSON.parse(document.getElementById('requestData').textContent);\n        if ('serviceWorker' in navigator) {\n          navigator.serviceWorker\n            .register(")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script>\n        const originalRequest = JSON.parse(document.getElementById('requestData').textContent);\n        \n        async function registerAndWaitForServiceWorker() {\n          if (!('serviceWorker' in navigator)) {\n            return false;\n          }\n          try {\n            const registration = await navigator.serviceWorker.register(")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Var2, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swPath)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 14, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 18, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, ", { scope: ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, ", { \n              scope: ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Var3, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swScope)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 14, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 19, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "})\n            .catch(error => {\n              console.error('SW registration failed:', error);\n            });\n        };\n\n        window.location.reload(); // flimsy way to attach the worker\n\n        // TODO: This may need more context for more complicated requests.\n        // EDGE CASE\n        fetch(originalRequest.url, {\n          method: originalRequest.method,\n          headers: originalRequest.header,\n          body: originalRequest.method === 'GET' || originalRequest.method === 'HEAD' \n            ? null \n            : originalRequest.body,\n          });\n      </script></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " \n            });\n            \n            await navigator.serviceWorker.ready;\n            \n            return true;\n            \n          } catch (error) {\n            console.error('SW registration failed:', error);\n            return false;\n          }\n        }\n\n        async function resendRequest() {\n          const isReady = await registerAndWaitForServiceWorker();\n          \n          if (isReady) {\n            window.location.reload();\n            try {\n              const response = await fetch(originalRequest.url, {\n                method: originalRequest.method,\n                headers: originalRequest.header,\n                body: originalRequest.method === 'GET' || originalRequest.method === 'HEAD' \n                  ? null \n                  : originalRequest.body,\n              });\n            } catch (error) {\n              console.error('Request failed:', error);\n            }\n          }\n        }\n\n        resendRequest();\n      </script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

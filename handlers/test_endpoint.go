@@ -7,6 +7,7 @@ import (
 )
 
 func (stx *ServiceContext) TestEndpoint(w http.ResponseWriter, r *http.Request) {
+	stx.RequestTracer.UpdateActiveTrace("TestEndpoint")
 	page := pages.TestPage()
 	page.Render(r.Context(), w)
 }

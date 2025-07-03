@@ -11,11 +11,13 @@ async function handleFetchWithAuth(request) {
     headers: headers
   });
 
+  // return fetch(modifiedRequest);
+
   try {
     const response = await fetch(modifiedRequest);
 
     if (response.status === 401) {
-      console.log("handling 401");
+      console.log("handling 401, ", modifiedRequest.url);
       return handle401(response, modifiedRequest);
     }
 
@@ -31,11 +33,11 @@ async function handle401(oldResponse, request) {
   if (response.headers.get('Refresh-Access-Token')) {
     console.log('401 with Refresh-Access-Token detected, attempting refresh...');
 
-    const refreshSuccess = await refreshToken();
+    const isRefreshSuccess = await refreshToken();
 
-    if (!refreshSuccess) {
-      await deauthorize();
-      return response;
+    if (!isRefreshSuccess) {
+      await logout();
+      return oldResponse;
     }
     return await fetch(request.clone());
   }
@@ -60,9 +62,9 @@ async function refreshToken() {
   }
 }
 
-async function deauthorize() {
+async function logout() {
   try {
-    await fetch('/deauthorize', {
+    await fetch('/logout', {
       method: 'POST',
       credentials: 'include',
       headers: {

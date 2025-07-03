@@ -10,7 +10,6 @@ import (
 const (
 	swAuthRetryPath  = "/static/sw/auth_retry.js"
 	swAuthRetryScope = "/"
-	swBootstrap      = "/static/sw/bootstrap_sw.js"
 )
 
 type SubRouter struct {
@@ -22,14 +21,16 @@ func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(
+		handlers.STX.TraceRequests,
 		handlers.STX.SetHSTSPolicy,
-		handlers.STX.Logging,
+		// handlers.STX.Logging,
 		handlers.STX.VerifyServiceWorkerIsRunning(
 			swAuthRetryPath,
 			swAuthRetryScope,
 			"SW-Auth-Retry-Running",
 		),
-		handlers.ScopeServiceWorkerAccess(swAuthRetryPath, swAuthRetryScope),
+		// TODO: feels like this should be somewhere else
+		handlers.STX.ScopeServiceWorkerAccess(swAuthRetryPath, swAuthRetryScope),
 	)
 
 	// may want to make this its own router
@@ -45,6 +46,7 @@ func CreateRouter(subRouters ...SubRouter) *chi.Mux {
 		r.Post("/", handlers.STX.LoginCallback)
 	})
 	router.Post(handlers.RefreshPath, handlers.STX.PostRefresh)
+	router.Post(handlers.LogoutPath, handlers.STX.Logout)
 
 	router.Get(handlers.Test, handlers.STX.TestEndpoint)
 

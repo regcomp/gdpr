@@ -16,9 +16,10 @@ var (
 
 // Cookies
 const (
-	AccessTokenString  = "access-token"
-	RefreshTokenString = "refresh-token"
-	SessionIDString    = "session-id"
+	AccessCookieName  = "access-token"
+	RefreshCookieName = "refresh-token"
+	SessionCookieName = "session-id"
+	CSRFCookieName    = "csrf-token"
 )
 
 type cookieOption func(*http.Cookie)
@@ -77,9 +78,9 @@ func createCookie(
 
 func DestroyAllCookies(r *http.Request) {
 	cookieNames := []string{
-		AccessTokenString,
-		RefreshTokenString,
-		SessionIDString,
+		AccessCookieName,
+		RefreshCookieName,
+		SessionCookieName,
 	}
 
 	for _, cookieName := range cookieNames {
@@ -119,7 +120,7 @@ func getTokenFromCookie(
 
 func CreateAccessCookie(accessToken string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
 	return createCookie(
-		AccessTokenString,
+		AccessCookieName,
 		accessToken,
 		sc,
 		func(c *http.Cookie) {
@@ -130,12 +131,12 @@ func CreateAccessCookie(accessToken string, sc *securecookie.SecureCookie) (*htt
 }
 
 func GetAccessToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
-	return getTokenFromCookie(AccessTokenString, r, sc)
+	return getTokenFromCookie(AccessCookieName, r, sc)
 }
 
 func CreateRefreshCookie(refreshToken string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
 	return createCookie(
-		RefreshTokenString,
+		RefreshCookieName,
 		refreshToken,
 		sc,
 		// TODO: Configure
@@ -146,13 +147,13 @@ func CreateRefreshCookie(refreshToken string, sc *securecookie.SecureCookie) (*h
 }
 
 func GetRefreshToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
-	return getTokenFromCookie(RefreshTokenString, r, sc)
+	return getTokenFromCookie(RefreshCookieName, r, sc)
 }
 
-func CreateSessionCookie(sc *securecookie.SecureCookie) (*http.Cookie, error) {
+func CreateSessionCookie(sessionID string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
 	return createCookie(
-		SessionIDString,
-		generateSessionID(),
+		SessionCookieName,
+		sessionID,
 		sc,
 		// TODO: Configure
 		func(c *http.Cookie) {
@@ -162,5 +163,21 @@ func CreateSessionCookie(sc *securecookie.SecureCookie) (*http.Cookie, error) {
 }
 
 func GetSessionID(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
-	return getTokenFromCookie(SessionIDString, r, sc)
+	return getTokenFromCookie(SessionCookieName, r, sc)
+}
+
+func CreateCSRFCookie(csrfToken string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
+	return createCookie(
+		CSRFCookieName,
+		csrfToken,
+		sc,
+		// TODO: Configure
+		func(c *http.Cookie) {
+			c.Path = "/"
+		},
+	)
+}
+
+func GetCSRFToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
+	return getTokenFromCookie(CSRFCookieName, r, sc)
 }

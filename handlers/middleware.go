@@ -41,7 +41,10 @@ func (stx *ServiceContext) VerifyServiceWorkerIsRunning(swPath, swScope, swHeade
 
 type ContextKey string
 
-const claimsContextKey ContextKey = "claims"
+const (
+	claimsContextKey   ContextKey = "claims"
+	sessionIDContexKey ContextKey = "session-id"
+)
 
 // -----
 
@@ -70,6 +73,43 @@ func (stx *ServiceContext) IsAuthenticated(next http.Handler) http.Handler {
 		ctx = context.WithValue(ctx, claimsContextKey, claims)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (stx *ServiceContext) HasActiveSession(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sessionID, err := auth.GetSessionID(r, stx.CookieKeys)
+		if err != nil {
+			// TODO:
+			// No session cookie
+		}
+		_, err = stx.SessionStore.GetSession(sessionID)
+		if err != nil {
+			// TODO:
+			// no registered session. old cookie?
+		}
+		ctx := context.WithValue(r.Context(), sessionIDContexKey, sessionID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (stx *ServiceContext) HasValidCSRFToken(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sessionID := r.Context().Value(sessionIDContexKey).(string)
+		if sessionID == "" {
+			// TODO:
+			// error setting id in previous middleware
+		}
+		csrfToken, err := auth.GetCSRFToken(r, stx.CookieKeys)
+		if err != nil {
+			// TODO:
+		}
+
+		isValid := auth.ValidateCSRFToken(sessionID, csrfToken, stx.HMACSecret)
+		if !isValid {
+			// TODO:
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 

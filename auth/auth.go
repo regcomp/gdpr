@@ -19,7 +19,7 @@ const (
 	MOCK
 )
 
-// The shape of this may change. This is the struct that Auth responses will be converted into for the
+// NOTE: The shape of this may change. This is the struct that Auth responses will be converted into for the
 // service to manage auth
 type Credentials struct {
 	AccessToken  string `json:"access_token"`
@@ -27,7 +27,7 @@ type Credentials struct {
 	SessionID    string `json:"session_id"`
 }
 
-type Provider interface {
+type IProvider interface {
 	GetProviderType() ProviderType
 	AuthenticateUser(http.ResponseWriter, *http.Request, url.URL) // NOTE: This may require more fields
 	ValidateAccessToken(string) (*CustomClaims, error)
@@ -37,7 +37,7 @@ type Provider interface {
 	GetNewAccessToken(string, *http.Request) (string, error)
 }
 
-func GetProvider(getenv func(string) string) (Provider, error) {
+func GetProvider(getenv func(string) string) (IProvider, error) {
 	provider := getenv(providerConfigString)
 	switch provider {
 	case "MOCK":

@@ -45,11 +45,19 @@ func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request)
 	}
 	http.SetCookie(w, refreshCookie)
 
-	sessionCookie, err := auth.CreateSessionCookie(stx.CookieKeys)
+	sessionID := stx.SessionStore.CreateSession()
+	sessionCookie, err := auth.CreateSessionCookie(sessionID, stx.CookieKeys)
 	if err != nil {
 		// TODO:
 	}
 	http.SetCookie(w, sessionCookie)
+
+	csrfToken := auth.NewCSRFToken(sessionID, stx.HMACSecret)
+	csrfCookie, err := auth.CreateCSRFCookie(csrfToken, stx.CookieKeys)
+	if err != nil {
+		// TODO:
+	}
+	http.SetCookie(w, csrfCookie)
 
 	// NOTE: This redirect may want to instead reference where a user was when a refresh token expired.
 	http.Redirect(w, r, DashboardPath, http.StatusSeeOther)

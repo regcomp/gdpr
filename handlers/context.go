@@ -7,20 +7,24 @@ import (
 
 	"github.com/gorilla/securecookie"
 	"github.com/regcomp/gdpr/auth"
+	"github.com/regcomp/gdpr/database"
 	"github.com/regcomp/gdpr/logging"
 )
 
 var STX *ServiceContext
 
 type ServiceContext struct {
-	AuthProvider  auth.Provider
+	AuthProvider  auth.IProvider
 	RequestLogger *slog.Logger
-	RequestTracer logging.Tracer
+	RequestTracer logging.ITracer
 	CookieKeys    *securecookie.SecureCookie
 	SessionStore  *auth.SessionStore
+	DatabaseStore *database.DatabaseStore
 
 	HostPath        string
 	SessionDuration int
+
+	HMACSecret []byte
 }
 
 func CreateServiceContext(getenv func(string) string) *ServiceContext {
@@ -33,8 +37,17 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 	requestlogger := logging.NewRequestLogger(os.Stdout)
 	requestTracer := logging.NewTracer(getenv)
 
+	databaseStore, err := database.CreateDatabaseStore(getenv)
+	if err != nil {
+		// TODO:
+		// NOTE: a databaseProvider can fail to initialize. This should halt the service from running
+		// NOTE: Shouldn't need to establish database connections until necessary
+	}
+
 	cookieKeys := auth.CreateCookieKeys()
 	sessionStore := auth.CreateSessionStore()
+
+	hmacSecret := auth.GenerateHMACSecret()
 
 	return &ServiceContext{
 		AuthProvider:  authProvider,
@@ -42,7 +55,9 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 		RequestTracer: requestTracer,
 		CookieKeys:    cookieKeys,
 		SessionStore:  sessionStore,
+		DatabaseStore: databaseStore,
 		HostPath:      "localhost:8080",
+		HMACSecret:    hmacSecret,
 	}
 }
 

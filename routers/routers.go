@@ -91,6 +91,7 @@ func CreateClientRouter() SubRouter {
 
 	client.Use(
 		handlers.STX.IsAuthenticated,
+		handlers.STX.HasActiveSession,
 	)
 
 	client.Get(handlers.DashboardPath, handlers.STX.GetDashboard)
@@ -103,6 +104,7 @@ func CreateAPIRouter() SubRouter {
 
 	api.Use(
 		handlers.STX.IsAuthenticated,
+		handlers.STX.HasActiveSession,
 	)
 
 	return SubRouter{Path: handlers.ApiRouterPathPrefix, Router: api}

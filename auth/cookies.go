@@ -122,6 +122,9 @@ func CreateAccessCookie(accessToken string, sc *securecookie.SecureCookie) (*htt
 		AccessTokenString,
 		accessToken,
 		sc,
+		func(c *http.Cookie) {
+			c.Path = "/"
+		},
 		// TODO: Configure
 	)
 }
@@ -136,6 +139,9 @@ func CreateRefreshCookie(refreshToken string, sc *securecookie.SecureCookie) (*h
 		refreshToken,
 		sc,
 		// TODO: Configure
+		func(c *http.Cookie) {
+			c.Path = "/auth/refresh/"
+		},
 	)
 }
 
@@ -149,6 +155,9 @@ func CreateSessionCookie(sc *securecookie.SecureCookie) (*http.Cookie, error) {
 		generateSessionID(),
 		sc,
 		// TODO: Configure
+		func(c *http.Cookie) {
+			c.Path = "/"
+		},
 	)
 }
 

@@ -23,7 +23,7 @@ func (stx *ServiceContext) Logging(next http.Handler) http.Handler {
 func (stx *ServiceContext) VerifyServiceWorkerIsRunning(swPath, swScope, swHeader string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			stx.RequestTracer.UpdateActiveTrace("VerifyServiceWorkerIsRunning")
+			stx.RequestTracer.UpdateRequestTrace(r, "VerifyServiceWorkerIsRunning")
 			if strings.HasPrefix(r.URL.Path, "/static/sw") {
 				next.ServeHTTP(w, r)
 				return
@@ -47,16 +47,19 @@ const claimsContextKey ContextKey = "claims"
 
 func (stx *ServiceContext) IsAuthenticated(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		stx.RequestTracer.UpdateActiveTrace("IsAuthenticated")
+		stx.RequestTracer.UpdateRequestTrace(r, "IsAuthenticated")
 		accessToken, err := auth.GetAccessToken(r, stx.CookieKeys)
 		if err != nil {
+			stx.RequestTracer.UpdateRequestTrace(r, "DestroyAllCookies")
 			auth.DestroyAllCookies(r)
 			http.Error(w, "access token required", http.StatusUnauthorized)
 			return
 		}
 
+		stx.RequestTracer.UpdateRequestTrace(r, "ValidateAccessToken")
 		claims, err := stx.AuthProvider.ValidateAccessToken(accessToken)
 		if err != nil {
+			stx.RequestTracer.UpdateRequestTrace(r, "Invalid Access Token")
 			w.Header().Add("Refresh-Access-Token", "true")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
@@ -73,7 +76,7 @@ func (stx *ServiceContext) IsAuthenticated(next http.Handler) http.Handler {
 func (stx *ServiceContext) ScopeServiceWorkerAccess(swPath, accessPath string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			stx.RequestTracer.UpdateActiveTrace("ScopeServiceWorkerAccess")
+			stx.RequestTracer.UpdateRequestTrace(r, "ScopeServiceWorkerAccess")
 			if r.URL.Path == swPath {
 				w.Header().Add("Service-Worker-Allowed", accessPath)
 			}
@@ -84,7 +87,7 @@ func (stx *ServiceContext) ScopeServiceWorkerAccess(swPath, accessPath string) f
 
 func (stx *ServiceContext) SetHSTSPolicy(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		stx.RequestTracer.UpdateActiveTrace("SetHSTSPolicy")
+		stx.RequestTracer.UpdateRequestTrace(r, "SetHSTSPolicy")
 		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
 		next.ServeHTTP(w, r)
 	})
@@ -95,10 +98,10 @@ func (stx *ServiceContext) TraceRequests(next http.Handler) http.Handler {
 		cw := &logging.CustomWriter{ResponseWriter: w, Code: http.StatusOK}
 		stx.RequestTracer.NewRequestTrace(r)
 		next.ServeHTTP(cw, r)
-		stx.RequestTracer.DumpActiveTrace()
+		stx.RequestTracer.DumpRequestTrace(r)
 		fmt.Printf("[RESPONSE HEADER %d]\n", cw.Code)
 		cw.Header().Write(os.Stdout)
-		fmt.Printf("[BODY]\n%s\n", cw.Body.String())
+		// fmt.Printf("[BODY]\n%s\n", cw.Body.String())
 		fmt.Println("")
 	})
 }

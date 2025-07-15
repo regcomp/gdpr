@@ -10,7 +10,7 @@ import (
 
 func (stx *ServiceContext) RegisterServiceWorker(swPath, swScope string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		stx.RequestTracer.UpdateActiveTrace("RegisterServiceWorker")
+		stx.RequestTracer.UpdateRequestTrace(r, "RegisterServiceWorker")
 		req, err := constructRequestObject(r)
 		if err != nil {
 			log.Panicf("could not construct jsonRequest=%s", err.Error())

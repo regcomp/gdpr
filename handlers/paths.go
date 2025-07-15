@@ -4,15 +4,21 @@ package handlers
 const (
 	ClientRouterPathPrefix = "/"
 	ApiRouterPathPrefix    = "/api"
+	AuthRouterPathPrefix   = "/auth"
 )
 
 // endpoints
 const (
-	HealthzPath       = "/healthz"
+	// base
+	HealthzPath = "/healthz"
+	Test        = "/test"
+
+	// auth
 	LoginPath         = "/login"
 	LogoutPath        = "/logout"
 	LoginCallbackPath = "/logincallback"
-	RefreshPath       = "/auth/refresh"
-	DashboardPath     = "/dashboard"
-	Test              = "/test"
+	RefreshPath       = "/refresh"
+
+	// client
+	DashboardPath = "/dashboard"
 )

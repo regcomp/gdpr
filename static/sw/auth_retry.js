@@ -8,7 +8,8 @@ async function handleFetchWithAuth(request) {
   headers.set('SW-Auth-Retry-Running', true);
 
   const modifiedRequest = new Request(clonedRequest, {
-    headers: headers
+    headers: headers,
+    credentials: 'include',
   });
 
   // return fetch(modifiedRequest);
@@ -30,7 +31,7 @@ async function handleFetchWithAuth(request) {
 }
 
 async function handle401(oldResponse, request) {
-  if (response.headers.get('Refresh-Access-Token')) {
+  if (oldResponse.headers.get('Refresh-Access-Token')) {
     console.log('401 with Refresh-Access-Token detected, attempting refresh...');
 
     const isRefreshSuccess = await refreshToken();
@@ -46,7 +47,7 @@ async function handle401(oldResponse, request) {
 
 async function refreshToken() {
   try {
-    const refreshResponse = await fetch('/auth/refresh/', {
+    const refreshResponse = await fetch('/auth/refresh', {
       method: 'POST',
       credentials: 'include',
       headers: {

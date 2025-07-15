@@ -11,19 +11,43 @@ const shouldTraceRequestsConfigString = "SHOULD_TRACE_REQUESTS"
 
 type Tracer interface {
 	NewRequestTrace(*http.Request)
-	UpdateActiveTrace(string) error
-	DumpActiveTrace() error
+	UpdateRequestTrace(*http.Request, string) error
+	DumpRequestTrace(*http.Request) error
 }
 
 type RequestTraces struct {
-	traces []*RequestTrace
+	requestToTrace map[*http.Request]*RequestTrace
+}
+
+func createRequestTraces() *RequestTraces {
+	return &RequestTraces{
+		requestToTrace: make(map[*http.Request]*RequestTrace),
+	}
+}
+
+func (rts *RequestTraces) addRequestTrace(r *http.Request, rt *RequestTrace) {
+	rts.requestToTrace[r] = rt
+}
+
+func (rts *RequestTraces) getTrace(r *http.Request) (*RequestTrace, error) {
+	if _, ok := rts.requestToTrace[r]; !ok {
+		return nil, fmt.Errorf("could not find trace in getTrace")
+	}
+	return rts.requestToTrace[r], nil
+}
+
+func (rts *RequestTraces) deleteTrace(r *http.Request) error {
+	if _, ok := rts.requestToTrace[r]; !ok {
+		return fmt.Errorf("could not find trace in deleteTrace")
+	}
+
+	delete(rts.requestToTrace, r)
+	return nil
 }
 
 func NewTracer(getenv func(string) string) Tracer {
 	if getenv(shouldTraceRequestsConfigString) == "TRUE" {
-		return &RequestTraces{
-			traces: make([]*RequestTrace, 0, 32),
-		}
+		return createRequestTraces()
 	}
 	return &NoOpTracer{}
 }
@@ -34,29 +58,29 @@ func (rts *RequestTraces) NewRequestTrace(r *http.Request) {
 	if err != nil {
 		// TODO:
 	}
-	rts.traces = append(rts.traces, newTrace)
+
+	rts.addRequestTrace(r, newTrace)
 }
 
-func (rts *RequestTraces) UpdateActiveTrace(function string) error {
-	activeIdx := len(rts.traces) - 1
-	if activeIdx < 0 {
-		return fmt.Errorf("could not log function. no active trace")
+func (rts *RequestTraces) UpdateRequestTrace(r *http.Request, function string) error {
+	trace, err := rts.getTrace(r)
+	if err != nil {
+		// TODO: error, that trace doesnt exist
+		return err
 	}
-	rts.traces[activeIdx].logCurrentFunction(function)
+	trace.logCurrentFunction(function)
 	return nil
 }
 
-func (rts *RequestTraces) DumpActiveTrace() error {
-	activeIdx := len(rts.traces) - 1
-	if activeIdx < 0 {
-		return fmt.Errorf("could not print trace. no active trace")
+func (rts *RequestTraces) DumpRequestTrace(r *http.Request) error {
+	trace, err := rts.getTrace(r)
+	if err != nil {
+		// TODO: error, that trace doesnt exist
+		return err
 	}
-	rts.traces[activeIdx].printTrace(activeIdx)
-
-	rts.traces[activeIdx].zeroOutTrace()
-	rts.traces[activeIdx] = nil
-	rts.traces = rts.traces[:activeIdx]
-
+	trace.printTrace(0)
+	trace.zeroOutTrace()
+	rts.deleteTrace(r)
 	return nil
 }
 
@@ -83,7 +107,7 @@ func (rt *RequestTrace) logCurrentFunction(t string) {
 	rt.trace = append(rt.trace, t)
 }
 
-func (rt *RequestTrace) printTrace(depth int) {
+func (rt *RequestTrace) printTrace(depth int) { // NOTE: depth is not currently used in a real way
 	var output []byte
 	buf := bytes.NewBuffer(output)
 	padding := strings.Repeat("\t", depth)
@@ -96,6 +120,13 @@ func (rt *RequestTrace) printTrace(depth int) {
 func (rt *RequestTrace) constructPrintTraceOutput(buf *bytes.Buffer, padding string) {
 	fmt.Fprintf(buf, "%s[REQUEST]\n", padding)
 	fmt.Fprintf(buf, "%s%s | %s\n", padding, rt.req.URL.Path, rt.req.Method)
+	fmt.Fprintf(buf, "%s[REQUEST HEADER]\n", padding)
+	for name, values := range rt.req.Header {
+		if name == "Cookie" {
+			continue
+		}
+		fmt.Fprintf(buf, "%s%s: %s\n", padding, name, values)
+	}
 	fmt.Fprintf(buf, "%s[CALLS]\n", padding)
 	for _, call := range rt.trace {
 		fmt.Fprintf(buf, "%s%s\n", padding, call)
@@ -109,6 +140,6 @@ func (rt *RequestTrace) zeroOutTrace() {
 
 type NoOpTracer struct{}
 
-func (not *NoOpTracer) NewRequestTrace(*http.Request)  {}
-func (not *NoOpTracer) UpdateActiveTrace(string) error { return nil }
-func (not *NoOpTracer) DumpActiveTrace() error         { return nil }
+func (not *NoOpTracer) NewRequestTrace(*http.Request)                  {}
+func (not *NoOpTracer) UpdateRequestTrace(*http.Request, string) error { return nil }
+func (not *NoOpTracer) DumpRequestTrace(*http.Request) error           { return nil }

@@ -46,10 +46,7 @@ func run(
 	stx := handlers.CreateServiceContext(getenv)
 	handlers.LinkServiceContext(stx)
 
-	router := routers.CreateRouter(
-		routers.CreateAPIRouter(),
-		routers.CreateClientRouter(),
-	)
+	router := routers.CreateRouter()
 
 	cert, err := tls.X509KeyPair(certs.ServerCertPEMBlock, certs.ServerKeyPEMBlock)
 	if err != nil {

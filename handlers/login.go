@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/regcomp/gdpr/auth"
@@ -8,19 +9,19 @@ import (
 )
 
 func (stx *ServiceContext) GetLogin(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateActiveTrace("GetLogin")
+	stx.RequestTracer.UpdateRequestTrace(r, "GetLogin")
 	page := pages.Login()
 	page.Render(r.Context(), w)
 }
 
 func (stx *ServiceContext) PostLogin(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateActiveTrace("PostLogin")
-	callbackURL := NewURL("https", stx.HostPath, LoginCallbackPath)
+	stx.RequestTracer.UpdateRequestTrace(r, "PostLogin")
+	callbackURL := NewURL("https", stx.HostPath, AuthRouterPathPrefix+LoginCallbackPath)
 	stx.AuthProvider.AuthenticateUser(w, r, callbackURL)
 }
 
 func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateActiveTrace("LoginCallback")
+	stx.RequestTracer.UpdateRequestTrace(r, "LoginCallback")
 	credentials := auth.Credentials{}
 
 	switch stx.AuthProvider.GetProviderType() {
@@ -34,7 +35,7 @@ func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request)
 
 	accessCookie, err := auth.CreateAccessCookie(credentials.AccessToken, stx.CookieKeys)
 	if err != nil {
-		// TODO:
+		log.Panic("could not create access cookie")
 	}
 	http.SetCookie(w, accessCookie)
 
@@ -55,7 +56,7 @@ func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request)
 }
 
 func (stx *ServiceContext) PostRefresh(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateActiveTrace("PostRefresh")
+	stx.RequestTracer.UpdateRequestTrace(r, "PostRefresh")
 
 	refreshToken, err := auth.GetRefreshToken(r, stx.CookieKeys)
 	if err != nil {
@@ -75,8 +76,8 @@ func (stx *ServiceContext) PostRefresh(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (stx *ServiceContext) Logout(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateActiveTrace("Logout")
+func (stx *ServiceContext) PostLogout(w http.ResponseWriter, r *http.Request) {
+	stx.RequestTracer.UpdateRequestTrace(r, "PostLogout")
 	auth.DestroyAllCookies(r)
-	w.WriteHeader(http.StatusOK)
+	http.Redirect(w, r, LoginPath, http.StatusSeeOther)
 }

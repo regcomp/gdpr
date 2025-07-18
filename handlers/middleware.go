@@ -115,23 +115,14 @@ func (stx *ServiceContext) HasActiveSession(next http.Handler) http.Handler {
 	})
 }
 
-func (stx *ServiceContext) HasValidCSRFToken(next http.Handler) http.Handler {
+func (stx *ServiceContext) AddNonceToRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		stx.RequestTracer.UpdateRequestTrace(r, "HasValidCSRFToken")
-		sessionID := r.Context().Value(sessionIDContexKey).(string)
-		if sessionID == "" {
-			// TODO:
-			// error setting id in previous middleware
-		}
-		csrfToken, err := auth.GetCSRFToken(r, stx.CookieKeys)
-		if err != nil {
-			// TODO:
-		}
+		nonce := stx.NonceStore.Generate()
+		// adding to response header
+		w.Header().Set("XSRF-Nonce", nonce)
+		// adding to context so it can be passed to templates
+		r = r.WithContext(context.WithValue(r.Context(), "nonce", nonce))
 
-		isValid := auth.ValidateCSRFToken(sessionID, csrfToken, stx.HMACSecret)
-		if !isValid {
-			// TODO:
-		}
 		next.ServeHTTP(w, r)
 	})
 }

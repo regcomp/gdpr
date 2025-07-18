@@ -84,6 +84,7 @@ func CreateClientRouter() SubRouter {
 	client.Use(
 		handlers.STX.IsAuthenticated,
 		handlers.STX.HasActiveSession,
+		handlers.STX.AddNonceToRequest,
 	)
 
 	client.Get(handlers.DashboardPath, handlers.STX.GetDashboard)

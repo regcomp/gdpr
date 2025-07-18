@@ -19,14 +19,12 @@ const (
 	AccessCookieName  = "access-token"
 	RefreshCookieName = "refresh-token"
 	SessionCookieName = "session-id"
-	CSRFCookieName    = "csrf-token"
 )
 
 var cookieNames = []string{
 	AccessCookieName,
 	RefreshCookieName,
 	SessionCookieName,
-	CSRFCookieName,
 }
 
 type cookieOption func(*http.Cookie)
@@ -165,17 +163,4 @@ func CreateSessionCookie(sessionID string, sc *securecookie.SecureCookie) (*http
 
 func GetSessionID(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
 	return getTokenFromCookie(SessionCookieName, r, sc)
-}
-
-func CreateCSRFCookie(csrfToken string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
-	return createCookie(
-		CSRFCookieName,
-		csrfToken,
-		sc,
-		// TODO: Configure
-	)
-}
-
-func GetCSRFToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
-	return getTokenFromCookie(CSRFCookieName, r, sc)
 }

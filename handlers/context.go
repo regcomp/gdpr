@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/gorilla/securecookie"
+	sc "github.com/gorilla/securecookie"
 	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/database"
 	"github.com/regcomp/gdpr/logging"
@@ -14,19 +14,18 @@ import (
 var STX *ServiceContext
 
 type ServiceContext struct {
-	AuthProvider  auth.IProvider
-	CookieKeys    *securecookie.SecureCookie
-	SessionStore  *auth.SessionStore
-	DatabaseStore *database.DatabaseStore
+	AuthProvider  auth.IAuthProvider
+	CookieKeys    *sc.SecureCookie
+	SessionStore  auth.ISessionStore
+	DatabaseStore database.IDatabaseStore
 	RequestStore  IRequestStore
+	NonceStore    auth.INonceStore
 
 	RequestLogger *slog.Logger
 	RequestTracer logging.IRequestTracer
 
 	HostPath        string
 	SessionDuration int
-
-	HMACSecret []byte
 }
 
 func CreateServiceContext(getenv func(string) string) *ServiceContext {
@@ -47,11 +46,10 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 	}
 
 	cookieKeys := auth.CreateCookieKeys()
+
 	sessionStore := auth.CreateSessionStore()
-
-	hmacSecret := auth.GenerateHMACSecret()
-
 	requestStore := CreateRequestStore()
+	nonceStore := auth.CreateNonceStore()
 
 	return &ServiceContext{
 		AuthProvider:  authProvider,
@@ -61,8 +59,8 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 		SessionStore:  sessionStore,
 		DatabaseStore: databaseStore,
 		RequestStore:  requestStore,
+		NonceStore:    nonceStore,
 		HostPath:      "localhost:8080",
-		HMACSecret:    hmacSecret,
 	}
 }
 

@@ -5,6 +5,10 @@ type IDatabaseProvider interface {
 	BatchDeleteData(data []ScheduledDeletion) []error
 }
 
+type IDatabaseStore interface {
+	IDatabaseStore()
+}
+
 type DatabaseStore struct {
 	databases []IDatabaseProvider
 }
@@ -14,3 +18,5 @@ func CreateDatabaseStore(getenv func(string) string) (*DatabaseStore, error) {
 		databases: make([]IDatabaseProvider, 8),
 	}, nil
 }
+
+func (dbs *DatabaseStore) IDatabaseStore() {}

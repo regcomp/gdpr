@@ -27,7 +27,7 @@ type Credentials struct {
 	SessionID    string `json:"session_id"`
 }
 
-type IProvider interface {
+type IAuthProvider interface {
 	GetProviderType() ProviderType
 	AuthenticateUser(http.ResponseWriter, *http.Request, url.URL) // NOTE: This may require more fields
 	ValidateAccessToken(string) (*CustomClaims, error)
@@ -37,7 +37,7 @@ type IProvider interface {
 	GetNewAccessToken(string, *http.Request) (string, error)
 }
 
-func GetProvider(getenv func(string) string) (IProvider, error) {
+func GetProvider(getenv func(string) string) (IAuthProvider, error) {
 	provider := getenv(providerConfigString)
 	switch provider {
 	case "MOCK":

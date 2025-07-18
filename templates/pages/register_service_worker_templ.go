@@ -37,31 +37,55 @@ func RegisterServiceWorker(swPath, swScope string, req any) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script>\n        const originalRequest = JSON.parse(document.getElementById('requestData').textContent);\n        \n        async function registerAndWaitForServiceWorker() {\n          if (!('serviceWorker' in navigator)) {\n            return false;\n          }\n          try {\n            const registration = await navigator.serviceWorker.register(")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script>\n        const originalRequest = JSON.parse(document.getElementById('requestData').textContent);\n        \n        async function registerAndWaitForServiceWorker() {\n          if (!('serviceWorker' in navigator)) {\n            return false;\n          }\n          try {\n            const registration = await navigator.serviceWorker.getRegistration(")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var2, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swPath)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swScope)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 18, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 18, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, ", { \n              scope: ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, ");\n          \n            if (!(registration && \n                registration.active && \n                registration.active.scriptURL.includes(")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var3, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swScope)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swPath)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 19, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 22, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " \n            });\n            \n            await navigator.serviceWorker.ready;\n            \n            return true;\n            \n          } catch (error) {\n            console.error('SW registration failed:', error);\n            return false;\n          }\n        }\n\n        async function resendRequest() {\n          const isReady = await registerAndWaitForServiceWorker();\n          \n          if (isReady) {\n            window.location.reload();\n            try {\n              const response = await fetch(originalRequest.url, {\n                method: originalRequest.method,\n                headers: originalRequest.header,\n                body: originalRequest.method === 'GET' || originalRequest.method === 'HEAD' \n                  ? null \n                  : originalRequest.body,\n              });\n            } catch (error) {\n              console.error('Request failed:', error);\n            }\n          }\n        }\n\n        resendRequest();\n      </script></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "))) {\n              const registration = await navigator.serviceWorker.register(")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var4, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swPath)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 23, Col: 83}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, ", { \n                scope: ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var5, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swScope)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 24, Col: 33}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " \n              });\n            }\n            \n            await navigator.serviceWorker.ready;\n    \n            if (!navigator.serviceWorker.controller) {\n              await new Promise(resolve => {\n                navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });\n              });\n            }\n            \n            return true;\n            \n          } catch (error) {\n            console.error('SW registration failed:', error);\n            return false;\n          }\n        }\n\n        async function resendRequest() {\n          const isReady = await registerAndWaitForServiceWorker();\n          \n          // NOTE: needs better error handling\n          if (isReady && navigator.serviceWorker.controller) {\n            window.location.href = originalRequest.url // retrying the url with a GET\n            // TODO: Handle all types of requests? Maybe only GETS is good enough\n\n            // NOTE: this isn't good enough. fetch doesn't navigate\n            // try {\n            //   const response = await fetch(originalRequest.url, {\n            //     method: originalRequest.method,\n            //     headers: originalRequest.header,\n            //     body: originalRequest.method === 'GET' || originalRequest.method === 'HEAD' \n            //       ? null \n            //       : originalRequest.body,\n            //   });\n            // } catch (error) {\n            //   console.error('Request failed:', error);\n            //   throw error;\n            // }\n          }\n        }\n\n        resendRequest();\n      </script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

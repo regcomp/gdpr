@@ -1,52 +1,31 @@
 package handlers
 
 import (
-	"io"
-	"log"
 	"net/http"
 
 	"github.com/regcomp/gdpr/templates/pages"
 )
 
-func (stx *ServiceContext) RegisterServiceWorker(swPath, swScope string) http.Handler {
+func (stx *ServiceContext) RegisterAuthRetryWorker() http.HandlerFunc {
+	return stx.RegisterServiceWorker(SWAuthRetryPath, SWAuthRetryScope, "RegisterAuthRetryWorker")
+}
+
+func (stx *ServiceContext) RegisterServiceWorker(swPath, swScope, functionTrace string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		stx.RequestTracer.UpdateRequestTrace(r, "RegisterServiceWorker")
-		req, err := constructRequestObject(r)
+		stx.RequestTracer.UpdateRequestTrace(r, functionTrace)
+		redirectURL := r.URL.Query().Get("redirectURL")
+		if redirectURL == "" {
+			// TODO: fatal
+		}
+		requestID := r.URL.Query().Get("requestID")
+		if requestID == "" {
+			// TODO: fatal
+		}
+		cachedRequest, err := stx.RequestStore.RetrieveCachedRequest(requestID)
 		if err != nil {
-			log.Panicf("could not construct jsonRequest=%s", err.Error())
+			// TODO: could not get cached request
 		}
 
-		pages.RegisterServiceWorker(swPath, swScope, req).Render(r.Context(), w)
+		pages.RegisterServiceWorker(swPath, swScope, cachedRequest).Render(r.Context(), w)
 	})
-}
-
-// WARN: the json fields are coupled with bootstrapCodePath
-type jsonRequest struct {
-	URL    string              `json:"url"`
-	Method string              `json:"method"`
-	Header map[string][]string `json:"header"`
-	Body   string              `json:"body"`
-}
-
-func constructRequestObject(r *http.Request) (jsonRequest, error) {
-	body, err := extractBody(r)
-	if err != nil {
-		// TODO:
-	}
-	return jsonRequest{
-		URL:    r.URL.String(),
-		Method: r.Method,
-		Header: r.Header.Clone(),
-		Body:   body,
-	}, nil
-}
-
-func extractBody(r *http.Request) (string, error) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		// TODO:
-	}
-	r.Body.Close()
-
-	return string(body), nil
 }

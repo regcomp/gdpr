@@ -15,11 +15,13 @@ var STX *ServiceContext
 
 type ServiceContext struct {
 	AuthProvider  auth.IProvider
-	RequestLogger *slog.Logger
-	RequestTracer logging.ITracer
 	CookieKeys    *securecookie.SecureCookie
 	SessionStore  *auth.SessionStore
 	DatabaseStore *database.DatabaseStore
+	RequestStore  IRequestStore
+
+	RequestLogger *slog.Logger
+	RequestTracer logging.IRequestTracer
 
 	HostPath        string
 	SessionDuration int
@@ -49,6 +51,8 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 
 	hmacSecret := auth.GenerateHMACSecret()
 
+	requestStore := CreateRequestStore()
+
 	return &ServiceContext{
 		AuthProvider:  authProvider,
 		RequestLogger: requestlogger,
@@ -56,6 +60,7 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 		CookieKeys:    cookieKeys,
 		SessionStore:  sessionStore,
 		DatabaseStore: databaseStore,
+		RequestStore:  requestStore,
 		HostPath:      "localhost:8080",
 		HMACSecret:    hmacSecret,
 	}

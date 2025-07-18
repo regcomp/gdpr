@@ -14,11 +14,18 @@ const (
 	Test        = "/test"
 
 	// auth
-	LoginPath         = "/login"
-	LogoutPath        = "/logout"
-	LoginCallbackPath = "/logincallback"
-	RefreshPath       = "/refresh"
+	LoginPath                 = "/login"
+	LogoutPath                = "/logout"
+	LoginCallbackPath         = "/logincallback"
+	RefreshPath               = "/refresh"
+	RegisterServiceWorkerPath = "/registerserviceworker"
 
 	// client
 	DashboardPath = "/dashboard"
+)
+
+// service workers
+const (
+	SWAuthRetryPath  = "/static/sw/auth_retry.js"
+	SWAuthRetryScope = "/"
 )

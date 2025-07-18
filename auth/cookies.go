@@ -22,6 +22,13 @@ const (
 	CSRFCookieName    = "csrf-token"
 )
 
+var cookieNames = []string{
+	AccessCookieName,
+	RefreshCookieName,
+	SessionCookieName,
+	CSRFCookieName,
+}
+
 type cookieOption func(*http.Cookie)
 
 func createSecrets() {
@@ -67,6 +74,11 @@ func createCookie(
 	cookie := &http.Cookie{
 		Name:  name,
 		Value: encoded,
+
+		Path:     "/",
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 	}
 
 	for _, option := range options {
@@ -76,24 +88,19 @@ func createCookie(
 	return cookie, nil
 }
 
-func DestroyAllCookies(r *http.Request) {
-	cookieNames := []string{
-		AccessCookieName,
-		RefreshCookieName,
-		SessionCookieName,
-	}
-
+func DestroyAllCookies(w http.ResponseWriter, r *http.Request) {
 	for _, cookieName := range cookieNames {
 		cookie, err := r.Cookie(cookieName)
 		if err != nil {
 			continue
 		}
-		destroyCookie(cookie)
+		destroyCookie(w, cookie)
 	}
 }
 
-func destroyCookie(cookie *http.Cookie) {
+func destroyCookie(w http.ResponseWriter, cookie *http.Cookie) {
 	cookie.MaxAge = -1
+	http.SetCookie(w, cookie)
 }
 
 func getTokenFromCookie(
@@ -123,9 +130,6 @@ func CreateAccessCookie(accessToken string, sc *securecookie.SecureCookie) (*htt
 		AccessCookieName,
 		accessToken,
 		sc,
-		func(c *http.Cookie) {
-			c.Path = "/"
-		},
 		// TODO: Configure
 	)
 }
@@ -156,9 +160,6 @@ func CreateSessionCookie(sessionID string, sc *securecookie.SecureCookie) (*http
 		sessionID,
 		sc,
 		// TODO: Configure
-		func(c *http.Cookie) {
-			c.Path = "/"
-		},
 	)
 }
 
@@ -172,9 +173,6 @@ func CreateCSRFCookie(csrfToken string, sc *securecookie.SecureCookie) (*http.Co
 		csrfToken,
 		sc,
 		// TODO: Configure
-		func(c *http.Cookie) {
-			c.Path = "/"
-		},
 	)
 }
 

@@ -7,11 +7,6 @@ import (
 	"github.com/regcomp/gdpr/handlers"
 )
 
-const (
-	swAuthRetryPath  = "/static/sw/auth_retry.js"
-	swAuthRetryScope = "/"
-)
-
 type SubRouter struct {
 	Path   string
 	Router *chi.Mux
@@ -25,6 +20,7 @@ func CreateRouter() *chi.Mux {
 	)
 
 	router.Get(handlers.HealthzPath, healthz)
+	router.Get(handlers.RegisterServiceWorkerPath, handlers.STX.RegisterAuthRetryWorker())
 	router.Get(handlers.Test, handlers.STX.TestEndpoint)
 
 	mountRouters(router,
@@ -39,7 +35,7 @@ func CreateStaticRouter() SubRouter {
 	static := chi.NewRouter()
 
 	static.Use(
-		handlers.STX.ScopeServiceWorkerAccess(swAuthRetryPath, swAuthRetryScope),
+		handlers.STX.ScopeAuthRetryAccess(),
 	)
 
 	static.Handle("/*", http.StripPrefix("/static/",
@@ -56,11 +52,7 @@ func CreateServiceRouter() SubRouter {
 		handlers.STX.SetHSTSPolicy,
 		// TODO: Content policies/CORS/ect... go here
 
-		handlers.STX.VerifyServiceWorkerIsRunning(
-			swAuthRetryPath,
-			swAuthRetryScope,
-			"SW-Auth-Retry-Running",
-		),
+		handlers.STX.VerifyAuthRetryIsRunning(),
 	)
 
 	mountRouters(service,

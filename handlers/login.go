@@ -86,6 +86,6 @@ func (stx *ServiceContext) PostRefresh(w http.ResponseWriter, r *http.Request) {
 
 func (stx *ServiceContext) PostLogout(w http.ResponseWriter, r *http.Request) {
 	stx.RequestTracer.UpdateRequestTrace(r, "PostLogout")
-	auth.DestroyAllCookies(r)
-	http.Redirect(w, r, LoginPath, http.StatusSeeOther)
+	auth.DestroyAllCookies(w, r)
+	w.WriteHeader(http.StatusOK)
 }

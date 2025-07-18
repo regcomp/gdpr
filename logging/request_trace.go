@@ -9,34 +9,34 @@ import (
 
 const shouldTraceRequestsConfigString = "SHOULD_TRACE_REQUESTS"
 
-type ITracer interface {
+type IRequestTracer interface {
 	NewRequestTrace(*http.Request)
 	UpdateRequestTrace(*http.Request, string) error
 	DumpRequestTrace(*http.Request) error
 }
 
-type RequestTraces struct {
+type RequestTracer struct {
 	requestToTrace map[*http.Request]*RequestTrace
 }
 
-func createRequestTraces() *RequestTraces {
-	return &RequestTraces{
+func createRequestTraces() *RequestTracer {
+	return &RequestTracer{
 		requestToTrace: make(map[*http.Request]*RequestTrace),
 	}
 }
 
-func (rts *RequestTraces) addRequestTrace(r *http.Request, rt *RequestTrace) {
+func (rts *RequestTracer) addRequestTrace(r *http.Request, rt *RequestTrace) {
 	rts.requestToTrace[r] = rt
 }
 
-func (rts *RequestTraces) getTrace(r *http.Request) (*RequestTrace, error) {
+func (rts *RequestTracer) getTrace(r *http.Request) (*RequestTrace, error) {
 	if _, ok := rts.requestToTrace[r]; !ok {
 		return nil, fmt.Errorf("could not find trace in getTrace")
 	}
 	return rts.requestToTrace[r], nil
 }
 
-func (rts *RequestTraces) deleteTrace(r *http.Request) error {
+func (rts *RequestTracer) deleteTrace(r *http.Request) error {
 	if _, ok := rts.requestToTrace[r]; !ok {
 		return fmt.Errorf("could not find trace in deleteTrace")
 	}
@@ -45,14 +45,14 @@ func (rts *RequestTraces) deleteTrace(r *http.Request) error {
 	return nil
 }
 
-func NewTracer(getenv func(string) string) ITracer {
+func NewTracer(getenv func(string) string) IRequestTracer {
 	if getenv(shouldTraceRequestsConfigString) == "TRUE" {
 		return createRequestTraces()
 	}
-	return &NoOpTracer{}
+	return &NoOpRequestTracer{}
 }
 
-func (rts *RequestTraces) NewRequestTrace(r *http.Request) {
+func (rts *RequestTracer) NewRequestTrace(r *http.Request) {
 	newTrace := newRequestTrace()
 	err := newTrace.initRequestTrace(r)
 	if err != nil {
@@ -62,7 +62,7 @@ func (rts *RequestTraces) NewRequestTrace(r *http.Request) {
 	rts.addRequestTrace(r, newTrace)
 }
 
-func (rts *RequestTraces) UpdateRequestTrace(r *http.Request, function string) error {
+func (rts *RequestTracer) UpdateRequestTrace(r *http.Request, function string) error {
 	trace, err := rts.getTrace(r)
 	if err != nil {
 		// TODO: error, that trace doesnt exist
@@ -72,7 +72,7 @@ func (rts *RequestTraces) UpdateRequestTrace(r *http.Request, function string) e
 	return nil
 }
 
-func (rts *RequestTraces) DumpRequestTrace(r *http.Request) error {
+func (rts *RequestTracer) DumpRequestTrace(r *http.Request) error {
 	trace, err := rts.getTrace(r)
 	if err != nil {
 		// TODO: error, that trace doesnt exist
@@ -138,8 +138,8 @@ func (rt *RequestTrace) zeroOutTrace() {
 	rt.trace = nil
 }
 
-type NoOpTracer struct{}
+type NoOpRequestTracer struct{}
 
-func (not *NoOpTracer) NewRequestTrace(*http.Request)                  {}
-func (not *NoOpTracer) UpdateRequestTrace(*http.Request, string) error { return nil }
-func (not *NoOpTracer) DumpRequestTrace(*http.Request) error           { return nil }
+func (not *NoOpRequestTracer) NewRequestTrace(*http.Request)                  {}
+func (not *NoOpRequestTracer) UpdateRequestTrace(*http.Request, string) error { return nil }
+func (not *NoOpRequestTracer) DumpRequestTrace(*http.Request) error           { return nil }

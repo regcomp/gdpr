@@ -11,6 +11,7 @@ build-local:
 	@ go build -o $(BUILD_TARGETS)/$(TARGET) $(SOURCE)
 
 run-local: build-local
+	@ clear
 	@ $(BUILD_TARGETS)/$(TARGET)
 
 clean:

@@ -3,7 +3,9 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -20,6 +22,10 @@ func (stx *ServiceContext) Logging(next http.Handler) http.Handler {
 	})
 }
 
+func (stx *ServiceContext) VerifyAuthRetryIsRunning() func(http.Handler) http.Handler {
+	return stx.VerifyServiceWorkerIsRunning(SWAuthRetryPath, SWAuthRetryScope, "SW-Auth-Retry-Running")
+}
+
 func (stx *ServiceContext) VerifyServiceWorkerIsRunning(swPath, swScope, swHeader string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -28,8 +34,22 @@ func (stx *ServiceContext) VerifyServiceWorkerIsRunning(swPath, swScope, swHeade
 				next.ServeHTTP(w, r)
 				return
 			}
-			if r.Header.Get(swHeader) == "" {
-				stx.RegisterServiceWorker(swPath, swScope).ServeHTTP(w, r)
+			if r.Header.Get(swHeader) != "true" {
+				// cache request
+				requestID, err := stx.RequestStore.StoreCachedRequest(r)
+				if err != nil {
+					// TODO:
+				}
+
+				// construct callback url
+				bootstrapURL := fmt.Sprintf("%s?redirect=%s&requestID=%s",
+					RegisterServiceWorkerPath,
+					url.QueryEscape(r.URL.String()),
+					requestID,
+				)
+
+				// redirect to the url
+				http.Redirect(w, r, bootstrapURL, http.StatusTemporaryRedirect)
 				return
 			}
 			next.ServeHTTP(w, r)
@@ -54,8 +74,7 @@ func (stx *ServiceContext) IsAuthenticated(next http.Handler) http.Handler {
 		accessToken, err := auth.GetAccessToken(r, stx.CookieKeys)
 		if err != nil {
 			stx.RequestTracer.UpdateRequestTrace(r, "DestroyAllCookies")
-			auth.DestroyAllCookies(r)
-			http.Error(w, "access token required", http.StatusUnauthorized)
+			http.Error(w, "requires authentication", http.StatusUnauthorized)
 			return
 		}
 
@@ -78,15 +97,18 @@ func (stx *ServiceContext) IsAuthenticated(next http.Handler) http.Handler {
 
 func (stx *ServiceContext) HasActiveSession(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		stx.RequestTracer.UpdateRequestTrace(r, "HasActiveSession")
 		sessionID, err := auth.GetSessionID(r, stx.CookieKeys)
 		if err != nil {
 			// TODO:
 			// No session cookie
+			log.Panic("No session cookie")
 		}
 		_, err = stx.SessionStore.GetSession(sessionID)
 		if err != nil {
 			// TODO:
 			// no registered session. old cookie?
+			log.Panic("sessionID not found")
 		}
 		ctx := context.WithValue(r.Context(), sessionIDContexKey, sessionID)
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -95,6 +117,7 @@ func (stx *ServiceContext) HasActiveSession(next http.Handler) http.Handler {
 
 func (stx *ServiceContext) HasValidCSRFToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		stx.RequestTracer.UpdateRequestTrace(r, "HasValidCSRFToken")
 		sessionID := r.Context().Value(sessionIDContexKey).(string)
 		if sessionID == "" {
 			// TODO:
@@ -111,6 +134,10 @@ func (stx *ServiceContext) HasValidCSRFToken(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (stx *ServiceContext) ScopeAuthRetryAccess() func(http.Handler) http.Handler {
+	return stx.ScopeServiceWorkerAccess(SWAuthRetryPath, SWAuthRetryScope)
 }
 
 func (stx *ServiceContext) ScopeServiceWorkerAccess(swPath, accessPath string) func(http.Handler) http.Handler {

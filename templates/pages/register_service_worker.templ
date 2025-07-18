@@ -1,0 +1,72 @@
+package pages
+
+templ RegisterServiceWorker(swPath, swScope string, req any) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head></head>
+		<body>
+			<h1>Loading service worker...</h1>
+			@templ.JSONScript("requestData", req)
+			<script>
+        const originalRequest = JSON.parse(document.getElementById('requestData').textContent);
+        
+        async function registerAndWaitForServiceWorker() {
+          if (!('serviceWorker' in navigator)) {
+            return false;
+          }
+          try {
+            const registration = await navigator.serviceWorker.getRegistration({{ swScope }});
+          
+            if (!(registration && 
+                registration.active && 
+                registration.active.scriptURL.includes({{ swPath }}))) {
+              const registration = await navigator.serviceWorker.register({{ swPath }}, { 
+                scope: {{ swScope }} 
+              });
+            }
+            
+            await navigator.serviceWorker.ready;
+    
+            if (!navigator.serviceWorker.controller) {
+              await new Promise(resolve => {
+                navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
+              });
+            }
+            
+            return true;
+            
+          } catch (error) {
+            console.error('SW registration failed:', error);
+            return false;
+          }
+        }
+
+        async function resendRequest() {
+          const isReady = await registerAndWaitForServiceWorker();
+          
+          // NOTE: needs better error handling
+          if (isReady && navigator.serviceWorker.controller) {
+            window.location.href = originalRequest.url // retrying the url with a GET
+            // TODO: Handle all types of requests? Maybe only GETS is good enough
+
+            // NOTE: this isn't good enough. fetch doesn't navigate
+            // try {
+            //   const response = await fetch(originalRequest.url, {
+            //     method: originalRequest.method,
+            //     headers: originalRequest.header,
+            //     body: originalRequest.method === 'GET' || originalRequest.method === 'HEAD' 
+            //       ? null 
+            //       : originalRequest.body,
+            //   });
+            // } catch (error) {
+            //   console.error('Request failed:', error);
+            //   throw error;
+            // }
+          }
+        }
+
+        resendRequest();
+      </script>
+		</body>
+	</html>
+}

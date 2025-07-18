@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	certs "github.com/regcomp/gdpr/auth/local_certs"
 	"github.com/regcomp/gdpr/config"
 	"github.com/regcomp/gdpr/handlers"
 	"github.com/regcomp/gdpr/routers"
@@ -44,22 +46,29 @@ func run(
 	stx := handlers.CreateServiceContext(getenv)
 	handlers.LinkServiceContext(stx)
 
-	router := routers.CreateRouter(
-		routers.CreateApiRouter(),
-		routers.CreateClientRouter(),
-	)
+	router := routers.CreateRouter()
+
+	cert, err := tls.X509KeyPair(certs.ServerCertPEMBlock, certs.ServerKeyPEMBlock)
+	if err != nil {
+		// TODO:
+	}
+
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
 
 	server := &http.Server{
-		Addr:    ":" + config.Port,
-		Handler: router,
+		Addr:      ":" + config.Port,
+		Handler:   router,
+		TLSConfig: tlsConfig,
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	go func() {
-		fmt.Fprintf(outStream, "listening on %s\n", server.Addr)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		fmt.Fprintf(outStream, "listening on %s\n\n", server.Addr)
+		if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 			fmt.Fprintf(outStream, "error listening and serving: %s\n", err)
 		}
 	}()

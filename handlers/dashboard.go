@@ -9,23 +9,25 @@ import (
 )
 
 func (stx *ServiceContext) GetDashboard(w http.ResponseWriter, r *http.Request) {
+	stx.RequestTracer.UpdateRequestTrace(r, "GetDashboard")
+
 	// WARN: TEMPORARY!!
 
 	accessToken, err := auth.GetAccessToken(r, stx.CookieKeys)
 	if err != nil {
 		log.Panicf("%s", err.Error())
 	}
-	refreshToken, err := auth.GetRefreshToken(r, stx.CookieKeys)
-	if err != nil {
-		log.Panicf("%s", err.Error())
-	}
+	// refreshToken, err := auth.GetRefreshToken(r, stx.CookieKeys)
+	// if err != nil {
+	// 	log.Panicf("%s", err.Error())
+	// }
 
 	sessionID, err := auth.GetSessionID(r, stx.CookieKeys)
 	if err != nil {
 		log.Panicf("%s", err.Error())
 	}
 
-	pages.Dashboard(accessToken, refreshToken, sessionID).Render(r.Context(), w)
+	pages.Dashboard(accessToken, "---", sessionID).Render(r.Context(), w)
 	// -----
 
 	// dashboard := pages.Dashboard()

@@ -4,13 +4,28 @@ package handlers
 const (
 	ClientRouterPathPrefix = "/"
 	ApiRouterPathPrefix    = "/api"
+	AuthRouterPathPrefix   = "/auth"
 )
 
 // endpoints
 const (
-	HealthzPath       = "/healthz"
-	LoginPath         = "/login"
-	LoginCallbackPath = "/logincallback"
-	DashboardPath     = "/dashboard"
-	Test              = "/test"
+	// base
+	HealthzPath = "/healthz"
+	Test        = "/test"
+
+	// auth
+	LoginPath                 = "/login"
+	LogoutPath                = "/logout"
+	LoginCallbackPath         = "/logincallback"
+	RefreshPath               = "/refresh"
+	RegisterServiceWorkerPath = "/registerserviceworker"
+
+	// client
+	DashboardPath = "/dashboard"
+)
+
+// service workers
+const (
+	SWAuthRetryPath  = "/static/sw/auth_retry.js"
+	SWAuthRetryScope = "/"
 )

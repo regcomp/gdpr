@@ -21,7 +21,8 @@ func CreateRouter() *chi.Mux {
 
 	router.Get(handlers.HealthzPath, healthz)
 	router.Get(handlers.RegisterServiceWorkerPath, handlers.STX.RegisterAuthRetryWorker())
-	router.Get(handlers.Test, handlers.STX.TestEndpoint)
+	router.Get(handlers.Test1Path, handlers.STX.TestEndpoint1)
+	router.Get(handlers.Test2Path, handlers.STX.TestEndpoint2)
 
 	mountRouters(router,
 		CreateStaticRouter(),

@@ -11,7 +11,8 @@ const (
 const (
 	// base
 	HealthzPath = "/healthz"
-	Test        = "/test"
+	Test1Path   = "/test1"
+	Test2Path   = "/test2"
 
 	// auth
 	LoginPath                 = "/login"

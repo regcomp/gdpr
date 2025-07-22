@@ -29,7 +29,30 @@ templ Dashboard(accessToken, refreshToken, sessionID string) {
         .sidebar-nav {
           margin-bottom: 0.5rem;
         }
+
+        .navigable {
+          cursor: pointer;
+          tabindex: 0
+        }
       </style>
+			<script>
+        document.addEventListener('alpine:init', () => {
+          Alpine.data('ajaxButton', () => ({
+
+            dashboard() {
+              this.fetchData('/test1')
+            },
+
+            analytics() {
+              this.fetchData('/test2')
+            },
+
+            fetchData(endpoint) {
+              this.$ajax(endpoint, { target: 'content-inner' });
+            }
+          }));
+        });
+    </script>
 		</head>
 		<body>
 			<!-- Top Bar - Full Width -->
@@ -50,15 +73,25 @@ templ Dashboard(accessToken, refreshToken, sessionID string) {
 							<!-- Navigation -->
 							<nav class="flex-grow-1 p-3">
 								<ul class="nav nav-pills flex-column">
-									<li class="nav-item sidebar-nav">
-										<a href="#" class="nav-link active">
-											Dashboard
-										</a>
+									<li>
+										<div x-data="ajaxButton">
+											<button
+												class="nav-item nav-link sidebar-nav"
+												x-on:click="dashboard"
+											>
+												Dashboard
+											</button>
+										</div>
 									</li>
-									<li class="nav-item sidebar-nav">
-										<a href="#" class="nav-link">
-											Analytics
-										</a>
+									<li>
+										<div x-data="ajaxButton">
+											<button
+												class="nav-item nav-link sidebar-nav"
+												x-on:click="analytics"
+											>
+												Analytics
+											</button>
+										</div>
 									</li>
 									<li class="nav-item sidebar-nav">
 										<a href="#" class="nav-link">
@@ -97,15 +130,17 @@ templ Dashboard(accessToken, refreshToken, sessionID string) {
 						</div>
 					</div>
 					<!-- Main Content Area -->
-					<div class="col-md-9 col-lg-10">
-						<main class="p-4">
-							<div class="mb-4">
-								<h2 class="mb-1">Dashboard</h2>
-								<div>access token: { accessToken } </div>
-								<div>refresh token: { refreshToken } </div>
-								<div>session id: { sessionID } </div>
-							</div>
-						</main>
+					<div class="col-md-9 col-lg-10" id="content-area">
+						<div id="content-inner">
+							<main class="p-4">
+								<div class="mb-4">
+									<h2 class="mb-1">Dashboard</h2>
+									<div>access token: { accessToken } </div>
+									<div>refresh token: { refreshToken } </div>
+									<div>session id: { sessionID } </div>
+								</div>
+							</main>
+						</div>
 					</div>
 				</div>
 			</div>

@@ -159,7 +159,7 @@ func (stx *ServiceContext) TraceRequests(next http.Handler) http.Handler {
 		stx.RequestTracer.DumpRequestTrace(r)
 		fmt.Printf("[RESPONSE HEADER %d]\n", cw.Code)
 		cw.Header().Write(os.Stdout)
-		// fmt.Printf("[BODY]\n%s\n", cw.Body.String())
+		fmt.Printf("[BODY]\n%s\n", cw.Body.String())
 		fmt.Println("")
 	})
 }

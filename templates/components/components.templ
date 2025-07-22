@@ -13,4 +13,17 @@ templ HeadContents(title string) {
 	<script defer src="/static/js/alpine-ajax.min.js"></script>
 	<script defer src="/static/js/alpine.csp.min.js"></script>
 	<script defer src="/static/js/bootstrap.bundle.js"></script>
+	<script defer src="/static/js/app.js"></script>
+}
+
+templ TestComponent1() {
+	<div id="content-inner">
+		component 1
+	</div>
+}
+
+templ TestComponent2() {
+	<div id="content-inner">
+		component 2
+	</div>
 }

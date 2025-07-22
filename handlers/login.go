@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/regcomp/gdpr/auth"
+	"github.com/regcomp/gdpr/config"
+	"github.com/regcomp/gdpr/logging"
 	"github.com/regcomp/gdpr/templates/pages"
 )
 
@@ -18,6 +20,18 @@ func (stx *ServiceContext) PostLogin(w http.ResponseWriter, r *http.Request) {
 	stx.RequestTracer.UpdateRequestTrace(r, "PostLogin")
 	callbackURL := NewURL("https", stx.HostPath, AuthRouterPathPrefix+LoginCallbackPath)
 	stx.AuthProvider.AuthenticateUser(w, r, callbackURL)
+}
+
+func postLogin(
+	reqTracer logging.IRequestTracer,
+	authProvider auth.IAuthProvider,
+	config config.IConfigStore,
+) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reqTracer.UpdateRequestTrace(r, "PostLogin")
+		callbackURL := NewURL("https", config.GetHostPath(), AuthRouterPathPrefix+LoginCallbackPath)
+		authProvider.AuthenticateUser(w, r, callbackURL)
+	})
 }
 
 func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request) {

@@ -4,14 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/securecookie"
-)
-
-// WARN: reusable module level keys. does not appear to have a use anymore
-var (
-	hashKey        []byte = nil
-	blockKey       []byte = nil
-	hasInitialized        = false
+	sc "github.com/gorilla/securecookie"
 )
 
 // Cookies
@@ -29,23 +22,28 @@ var cookieNames = []string{
 
 type cookieOption func(*http.Cookie)
 
-func createSecrets() {
-	if hasInitialized {
-		return
-	}
-	hashKey = securecookie.GenerateRandomKey(64)
-	blockKey = securecookie.GenerateRandomKey(32)
-	hasInitialized = true
+// NOTE: this is too implementation specific
+type ICookieCrypt interface {
+	Keys() *sc.SecureCookie
 }
 
-func CreateCookieKeys() *securecookie.SecureCookie {
-	createSecrets()
-	return securecookie.New(hashKey, blockKey)
+type CookieCrypt struct {
+	keys *sc.SecureCookie
+}
+
+func CreateCookieCrypt() *CookieCrypt {
+	hashKey := sc.GenerateRandomKey(64)
+	blockKey := sc.GenerateRandomKey(32)
+	return &CookieCrypt{keys: sc.New(hashKey, blockKey)}
+}
+
+func (cc *CookieCrypt) Keys() *sc.SecureCookie {
+	return cc.keys
 }
 
 func DecodeCookie(
 	name string,
-	sc *securecookie.SecureCookie,
+	sc *sc.SecureCookie,
 	encryptedCookie *http.Cookie,
 ) (map[string]string, error) {
 	value := make(map[string]string)
@@ -57,7 +55,7 @@ func DecodeCookie(
 
 func createCookie(
 	name, value string,
-	sc *securecookie.SecureCookie,
+	sc *sc.SecureCookie,
 	options ...cookieOption,
 ) (*http.Cookie, error) {
 	values := map[string]string{
@@ -104,7 +102,7 @@ func destroyCookie(w http.ResponseWriter, cookie *http.Cookie) {
 func getTokenFromCookie(
 	name string,
 	r *http.Request,
-	sc *securecookie.SecureCookie,
+	sc *sc.SecureCookie,
 ) (string, error) {
 	cookie, err := r.Cookie(name)
 	if err != nil {
@@ -123,7 +121,7 @@ func getTokenFromCookie(
 	return token, nil
 }
 
-func CreateAccessCookie(accessToken string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
+func CreateAccessCookie(accessToken string, sc *sc.SecureCookie) (*http.Cookie, error) {
 	return createCookie(
 		AccessCookieName,
 		accessToken,
@@ -132,11 +130,11 @@ func CreateAccessCookie(accessToken string, sc *securecookie.SecureCookie) (*htt
 	)
 }
 
-func GetAccessToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
+func GetAccessToken(r *http.Request, sc *sc.SecureCookie) (string, error) {
 	return getTokenFromCookie(AccessCookieName, r, sc)
 }
 
-func CreateRefreshCookie(refreshToken string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
+func CreateRefreshCookie(refreshToken string, sc *sc.SecureCookie) (*http.Cookie, error) {
 	return createCookie(
 		RefreshCookieName,
 		refreshToken,
@@ -148,11 +146,11 @@ func CreateRefreshCookie(refreshToken string, sc *securecookie.SecureCookie) (*h
 	)
 }
 
-func GetRefreshToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
+func GetRefreshToken(r *http.Request, sc *sc.SecureCookie) (string, error) {
 	return getTokenFromCookie(RefreshCookieName, r, sc)
 }
 
-func CreateSessionCookie(sessionID string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
+func CreateSessionCookie(sessionID string, sc *sc.SecureCookie) (*http.Cookie, error) {
 	return createCookie(
 		SessionCookieName,
 		sessionID,
@@ -161,6 +159,6 @@ func CreateSessionCookie(sessionID string, sc *securecookie.SecureCookie) (*http
 	)
 }
 
-func GetSessionID(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
+func GetSessionID(r *http.Request, sc *sc.SecureCookie) (string, error) {
 	return getTokenFromCookie(SessionCookieName, r, sc)
 }

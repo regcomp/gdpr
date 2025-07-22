@@ -1,12 +1,11 @@
-package handlers
+package servicecontext
 
 import (
 	"log"
-	"log/slog"
 	"os"
 
-	sc "github.com/gorilla/securecookie"
 	"github.com/regcomp/gdpr/auth"
+	"github.com/regcomp/gdpr/config"
 	"github.com/regcomp/gdpr/database"
 	"github.com/regcomp/gdpr/logging"
 )
@@ -14,18 +13,18 @@ import (
 var STX *ServiceContext
 
 type ServiceContext struct {
-	AuthProvider  auth.IAuthProvider
-	CookieKeys    *sc.SecureCookie
-	SessionStore  auth.ISessionStore
+	AuthProvider auth.IAuthProvider
+	CookieCrypt  auth.ICookieCrypt
+	SessionStore auth.ISessionStore
+	NonceStore   auth.INonceStore
+
+	ConfigStore config.IConfigStore
+
 	DatabaseStore database.IDatabaseStore
 	RequestStore  database.IRequestStore
-	NonceStore    auth.INonceStore
 
-	RequestLogger *slog.Logger
+	RequestLogger logging.ILogger
 	RequestTracer logging.IRequestTracer
-
-	HostPath        string
-	SessionDuration int
 }
 
 func CreateServiceContext(getenv func(string) string) *ServiceContext {
@@ -45,25 +44,22 @@ func CreateServiceContext(getenv func(string) string) *ServiceContext {
 		// NOTE: Shouldn't need to establish database connections until necessary
 	}
 
-	cookieKeys := auth.CreateCookieCrypt()
+	cookieCrypt := auth.CreateCookieCrypt()
 
 	sessionStore := auth.CreateSessionStore()
 	requestStore := database.CreateRequestStore()
 	nonceStore := auth.CreateNonceStore()
+	configStore := config.NewConfigStore()
 
 	return &ServiceContext{
 		AuthProvider:  authProvider,
 		RequestLogger: requestlogger,
 		RequestTracer: requestTracer,
-		CookieKeys:    cookieKeys,
+		CookieCrypt:   cookieCrypt,
 		SessionStore:  sessionStore,
 		DatabaseStore: databaseStore,
 		RequestStore:  requestStore,
 		NonceStore:    nonceStore,
-		HostPath:      "localhost:8080",
+		ConfigStore:   configStore,
 	}
-}
-
-func LinkServiceContext(stx *ServiceContext) {
-	STX = stx
 }

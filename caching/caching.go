@@ -1,4 +1,4 @@
-package cache
+package caching
 
 import (
 	"github.com/regcomp/gdpr/secrets"
@@ -22,23 +22,23 @@ Things that should live in the cache:
 
 */
 
+// NOTE: This will likely be a large and cluttered interface
 type IServiceCache interface {
-	ServiceCache()
+	// Nonce Handling
+	NonceAdd(string)
+
+	// Session Handling
+	SessionAdd(string, []byte)
+	SessionGet(string) ([]byte, error)
+
+	// Cookie Hashes
+	CookieHashesGet() []byte
+	CookieHashesSet([]byte)
 }
 
 func CreateServiceCache(secretStore secrets.ISecretStore, cacheType string) (IServiceCache, error) {
 	switch cacheType {
 	default:
-		return createInMemoryCache(), nil
+		return createInMemoryCache(secretStore), nil
 	}
 }
-
-type InMemoryCache struct {
-	//
-}
-
-func createInMemoryCache() *InMemoryCache {
-	return &InMemoryCache{}
-}
-
-func (imc *InMemoryCache) ServiceCache() {}

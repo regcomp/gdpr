@@ -15,7 +15,7 @@ var STX *ServiceContext
 type ServiceContext struct {
 	AuthProvider  auth.IAuthProvider
 	SessionStore  auth.ISessionStore
-	NonceStore    auth.INonceStore
+	NonceStore    *auth.NonceStore
 	CookieManager *auth.CookieManager
 
 	ConfigStore config.IConfigStore

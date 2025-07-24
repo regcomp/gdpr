@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"fmt"
+	"encoding/json"
 
 	"github.com/google/uuid"
+	"github.com/regcomp/gdpr/caching"
 )
 
 type SessionData struct {
@@ -18,31 +19,42 @@ type ISessionStore interface {
 }
 
 type SessionStore struct {
-	sessionIDToSessionData map[string]*SessionData
+	cache caching.IServiceCache
 }
 
-func CreateSessionStore() *SessionStore {
+func CreateSessionStore(serviceCache caching.IServiceCache) *SessionStore {
 	return &SessionStore{
-		sessionIDToSessionData: make(map[string]*SessionData),
+		cache: serviceCache,
 	}
 }
 
 func (ss *SessionStore) CreateSession() string {
 	id := generateSessionID()
-	data := &SessionData{}
-	ss.sessionIDToSessionData[id] = data
+	sessionData := &SessionData{}
+	sessionBytes, err := json.Marshal(sessionData)
+	if err != nil {
+		// TODO:
+	}
+
+	ss.cache.SessionAdd(id, sessionBytes)
 	return id
 }
 
-func (ss *SessionStore) UpdateSession(data SessionData) error {
+func (ss *SessionStore) UpdateSession(data *SessionData) error {
 	//
 	return nil
 }
 
 func (ss *SessionStore) GetSession(sessionID string) (*SessionData, error) {
-	sessionData, ok := ss.sessionIDToSessionData[sessionID]
-	if !ok {
-		return nil, fmt.Errorf("could not find session")
+	sessionBytes, err := ss.cache.SessionGet(sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	var sessionData *SessionData
+	err = json.Unmarshal(sessionBytes, sessionData)
+	if err != nil {
+		return nil, err
 	}
 
 	return sessionData, nil

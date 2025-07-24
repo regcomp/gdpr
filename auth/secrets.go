@@ -4,8 +4,8 @@ type ISecretsStore interface {
 	SecretsStore()
 }
 
-type SecretsStore struct {
+type MockSecretsStore struct {
 	//
 }
 
-func (ss *SecretsStore) SecretsStore() {}
+func (ss *MockSecretsStore) SecretsStore() {}

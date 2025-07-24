@@ -1,11 +1,12 @@
 package auth
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	sc "github.com/gorilla/securecookie"
-	"github.com/regcomp/gdpr/cache"
+	"github.com/regcomp/gdpr/caching"
 )
 
 // Cookies
@@ -24,18 +25,43 @@ var cookieNames = []string{
 type cookieOption func(*http.Cookie)
 
 type CookieManager struct {
-	serviceCache cache.IServiceCache
-	keys         *sc.SecureCookie
+	// cache caching.IServiceCache
+	keys *sc.SecureCookie
 }
 
-func CreateCookieManager(serviceCache cache.IServiceCache) *CookieManager {
-	// TODO: This data needs to be pulled from the cache or generated and added to it
-	hashKey := sc.GenerateRandomKey(64)
-	blockKey := sc.GenerateRandomKey(32)
-	keys := sc.New(hashKey, blockKey)
+type cookieKeys struct {
+	Hash  []byte `json:"hash"`
+	Block []byte `json:"block"`
+}
+
+func newCookieKeys() *cookieKeys {
+	return &cookieKeys{
+		Hash:  sc.GenerateRandomKey(64),
+		Block: sc.GenerateRandomKey(32),
+	}
+}
+
+func CreateCookieManager(serviceCache caching.IServiceCache) *CookieManager {
+	cookieHashes := serviceCache.CookieHashesGet()
+	var freshKeys *cookieKeys
+	if cookieHashes == nil {
+		freshKeys = newCookieKeys()
+		cookieHashesBytes, err := json.Marshal(freshKeys)
+		if err != nil {
+			// TODO:
+		}
+		serviceCache.CookieHashesSet(cookieHashesBytes)
+	} else {
+		err := json.Unmarshal(cookieHashes, freshKeys)
+		if err != nil {
+			// TODO:
+		}
+	}
+
+	keys := sc.New(freshKeys.Hash, freshKeys.Block)
 	return &CookieManager{
-		serviceCache: serviceCache,
-		keys:         keys,
+		// cache: serviceCache,
+		keys: keys,
 	}
 }
 

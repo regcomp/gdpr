@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/regcomp/gdpr/auth"
-	"github.com/regcomp/gdpr/cache"
+	"github.com/regcomp/gdpr/caching"
 	"github.com/regcomp/gdpr/logging"
 )
 
@@ -25,7 +25,7 @@ func RequestLogging(requestLogger logging.ILogger) func(http.Handler) http.Handl
 	}
 }
 
-func VerifyAuthRetryIsRunning(requestStore cache.IRequestStore) func(http.Handler) http.Handler {
+func VerifyAuthRetryIsRunning(requestStore caching.IRequestStore) func(http.Handler) http.Handler {
 	return VerifyServiceWorkerIsRunning(
 		SWAuthRetryPath,
 		SWAuthRetryScope,
@@ -36,7 +36,7 @@ func VerifyAuthRetryIsRunning(requestStore cache.IRequestStore) func(http.Handle
 
 func VerifyServiceWorkerIsRunning(
 	swPath, swScope, swHeader string,
-	requestStore cache.IRequestStore,
+	requestStore caching.IRequestStore,
 ) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +127,7 @@ func HasActiveSession(sessionStore auth.ISessionStore, cookieManager *auth.Cooki
 	}
 }
 
-func AddNonceToRequest(nonceStore auth.INonceStore) func(http.Handler) http.Handler {
+func AddNonceToRequest(nonceStore *auth.NonceStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logging.RT.UpdateRequestTrace(r, "AddNonceToRequest")

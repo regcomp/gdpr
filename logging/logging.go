@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// TODO: Fix this abstraction
 type ILogger interface {
 	Log(any) error
 }
@@ -21,7 +22,7 @@ func (rl *RequestLogger) Log(data any) error {
 		// TODO:
 	}
 
-	LogRequest(rl.logger, request)
+	logRequest(rl.logger, request)
 	return nil
 }
 
@@ -38,7 +39,7 @@ func NewRequestLogger(writer io.Writer) *RequestLogger {
 	}
 }
 
-func LogRequest(logger *slog.Logger, r *http.Request) {
+func logRequest(logger *slog.Logger, r *http.Request) {
 	logger.Log(
 		r.Context(),
 		LevelRequest,

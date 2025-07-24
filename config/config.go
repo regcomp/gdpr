@@ -1,21 +1,17 @@
 package config
 
-/*
-The idea for this package is that the .env file should not be
-edited that much because it has sensitive contents. This file contains
-general server configuration.
-*/
-
 const (
-	hostPath        = "HOST_PATH"
-	defaultPort     = "DEFAULT_PORT"
-	sessionDuration = "SESSION_DURATION"
+	ServiceURLKey       = "SERVICE_URL"
+	DefaultPortKey      = "DEFAULT_PORT"
+	SessionDurationKey  = "SESSION_DURATION"
+	ServiceCacheTypeKey = "SERVICE_CACHE_TYPE"
+	SecretStoreTypeKey  = "SECRET_STORE_TYPE"
 )
 
 var attrs = []string{
-	hostPath,
-	defaultPort,
-	sessionDuration,
+	ServiceURLKey,
+	DefaultPortKey,
+	SessionDurationKey,
 }
 
 type IConfigStore interface {
@@ -40,11 +36,11 @@ func (cs *ConfigStore) InitializeStore(getters ...func(string) string) {
 }
 
 func (cs *ConfigStore) GetHostPath() string {
-	return cs.attrs[hostPath]
+	return cs.attrs[ServiceURLKey]
 }
 
 func (cs *ConfigStore) GetSessionDuration() string {
-	return cs.attrs[sessionDuration]
+	return cs.attrs[SessionDurationKey]
 }
 
 type Config struct {

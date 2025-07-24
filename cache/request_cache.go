@@ -1,4 +1,4 @@
-package database
+package cache
 
 import (
 	"fmt"
@@ -20,6 +20,36 @@ type RequestStore struct {
 
 func CreateRequestStore() *RequestStore {
 	return &RequestStore{Store: sync.Map{}}
+}
+
+func (rs *RequestStore) StoreCachedRequest(r *http.Request) (string, error) {
+	requestID := uuid.New().String()
+	cachedValue, err := constructCachedRequest(r)
+	if err != nil {
+		return "", fmt.Errorf("RequestStore::StoreCachedRequest::could not cache request for redirect")
+	}
+
+	for {
+		_, isCollision := rs.Store.LoadOrStore(requestID, cachedValue)
+		if !isCollision {
+			break
+		}
+		requestID = uuid.New().String()
+	}
+
+	return requestID, nil
+}
+
+func (rs *RequestStore) RetrieveCachedRequest(requestID string) (*CachedRequest, error) {
+	cachedValue, exists := rs.Store.LoadAndDelete(requestID)
+	if !exists {
+		return nil, fmt.Errorf("RequestStore::GetCachedRequest::cached request does not exist")
+	}
+	cachedRequest, ok := cachedValue.(CachedRequest)
+	if !ok {
+		return nil, fmt.Errorf("RequestStore::GetCachedRequest::malformed cached request")
+	}
+	return &cachedRequest, nil
 }
 
 // WARN: this struct with its field names are coupled with the script in /static/pages/register_service_worker.templ
@@ -51,34 +81,4 @@ func extractBody(r *http.Request) (string, error) {
 	r.Body.Close()
 
 	return string(body), nil
-}
-
-func (rs *RequestStore) StoreCachedRequest(r *http.Request) (string, error) {
-	requestID := uuid.New().String()
-	cachedValue, err := constructCachedRequest(r)
-	if err != nil {
-		return "", fmt.Errorf("RequestStore::StoreCachedRequest::could not cache request for redirect")
-	}
-
-	for {
-		_, isCollision := rs.Store.LoadOrStore(requestID, cachedValue)
-		if !isCollision {
-			break
-		}
-		requestID = uuid.New().String()
-	}
-
-	return requestID, nil
-}
-
-func (rs *RequestStore) RetrieveCachedRequest(requestID string) (*CachedRequest, error) {
-	cachedValue, exists := rs.Store.LoadAndDelete(requestID)
-	if !exists {
-		return nil, fmt.Errorf("RequestStore::GetCachedRequest::cached request does not exist")
-	}
-	cachedRequest, ok := cachedValue.(CachedRequest)
-	if !ok {
-		return nil, fmt.Errorf("RequestStore::GetCachedRequest::malformed cached request")
-	}
-	return &cachedRequest, nil
 }

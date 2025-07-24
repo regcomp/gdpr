@@ -9,6 +9,8 @@ import (
 
 const shouldTraceRequestsConfigString = "SHOULD_TRACE_REQUESTS"
 
+var RT IRequestTracer
+
 type IRequestTracer interface {
 	NewRequestTrace(*http.Request)
 	UpdateRequestTrace(*http.Request, string) error
@@ -45,11 +47,11 @@ func (rts *RequestTracer) deleteTrace(r *http.Request) error {
 	return nil
 }
 
-func NewTracer(getenv func(string) string) IRequestTracer {
+func NewTracer(getenv func(string) string) {
 	if getenv(shouldTraceRequestsConfigString) == "TRUE" {
-		return createRequestTraces()
+		RT = createRequestTraces()
 	}
-	return &NoOpRequestTracer{}
+	RT = &NoOpRequestTracer{}
 }
 
 func (rts *RequestTracer) NewRequestTrace(r *http.Request) {

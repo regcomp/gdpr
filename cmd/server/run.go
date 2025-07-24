@@ -15,9 +15,11 @@ import (
 
 	"github.com/joho/godotenv"
 	certs "github.com/regcomp/gdpr/auth/local_certs"
+	"github.com/regcomp/gdpr/cache"
 	"github.com/regcomp/gdpr/config"
-	"github.com/regcomp/gdpr/handlers"
 	"github.com/regcomp/gdpr/routers"
+	"github.com/regcomp/gdpr/secrets"
+	servicecontext "github.com/regcomp/gdpr/service_context"
 )
 
 const (
@@ -27,7 +29,6 @@ const (
 
 func run(
 	ctx context.Context,
-	// args []string, // TODO: add later as further configuration
 	getenv func(string) string,
 	inStream io.Reader,
 	outStream io.Writer,
@@ -37,16 +38,27 @@ func run(
 		log.Fatalf("error loading .env: %s", err.Error())
 	}
 
-	// TODO: Load args
+	secretStoreType := getenv(config.SecretStoreTypeKey)
+	secretStoreConfig := secrets.LoadConfig(secretStoreType)
 
-	// TODO: if --config-path=... exists, load that into env last
+	// establish connection to secrets store, type configured in env variable passed to docker container
+	secretStore, err := secrets.CreateSecretStore(secretStoreConfig)
+	if err != nil {
+		return err
+	}
 
-	config := config.LoadConfig(getenv)
+	// establish connection to/instantiate cache
+	// cache needs secret store to get missing information
+	serviceCacheType := getenv(config.ServiceCacheTypeKey)
+	serviceCache, err := cache.CreateServiceCache(secretStore, serviceCacheType)
 
-	stx := handlers.CreateServiceContext(getenv)
-	handlers.LinkServiceContext(stx)
+	// service context needs cache to pull neccessary data from
+	stx, err := servicecontext.CreateServiceContext(serviceCache, getenv)
+	if err != nil {
+		return err
+	}
 
-	router := routers.CreateRouter()
+	router := routers.CreateRouter(stx)
 
 	cert, err := tls.X509KeyPair(certs.ServerCertPEMBlock, certs.ServerKeyPEMBlock)
 	if err != nil {
@@ -57,6 +69,7 @@ func run(
 		Certificates: []tls.Certificate{cert},
 	}
 
+	config := config.LoadConfig(getenv)
 	server := &http.Server{
 		Addr:      ":" + config.Port,
 		Handler:   router,

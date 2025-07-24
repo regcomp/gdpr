@@ -5,6 +5,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/regcomp/gdpr/handlers"
+	"github.com/regcomp/gdpr/middleware"
+	servicecontext "github.com/regcomp/gdpr/service_context"
 )
 
 type SubRouter struct {
@@ -12,11 +14,11 @@ type SubRouter struct {
 	Router *chi.Mux
 }
 
-func CreateRouter() *chi.Mux {
+func CreateRouter(stx *servicecontext.ServiceContext) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(
-		handlers.STX.TraceRequests,
+		middleware.TraceRequests,
 	)
 
 	router.Get(handlers.HealthzPath, healthz)
@@ -26,7 +28,7 @@ func CreateRouter() *chi.Mux {
 
 	mountRouters(router,
 		CreateStaticRouter(),
-		CreateServiceRouter(),
+		CreateServiceRouter(stx),
 	)
 
 	return router
@@ -45,26 +47,26 @@ func CreateStaticRouter() SubRouter {
 	return SubRouter{"/static", static}
 }
 
-func CreateServiceRouter() SubRouter {
+func CreateServiceRouter(stx *servicecontext.ServiceContext) SubRouter {
 	service := chi.NewRouter()
 
 	service.Use(
-		// handlers.STX.Logging,
-		handlers.STX.SetHSTSPolicy,
+		// middleware.RequestLogging(stx.RequestLogger),
+		middleware.SetHSTSPolicy,
 		// TODO: Content policies/CORS/ect... go here
 
-		handlers.STX.VerifyAuthRetryIsRunning(),
+		middleware.VerifyAuthRetryIsRunning(stx.RequestStore),
 	)
 
 	mountRouters(service,
-		CreateAuthRouter(),
-		CreateClientRouter(),
-		CreateAPIRouter(),
+		CreateAuthRouter(stx),
+		CreateClientRouter(stx),
+		CreateAPIRouter(stx),
 	)
 	return SubRouter{"/", service}
 }
 
-func CreateAuthRouter() SubRouter {
+func CreateAuthRouter(stx *servicecontext.ServiceContext) SubRouter {
 	auth := chi.NewRouter()
 
 	auth.Get(handlers.LoginPath, handlers.STX.GetLogin)
@@ -79,7 +81,7 @@ func CreateAuthRouter() SubRouter {
 	return SubRouter{Path: handlers.AuthRouterPathPrefix, Router: auth}
 }
 
-func CreateClientRouter() SubRouter {
+func CreateClientRouter(stx *servicecontext.ServiceContext) SubRouter {
 	client := chi.NewRouter()
 
 	client.Use(
@@ -93,7 +95,7 @@ func CreateClientRouter() SubRouter {
 	return SubRouter{Path: handlers.ClientRouterPathPrefix, Router: client}
 }
 
-func CreateAPIRouter() SubRouter {
+func CreateAPIRouter(stx *servicecontext.ServiceContext) SubRouter {
 	api := chi.NewRouter()
 
 	api.Use(

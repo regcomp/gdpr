@@ -1,3 +1,5 @@
+//go:generate go run ../../constants/generators/shared.go
+
 package main
 
 import (

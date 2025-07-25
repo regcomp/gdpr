@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
 	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/caching"
+	"github.com/regcomp/gdpr/constants"
 	"github.com/regcomp/gdpr/logging"
 )
 
@@ -26,15 +26,15 @@ func RequestLogging(requestLogger logging.ILogger) func(http.Handler) http.Handl
 }
 
 func VerifyAuthRetryIsRunning(requestStore caching.IRequestStore) func(http.Handler) http.Handler {
-	return VerifyServiceWorkerIsRunning(
-		SWAuthRetryPath,
-		SWAuthRetryScope,
-		"SW-Auth-Retry-Running",
+	return verifyServiceWorkerIsRunning(
+		constants.AuthRetryWorkerPath,
+		constants.AuthRetryWorkerScope,
+		constants.HeaderAuthRetryWorkerRunning,
 		requestStore,
 	)
 }
 
-func VerifyServiceWorkerIsRunning(
+func verifyServiceWorkerIsRunning(
 	swPath, swScope, swHeader string,
 	requestStore caching.IRequestStore,
 ) func(http.Handler) http.Handler {
@@ -47,37 +47,27 @@ func VerifyServiceWorkerIsRunning(
 			}
 			if r.Header.Get(swHeader) != "true" {
 				// cache request
-				requestID, err := requestStore.StoreCachedRequest(r)
+				requestID, err := requestStore.StoreRequest(r)
 				if err != nil {
 					// TODO:
 				}
 
-				// construct callback url
-				bootstrapURL := fmt.Sprintf("%s?redirect=%s&requestID=%s",
-					RegisterServiceWorkerPath,
-					url.QueryEscape(r.URL.String()),
-					requestID,
+				// construct registration url
+				registrationURL := fmt.Sprintf("%s?%s=%s&%s=%s&%s=%s",
+					constants.EndpointRegisterServiceWorker,
+					constants.QueryParamRequestID, requestID,
+					constants.QueryParamSWPath, swPath,
+					constants.QueryParamSWScope, swScope,
 				)
 
 				// redirect to the url
-				http.Redirect(w, r, bootstrapURL, http.StatusTemporaryRedirect)
+				http.Redirect(w, r, registrationURL, http.StatusTemporaryRedirect)
 				return
 			}
 			next.ServeHTTP(w, r)
 		})
 	}
 }
-
-// TODO: Figure out where this should go
-
-type ContextKey string
-
-const (
-	claimsContextKey   ContextKey = "claims"
-	sessionIDContexKey ContextKey = "session-id"
-)
-
-// -----
 
 func IsAuthenticated(authProvider auth.IAuthProvider, cookieManager *auth.CookieManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -91,14 +81,14 @@ func IsAuthenticated(authProvider auth.IAuthProvider, cookieManager *auth.Cookie
 
 			claims, err := authProvider.ValidateAccessToken(accessToken)
 			if err != nil {
-				w.Header().Add("Refresh-Access-Token", "true")
+				w.Header().Add(constants.HeaderRenewAccessToken, "true")
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
 
 			// TODO: Add the claims to the request context
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, claimsContextKey, claims)
+			ctx = context.WithValue(ctx, constants.ContextKeyClaims, claims)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -121,7 +111,7 @@ func HasActiveSession(sessionStore auth.ISessionStore, cookieManager *auth.Cooki
 				// no registered session. old cookie?
 				log.Panic("sessionID not found")
 			}
-			ctx := context.WithValue(r.Context(), sessionIDContexKey, sessionID)
+			ctx := context.WithValue(r.Context(), constants.ContextKetSessionID, sessionID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -133,17 +123,17 @@ func AddNonceToRequest(nonceStore *auth.NonceStore) func(http.Handler) http.Hand
 			logging.RT.UpdateRequestTrace(r, "AddNonceToRequest")
 			nonce := nonceStore.Generate()
 			// adding to response header
-			w.Header().Set("XSRF-Nonce", nonce)
+			w.Header().Set(constants.HeaderNonceToken, nonce)
 			// adding to context so it can be passed to templates
-			r = r.WithContext(context.WithValue(r.Context(), "nonce", nonce))
+			r = r.WithContext(context.WithValue(r.Context(), constants.ContextKeyNonceToken, nonce))
 
 			next.ServeHTTP(w, r)
 		})
 	}
 }
 
-func ScopeAuthRetryAccess(requestTracer logging.IRequestTracer) func(http.Handler) http.Handler {
-	return ScopeServiceWorkerAccess(SWAuthRetryPath, SWAuthRetryScope)
+func ScopeAuthRetryAccess() func(http.Handler) http.Handler {
+	return ScopeServiceWorkerAccess(constants.AuthRetryWorkerPath, constants.AuthRetryWorkerScope)
 }
 
 func ScopeServiceWorkerAccess(swPath, accessPath string) func(http.Handler) http.Handler {
@@ -151,7 +141,7 @@ func ScopeServiceWorkerAccess(swPath, accessPath string) func(http.Handler) http
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logging.RT.UpdateRequestTrace(r, "ScopeServiceWorkerAccess")
 			if r.URL.Path == swPath {
-				w.Header().Add("Service-Worker-Allowed", accessPath)
+				w.Header().Add(constants.HeaderServiceWorkerAllowed, accessPath)
 			}
 			next.ServeHTTP(w, r)
 		})

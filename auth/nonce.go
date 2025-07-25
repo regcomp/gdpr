@@ -6,6 +6,7 @@ import (
 
 	sc "github.com/gorilla/securecookie"
 	"github.com/regcomp/gdpr/caching"
+	"github.com/regcomp/gdpr/constants"
 )
 
 const (
@@ -18,9 +19,7 @@ type NonceStore struct {
 }
 
 func CreateNonceStore(serviceCache caching.IServiceCache) *NonceStore {
-	store := &NonceStore{
-		cache: serviceCache,
-	}
+	store := &NonceStore{cache: serviceCache}
 
 	return store
 }
@@ -36,10 +35,12 @@ func (ns *NonceStore) Generate() string {
 }
 
 func (ns *NonceStore) Validate(r *http.Request) bool {
-	nonce := r.FormValue("nonce")
+	nonce := r.FormValue(constants.FormValueNonce)
 	if nonce == "" {
-		nonce = r.Header.Get("CSRF-Nonce") // ajax
+		nonce = r.Header.Get(constants.HeaderNonceToken) // ajax
 	}
+
+	// TODO: ACTUALLY VALIDATE
 
 	return true
 }

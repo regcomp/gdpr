@@ -7,19 +7,13 @@ import (
 
 	sc "github.com/gorilla/securecookie"
 	"github.com/regcomp/gdpr/caching"
-)
-
-// Cookies
-const (
-	AccessCookieName  = "access-token"
-	RefreshCookieName = "refresh-token"
-	SessionCookieName = "session-id"
+	"github.com/regcomp/gdpr/constants"
 )
 
 var cookieNames = []string{
-	AccessCookieName,
-	RefreshCookieName,
-	SessionCookieName,
+	constants.AccessCookieName,
+	constants.RefreshCookieName,
+	constants.SessionCookieName,
 }
 
 type cookieOption func(*http.Cookie)
@@ -67,7 +61,7 @@ func CreateCookieManager(serviceCache caching.IServiceCache) *CookieManager {
 
 func (cm *CookieManager) CreateAccessCookie(accessToken string) (*http.Cookie, error) {
 	return createCookie(
-		AccessCookieName,
+		constants.AccessCookieName,
 		accessToken,
 		cm.keys,
 		// TODO: Configure
@@ -75,28 +69,28 @@ func (cm *CookieManager) CreateAccessCookie(accessToken string) (*http.Cookie, e
 }
 
 func (cm *CookieManager) GetAccessToken(r *http.Request) (string, error) {
-	return getTokenFromCookie(r, AccessCookieName, cm.keys)
+	return getTokenFromCookie(r, constants.AccessCookieName, cm.keys)
 }
 
 func (cm *CookieManager) CreateRefreshCookie(refreshToken string) (*http.Cookie, error) {
 	return createCookie(
-		RefreshCookieName,
+		constants.RefreshCookieName,
 		refreshToken,
 		cm.keys,
 		// TODO: Configure
 		func(c *http.Cookie) {
-			c.Path = "/auth/refresh/"
+			c.Path = constants.RouterAuthPathPrefix + constants.EndpointRenewToken
 		},
 	)
 }
 
 func (cm *CookieManager) GetRefreshToken(r *http.Request) (string, error) {
-	return getTokenFromCookie(r, RefreshCookieName, cm.keys)
+	return getTokenFromCookie(r, constants.RefreshCookieName, cm.keys)
 }
 
 func (cm *CookieManager) CreateSessionCookie(sessionID string) (*http.Cookie, error) {
 	return createCookie(
-		SessionCookieName,
+		constants.SessionCookieName,
 		sessionID,
 		cm.keys,
 		// TODO: Configure
@@ -104,7 +98,7 @@ func (cm *CookieManager) CreateSessionCookie(sessionID string) (*http.Cookie, er
 }
 
 func (cm *CookieManager) GetSessionID(r *http.Request) (string, error) {
-	return getTokenFromCookie(r, SessionCookieName, cm.keys)
+	return getTokenFromCookie(r, constants.SessionCookieName, cm.keys)
 }
 
 func (cm *CookieManager) DestroyAllCookies(w http.ResponseWriter, r *http.Request) {

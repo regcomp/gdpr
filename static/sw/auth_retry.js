@@ -1,3 +1,5 @@
+importScripts("/static/js/shared.js")
+
 self.addEventListener('activate', event => {
   event.waitUntil(clients.claim());
 });
@@ -11,7 +13,7 @@ async function handleFetchWithAuth(request) {
     const response = await fetch(addHeaderAndClone(request));
 
     if (response.status === 401) {
-      if (response.headers.get('Refresh-Access-Token')) {
+      if (response.headers.get(HEADERS.SERVICE_WORKER_ALLOWED)) {
         const isRefreshSuccess = await refreshToken();
 
         if (isRefreshSuccess) {
@@ -35,7 +37,7 @@ async function refreshToken() {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        'SW-Auth-Retry-Running': 'true'
+        [HEADERS.AUTH_RETRY_WORKER_RUNNING]: 'true'
       }
     });
 

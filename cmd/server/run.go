@@ -15,16 +15,12 @@ import (
 
 	"github.com/joho/godotenv"
 	certs "github.com/regcomp/gdpr/auth/local_certs"
-	"github.com/regcomp/gdpr/cache"
+	"github.com/regcomp/gdpr/caching"
 	"github.com/regcomp/gdpr/config"
+	"github.com/regcomp/gdpr/constants"
 	"github.com/regcomp/gdpr/routers"
 	"github.com/regcomp/gdpr/secrets"
 	servicecontext "github.com/regcomp/gdpr/service_context"
-)
-
-const (
-	envPath    = ".env"
-	configPath = "config/default.config"
 )
 
 func run(
@@ -33,13 +29,13 @@ func run(
 	inStream io.Reader,
 	outStream io.Writer,
 ) error {
-	// Loads files in parameter order
-	if err := godotenv.Load(configPath, envPath); err != nil {
+	if err := godotenv.Load(constants.LocalConfigPath); err != nil {
 		log.Fatalf("error loading .env: %s", err.Error())
 	}
 
-	secretStoreType := getenv(config.SecretStoreTypeKey)
-	secretStoreConfig := secrets.LoadConfig(secretStoreType)
+	// pull in and parse relevant env variables
+	secretStoreType := getenv(constants.ConfigSecretStoreTypeKey)
+	secretStoreConfig := secrets.LoadSecretStoreConfig(secretStoreType)
 
 	// establish connection to secrets store, type configured in env variable passed to docker container
 	secretStore, err := secrets.CreateSecretStore(secretStoreConfig)
@@ -49,11 +45,17 @@ func run(
 
 	// establish connection to/instantiate cache
 	// cache needs secret store to get missing information
-	serviceCacheType := getenv(config.ServiceCacheTypeKey)
-	serviceCache, err := cache.CreateServiceCache(secretStore, serviceCacheType)
+	serviceCacheType := getenv(constants.ConfigServiceCacheTypeKey)
+	serviceCache, err := caching.CreateServiceCache(secretStore, serviceCacheType)
+	if err != nil {
+		// TODO:
+	}
+
+	configStore := config.NewLocalConfigStore()
+	configStore.InitializeStore(getenv)
 
 	// service context needs cache to pull neccessary data from
-	stx, err := servicecontext.CreateServiceContext(serviceCache, getenv)
+	stx, err := servicecontext.CreateServiceContext(serviceCache, configStore)
 	if err != nil {
 		return err
 	}
@@ -69,12 +71,13 @@ func run(
 		Certificates: []tls.Certificate{cert},
 	}
 
-	config := config.LoadConfig(getenv)
 	server := &http.Server{
-		Addr:      ":" + config.Port,
+		Addr:      ":" + stx.ConfigStore.GetDefaultPort(),
 		Handler:   router,
 		TLSConfig: tlsConfig,
 	}
+
+	constants.InitializeSharedConstants()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

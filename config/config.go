@@ -1,33 +1,33 @@
 package config
 
-const (
-	ServiceURLKey       = "SERVICE_URL"
-	DefaultPortKey      = "DEFAULT_PORT"
-	SessionDurationKey  = "SESSION_DURATION"
-	ServiceCacheTypeKey = "SERVICE_CACHE_TYPE"
-	SecretStoreTypeKey  = "SECRET_STORE_TYPE"
+import (
+	"github.com/regcomp/gdpr/constants"
 )
 
 var attrs = []string{
-	ServiceURLKey,
-	DefaultPortKey,
-	SessionDurationKey,
+	constants.ConfigServiceURLKey,
+	constants.ConfigDefaultPortKey,
+	constants.ConfigSessionDurationKey,
 }
 
 type IConfigStore interface {
-	GetHostPath() string
+	GetServiceURL() string
+	GetDefaultPort() string
 	GetSessionDuration() string
 }
 
-type ConfigStore struct {
+type LocalConfigStore struct {
+	// mu    sync.RWMutex // May need in the future
 	attrs map[string]string
 }
 
-func NewConfigStore() *ConfigStore {
-	return &ConfigStore{}
+func NewLocalConfigStore() *LocalConfigStore {
+	return &LocalConfigStore{
+		attrs: make(map[string]string),
+	}
 }
 
-func (cs *ConfigStore) InitializeStore(getters ...func(string) string) {
+func (cs *LocalConfigStore) InitializeStore(getters ...func(string) string) {
 	for _, getter := range getters {
 		for _, attr := range attrs {
 			cs.attrs[attr] = getter(attr)
@@ -35,27 +35,14 @@ func (cs *ConfigStore) InitializeStore(getters ...func(string) string) {
 	}
 }
 
-func (cs *ConfigStore) GetHostPath() string {
-	return cs.attrs[ServiceURLKey]
+func (cs *LocalConfigStore) GetServiceURL() string {
+	return cs.attrs[constants.ConfigServiceURLKey]
 }
 
-func (cs *ConfigStore) GetSessionDuration() string {
-	return cs.attrs[SessionDurationKey]
+func (cs *LocalConfigStore) GetDefaultPort() string {
+	return cs.attrs[constants.ConfigDefaultPortKey]
 }
 
-type Config struct {
-	Port    string // 16 bit uint
-	TLSKey  string
-	TLSCert string
-}
-
-func LoadConfig(getenv func(string) string) *Config {
-	config := &Config{}
-
-	config.Port = getenv("CONFIG_PORT")
-
-	config.TLSKey = "/auth/local_certs/server.key"
-	config.TLSCert = "/auth/local_certs/server.crt"
-
-	return config
+func (cs *LocalConfigStore) GetSessionDuration() string {
+	return cs.attrs[constants.ConfigSessionDurationKey]
 }

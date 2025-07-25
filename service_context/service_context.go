@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/regcomp/gdpr/auth"
-	"github.com/regcomp/gdpr/cache"
+	"github.com/regcomp/gdpr/caching"
 	"github.com/regcomp/gdpr/config"
 	"github.com/regcomp/gdpr/database"
 	"github.com/regcomp/gdpr/logging"
@@ -21,20 +21,20 @@ type ServiceContext struct {
 	ConfigStore config.IConfigStore
 
 	DatabaseStore database.IDatabaseStore
-	RequestStore  cache.IRequestStore
+	RequestStore  caching.IRequestStore
 
 	RequestLogger logging.ILogger
 }
 
-func CreateServiceContext(serviceCache cache.IServiceCache, getConfig func(string) string) (*ServiceContext, error) {
+func CreateServiceContext(serviceCache caching.IServiceCache, configStore config.IConfigStore) (*ServiceContext, error) {
 	// other context setup goes here, like getting certs/keys
-	authProvider, err := auth.GetProvider(getConfig)
+	authProvider, err := auth.GetProvider(configStore.GetAuthProvider())
 	if err != nil {
 		return nil, err
 	}
 
 	requestlogger := logging.NewRequestLogger(os.Stdout)
-	logging.NewTracer(getConfig)
+	logging.NewTracer(configStore.GetTracerLevel())
 
 	databaseStore, err := database.CreateDatabaseStore(getConfig)
 	if err != nil {
@@ -44,11 +44,9 @@ func CreateServiceContext(serviceCache cache.IServiceCache, getConfig func(strin
 	}
 
 	cookieManager := auth.CreateCookieManager(serviceCache)
-
-	sessionStore := auth.CreateSessionStore()
-	nonceStore := auth.CreateNonceStore()
-	configStore := config.NewConfigStore()
-	requestStore := cache.CreateRequestStore()
+	sessionStore := auth.CreateSessionStore(serviceCache)
+	nonceStore := auth.CreateNonceStore(serviceCache)
+	requestStore := caching.CreateRequestStore(serviceCache)
 
 	return &ServiceContext{
 		AuthProvider:  authProvider,

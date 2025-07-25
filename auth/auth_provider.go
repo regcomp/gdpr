@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/regcomp/gdpr/constants"
 )
-
-const providerConfigString = "AUTH_PROVIDER"
 
 type ProviderType int
 
@@ -31,7 +30,7 @@ type Credentials struct {
 
 type IAuthProvider interface {
 	GetProviderType() ProviderType
-	AuthenticateUser(http.ResponseWriter, *http.Request, url.URL) // NOTE: This may require more fields
+	AuthenticateUser(http.ResponseWriter, *http.Request, *url.URL) // NOTE: This may require more fields
 	ValidateAccessToken(string) (*CustomClaims, error)
 
 	// NOTE: This likely doesnt need the request as information can be passed from
@@ -40,7 +39,7 @@ type IAuthProvider interface {
 }
 
 func GetProvider(getenv func(string) string) (IAuthProvider, error) {
-	provider := getenv(providerConfigString)
+	provider := getenv(constants.ConfigAuthProvierKey)
 	switch provider {
 	case "MOCK":
 		return createMockAuthProvider(), nil
@@ -105,7 +104,7 @@ func (mp *MockProvider) GetProviderType() ProviderType {
 	return MOCK
 }
 
-func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request, callback url.URL) {
+func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request, callback *url.URL) {
 	// NOTE: This assumes that there has been valid authentication and issues credentials
 
 	redirectURL, err := url.Parse(callback.String())

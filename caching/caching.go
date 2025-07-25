@@ -34,11 +34,18 @@ type IServiceCache interface {
 	// Cookie Hashes
 	CookieHashesGet() []byte
 	CookieHashesSet([]byte)
+
+	// Requests
+	RequestAdd(string, []byte) error
+	RequestRetrieve(string) ([]byte, error)
+
+	// Database
+	DatabaseGetConfig() any
 }
 
 func CreateServiceCache(secretStore secrets.ISecretStore, cacheType string) (IServiceCache, error) {
 	switch cacheType {
 	default:
-		return createInMemoryCache(secretStore), nil
+		return createLocalCache(secretStore), nil
 	}
 }

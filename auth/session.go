@@ -14,7 +14,7 @@ type SessionData struct {
 type ISessionStore interface {
 	CreateSession() string
 	GetSession(string) (*SessionData, error)
-	UpdateSession(SessionData) error
+	UpdateSession(*SessionData) error
 	DeleteSession(string)
 }
 
@@ -23,9 +23,7 @@ type SessionStore struct {
 }
 
 func CreateSessionStore(serviceCache caching.IServiceCache) *SessionStore {
-	return &SessionStore{
-		cache: serviceCache,
-	}
+	return &SessionStore{cache: serviceCache}
 }
 
 func (ss *SessionStore) CreateSession() string {

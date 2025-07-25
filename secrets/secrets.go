@@ -47,7 +47,7 @@ type ISecretStoreConfig interface {
 	StoreType() StoreType
 }
 
-func LoadConfig(secretStoreType string) ISecretStoreConfig {
+func LoadSecretStoreConfig(secretStoreType string) ISecretStoreConfig {
 	// This function should grab all relevant information for whatever provider
 	// specified in the secret store type from the environment. Data is passed
 	// through env variables at runtime with docker. There shouldn't be any sensitive

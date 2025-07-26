@@ -8,11 +8,9 @@ const SHARED = {
   },
   "PATHS": {
     "AUTH_RENEW": "/auth/renewtoken"
+  },
+  "VALUES": {
+    "TRUE": "true"
   }
 }
 ;
-
-// Export for modules if needed
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = HEADERS;
-}

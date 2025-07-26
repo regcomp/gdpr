@@ -13,7 +13,7 @@ async function handleFetchWithAuth(request) {
     const response = await fetch(addHeaderAndClone(request));
 
     if (response.status === 401) {
-      if (response.headers.get(HEADERS.SERVICE_WORKER_ALLOWED)) {
+      if (response.headers.get(SHARED.HEADERS.RENEW_ACCESS_TOKEN)) {
         const isRefreshSuccess = await refreshToken();
 
         if (isRefreshSuccess) {
@@ -32,12 +32,12 @@ async function handleFetchWithAuth(request) {
 
 async function refreshToken() {
   try {
-    const refreshResponse = await fetch('/auth/refresh', {
+    const refreshResponse = await fetch(SHARED.PATHS.AUTH_RENEW, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        [HEADERS.AUTH_RETRY_WORKER_RUNNING]: 'true'
+        [SHARED.HEADERS.AUTH_RETRY_WORKER_RUNNING]: SHARED.VALUES.TRUE,
       }
     });
 
@@ -50,7 +50,7 @@ async function refreshToken() {
 
 function addHeaderAndClone(request) {
   const headers = new Headers(request.headers);
-  headers.set('SW-Auth-Retry-Running', 'true')
+  headers.set(SHARED.HEADERS.AUTH_RETRY_WORKER_RUNNING, SHARED.VALUES.TRUE)
   return new Request(request, {
     headers: headers,
     credentials: 'include',

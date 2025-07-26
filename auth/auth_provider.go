@@ -8,17 +8,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/regcomp/gdpr/constants"
+	"github.com/regcomp/gdpr/config"
+	"github.com/regcomp/gdpr/secrets"
 )
 
-type ProviderType int
-
-const (
-	AUTH0 ProviderType = iota
-	OKTA
-	//
-	MOCK
-)
+const MockProviderType = "MOCK"
 
 // NOTE: The shape of this may change. This is the struct that Auth responses will be converted into for the
 // service to manage auth
@@ -29,7 +23,7 @@ type Credentials struct {
 }
 
 type IAuthProvider interface {
-	GetProviderType() ProviderType
+	GetProviderType() string
 	AuthenticateUser(http.ResponseWriter, *http.Request, *url.URL) // NOTE: This may require more fields
 	ValidateAccessToken(string) (*CustomClaims, error)
 
@@ -38,13 +32,12 @@ type IAuthProvider interface {
 	GetNewAccessToken(string, *http.Request) (string, error)
 }
 
-func GetProvider(getenv func(string) string) (IAuthProvider, error) {
-	provider := getenv(constants.ConfigAuthProvierKey)
-	switch provider {
-	case "MOCK":
+func CreateAuthProvider(config *config.AuthProviderConfig, secrets *secrets.AuthProviderSecrets) (IAuthProvider, error) {
+	switch config.ProviderType {
+	case MockProviderType:
 		return createMockAuthProvider(), nil
 	default:
-		return nil, fmt.Errorf("unknown auth provider=%s", provider)
+		return nil, fmt.Errorf("unknown auth provider type=%s", config.ProviderType)
 	}
 }
 
@@ -100,8 +93,8 @@ func getUserID() string {
 	return "user"
 }
 
-func (mp *MockProvider) GetProviderType() ProviderType {
-	return MOCK
+func (mp *MockProvider) GetProviderType() string {
+	return MockProviderType
 }
 
 func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request, callback *url.URL) {

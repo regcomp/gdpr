@@ -27,8 +27,6 @@ func CreateRouter(stx *servicecontext.ServiceContext) *chi.Mux {
 		constants.EndpointRegisterServiceWorker,
 		handlers.RegisterServiceWorker(stx.RequestStore, stx.ConfigStore),
 	)
-	router.Get(constants.EndpointTest1, handlers.TestEndpoint1)
-	router.Get(constants.EndpointTest2, handlers.TestEndpoint2)
 
 	mountRouters(router,
 		CreateStaticRouter(),
@@ -73,6 +71,10 @@ func CreateServiceRouter(stx *servicecontext.ServiceContext) SubRouter {
 func CreateAuthRouter(stx *servicecontext.ServiceContext) SubRouter {
 	auth := chi.NewRouter()
 
+	auth.Use(
+		middleware.SkipIfAuthenticated(stx.AuthProvider, stx.CookieManager, stx.ConfigStore),
+	)
+
 	auth.Get(constants.EndpointLogin, handlers.LoginPage)
 	auth.Post(constants.EndpointLogin, handlers.SubmitLoginCredentials(stx.AuthProvider, stx.ConfigStore))
 
@@ -82,7 +84,6 @@ func CreateAuthRouter(stx *servicecontext.ServiceContext) SubRouter {
 	auth.Post(constants.EndpointLoginCallback, loginCallback)
 
 	auth.Post(constants.EndpointRenewToken, handlers.RenewAccessToken(stx.AuthProvider, stx.CookieManager))
-	auth.Post(constants.EndpointLogout, handlers.Logout(stx.CookieManager))
 
 	return SubRouter{Path: constants.RouterAuthPathPrefix, Router: auth}
 }
@@ -91,12 +92,17 @@ func CreateClientRouter(stx *servicecontext.ServiceContext) SubRouter {
 	client := chi.NewRouter()
 
 	client.Use(
-		middleware.IsAuthenticated(stx.AuthProvider, stx.CookieManager),
+		middleware.RequiresAuthentication(stx.AuthProvider, stx.CookieManager),
 		middleware.HasActiveSession(stx.SessionStore, stx.CookieManager),
 		middleware.AddNonceToRequest(stx.NonceStore),
 	)
 
 	client.Get(constants.EndpointDashboard, handlers.DashboardPage(stx.CookieManager))
+	client.Get(constants.EndpointTest1, handlers.TestEndpoint1)
+	client.Get(constants.EndpointTest2, handlers.TestEndpoint2)
+
+	// NOTE: Not sure were this should go
+	client.Post(constants.EndpointLogout, handlers.Logout(stx.CookieManager))
 
 	return SubRouter{Path: constants.RouterClientPathPrefix, Router: client}
 }
@@ -105,7 +111,7 @@ func CreateAPIRouter(stx *servicecontext.ServiceContext) SubRouter {
 	api := chi.NewRouter()
 
 	api.Use(
-		middleware.IsAuthenticated(stx.AuthProvider, stx.CookieManager),
+		middleware.RequiresAuthentication(stx.AuthProvider, stx.CookieManager),
 		middleware.HasActiveSession(stx.SessionStore, stx.CookieManager),
 	)
 

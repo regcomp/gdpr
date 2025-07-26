@@ -19,14 +19,12 @@ func RegisterServiceWorker(requestStore caching.IRequestStore, configStore confi
 		}
 		cachedRequest, err := requestStore.RetrieveRequest(requestID)
 		if err != nil {
-			cachedRequest = &caching.CachedRequest{
-				URL:    configStore.GetServiceURL(),
-				Method: "GET",
-			}
+			http.Error(w, "could not find cached request", http.StatusInternalServerError)
+			return
 		}
 
-		swPath := r.URL.Query().Get(constants.QueryParamSWPath)
-		swScope := r.URL.Query().Get(constants.QueryParamSWScope)
+		swPath := r.URL.Query().Get(constants.QueryParamWorkerPath)
+		swScope := r.URL.Query().Get(constants.QueryParamWorkerScope)
 		if swPath == "" || swScope == "" {
 			http.Error(w, "missing service worker information", http.StatusBadRequest)
 		}

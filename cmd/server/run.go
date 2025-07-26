@@ -18,6 +18,7 @@ import (
 	"github.com/regcomp/gdpr/caching"
 	"github.com/regcomp/gdpr/config"
 	"github.com/regcomp/gdpr/constants"
+	"github.com/regcomp/gdpr/logging"
 	"github.com/regcomp/gdpr/routers"
 	"github.com/regcomp/gdpr/secrets"
 	servicecontext "github.com/regcomp/gdpr/service_context"
@@ -26,39 +27,39 @@ import (
 func run(
 	ctx context.Context,
 	getenv func(string) string,
-	inStream io.Reader,
 	outStream io.Writer,
 ) error {
 	if err := godotenv.Load(constants.LocalConfigPath); err != nil {
 		log.Fatalf("error loading .env: %s", err.Error())
 	}
 
-	// pull in and parse relevant env variables
-	secretStoreType := getenv(constants.ConfigSecretStoreTypeKey)
-	secretStoreConfig := secrets.LoadSecretStoreConfig(secretStoreType)
+	// pull in and parse relevant env variables for external secrets store
+	// should be passed in by docker env variables at runtime
+	configStore := config.NewLocalConfigStore(getenv)
 
-	// establish connection to secrets store, type configured in env variable passed to docker container
-	secretStore, err := secrets.CreateSecretStore(secretStoreConfig)
+	// establish connection to secrets store
+	secretStore, err := secrets.CreateSecretStore(configStore.GetSecretStoreConfig())
 	if err != nil {
 		return err
 	}
 
 	// establish connection to/instantiate cache
 	// cache needs secret store to get missing information
-	serviceCacheType := getenv(constants.ConfigServiceCacheTypeKey)
-	serviceCache, err := caching.CreateServiceCache(secretStore, serviceCacheType)
+	serviceCache, err := caching.CreateServiceCache(
+		configStore.GetServiceCacheConfig(),
+		secretStore.GetServiceCacheSecrets(),
+	)
 	if err != nil {
 		// TODO:
 	}
 
-	configStore := config.NewLocalConfigStore()
-	configStore.InitializeStore(getenv)
-
 	// service context needs cache to pull neccessary data from
-	stx, err := servicecontext.CreateServiceContext(serviceCache, configStore)
+	stx, err := servicecontext.CreateServiceContext(serviceCache, configStore, secretStore)
 	if err != nil {
 		return err
 	}
+
+	logging.NewRequestTracer(configStore.GetTracerConfig())
 
 	router := routers.CreateRouter(stx)
 
@@ -76,8 +77,6 @@ func run(
 		Handler:   router,
 		TLSConfig: tlsConfig,
 	}
-
-	constants.InitializeSharedConstants()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

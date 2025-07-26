@@ -44,7 +44,7 @@ func (rs *RequestStore) RetrieveRequest(requestID string) (*CachedRequest, error
 		return nil, err
 	}
 
-	var cachedRequest *CachedRequest
+	cachedRequest := &CachedRequest{}
 	err = json.Unmarshal(cachedBytes, cachedRequest)
 	if err != nil {
 		return nil, err

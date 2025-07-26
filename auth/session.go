@@ -49,7 +49,7 @@ func (ss *SessionStore) GetSession(sessionID string) (*SessionData, error) {
 		return nil, err
 	}
 
-	var sessionData *SessionData
+	sessionData := &SessionData{}
 	err = json.Unmarshal(sessionBytes, sessionData)
 	if err != nil {
 		return nil, err

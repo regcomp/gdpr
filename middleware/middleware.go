@@ -1,14 +1,11 @@
 package middleware
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
-	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/caching"
 	"github.com/regcomp/gdpr/constants"
 	"github.com/regcomp/gdpr/logging"
@@ -27,37 +24,34 @@ func RequestLogging(requestLogger logging.ILogger) func(http.Handler) http.Handl
 
 func VerifyAuthRetryIsRunning(requestStore caching.IRequestStore) func(http.Handler) http.Handler {
 	return verifyServiceWorkerIsRunning(
-		constants.AuthRetryWorkerPath,
-		constants.AuthRetryWorkerScope,
+		constants.WorkerAuthRetryPath,
+		constants.WorkerAuthRetryScope,
 		constants.HeaderAuthRetryWorkerRunning,
 		requestStore,
 	)
 }
 
 func verifyServiceWorkerIsRunning(
-	swPath, swScope, swHeader string,
+	workerPath, workerScope, workerHeader string,
 	requestStore caching.IRequestStore,
 ) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logging.RT.UpdateRequestTrace(r, "VerifyServiceWorkerIsRunning")
-			if strings.HasPrefix(r.URL.Path, "/static/sw") {
-				next.ServeHTTP(w, r)
-				return
-			}
-			if r.Header.Get(swHeader) != "true" {
-				// cache request
+
+			if r.Header.Get(workerHeader) != constants.ValueTrueString {
+				log.Printf("HEADER=%s, VALUE=%s\n", workerHeader, r.Header.Get(workerHeader))
 				requestID, err := requestStore.StoreRequest(r)
 				if err != nil {
-					// TODO:
+					log.Panicf("could not cache request, err=%s", err.Error())
 				}
 
 				// construct registration url
 				registrationURL := fmt.Sprintf("%s?%s=%s&%s=%s&%s=%s",
 					constants.EndpointRegisterServiceWorker,
 					constants.QueryParamRequestID, requestID,
-					constants.QueryParamSWPath, swPath,
-					constants.QueryParamSWScope, swScope,
+					constants.QueryParamWorkerPath, workerPath,
+					constants.QueryParamWorkerScope, workerScope,
 				)
 
 				// redirect to the url
@@ -69,71 +63,8 @@ func verifyServiceWorkerIsRunning(
 	}
 }
 
-func IsAuthenticated(authProvider auth.IAuthProvider, cookieManager *auth.CookieManager) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			logging.RT.UpdateRequestTrace(r, "IsAuthenticated")
-			accessToken, err := cookieManager.GetAccessToken(r)
-			if err != nil {
-				http.Error(w, "requires authentication", http.StatusUnauthorized)
-				return
-			}
-
-			claims, err := authProvider.ValidateAccessToken(accessToken)
-			if err != nil {
-				w.Header().Add(constants.HeaderRenewAccessToken, "true")
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			// TODO: Add the claims to the request context
-			ctx := r.Context()
-			ctx = context.WithValue(ctx, constants.ContextKeyClaims, claims)
-
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
-
-func HasActiveSession(sessionStore auth.ISessionStore, cookieManager *auth.CookieManager) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			logging.RT.UpdateRequestTrace(r, "HasActiveSession")
-			sessionID, err := cookieManager.GetSessionID(r)
-			if err != nil {
-				// TODO:
-				// No session cookie
-				log.Panic("No session cookie")
-			}
-			_, err = sessionStore.GetSession(sessionID)
-			if err != nil {
-				// TODO:
-				// no registered session. old cookie?
-				log.Panic("sessionID not found")
-			}
-			ctx := context.WithValue(r.Context(), constants.ContextKetSessionID, sessionID)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
-
-func AddNonceToRequest(nonceStore *auth.NonceStore) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			logging.RT.UpdateRequestTrace(r, "AddNonceToRequest")
-			nonce := nonceStore.Generate()
-			// adding to response header
-			w.Header().Set(constants.HeaderNonceToken, nonce)
-			// adding to context so it can be passed to templates
-			r = r.WithContext(context.WithValue(r.Context(), constants.ContextKeyNonceToken, nonce))
-
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
 func ScopeAuthRetryAccess() func(http.Handler) http.Handler {
-	return ScopeServiceWorkerAccess(constants.AuthRetryWorkerPath, constants.AuthRetryWorkerScope)
+	return ScopeServiceWorkerAccess(constants.WorkerAuthRetryPath, constants.WorkerAuthRetryScope)
 }
 
 func ScopeServiceWorkerAccess(swPath, accessPath string) func(http.Handler) http.Handler {
@@ -162,9 +93,11 @@ func TraceRequests(next http.Handler) http.Handler {
 		logging.RT.NewRequestTrace(r)
 		next.ServeHTTP(cw, r)
 		logging.RT.DumpRequestTrace(r)
-		fmt.Printf("[RESPONSE HEADER %d]\n", cw.Code)
-		cw.Header().Write(os.Stdout)
-		fmt.Printf("[BODY]\n%s\n", cw.Body.String())
-		fmt.Println("")
+		if logging.RT.DisplayResponses() == true {
+			fmt.Printf("[RESPONSE HEADER %d]\n", cw.Code)
+			cw.Header().Write(os.Stdout)
+			fmt.Printf("[BODY]\n%s\n", cw.Body.String())
+			fmt.Println("")
+		}
 	})
 }

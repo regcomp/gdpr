@@ -1,5 +1,11 @@
 package secrets
 
+import (
+	"fmt"
+
+	"github.com/regcomp/gdpr/config"
+)
+
 /*
 
 Things that should live in the secrets store:
@@ -13,23 +19,27 @@ Things that should live in the secrets store:
 
 */
 
-type StoreType string
-
 const (
-	AWSSecretsManager StoreType = "AWSSM"
-	MockStoreType     StoreType = "MOCK"
+	awsSecretsManager = "AWSSM"
+	mockStoreType     = "MOCK"
 )
 
 type ISecretStore interface {
-	SecretStore()
+	getAllSecrets()
+
+	GetServiceCacheSecrets() *ServiceCacheSecrets
+	GetAuthProviderSecrets() *AuthProviderSecrets
+	GetDatabaseStoreSecrets() *DatabaseStoreSecrets
 }
 
-func CreateSecretStore(config ISecretStoreConfig) (ISecretStore, error) {
+func CreateSecretStore(config *config.SecretStoreConfig) (ISecretStore, error) {
 	// this function dispatches to a function that creates a wrapper around
 	// a connection to a secret store that satisfies the interface
-	switch config.StoreType() {
+	switch config.StoreType {
+	case mockStoreType:
+		return createMockSecretStore(), nil
 	default:
-		return CreateMockSecretStore(), nil
+		return nil, fmt.Errorf("unknown store type=%s", config.StoreType)
 	}
 }
 
@@ -37,33 +47,11 @@ type MockSecretStore struct {
 	//
 }
 
-func CreateMockSecretStore() *MockSecretStore {
+func createMockSecretStore() *MockSecretStore {
 	return &MockSecretStore{}
 }
 
-func (mss *MockSecretStore) SecretStore() {}
-
-type ISecretStoreConfig interface {
-	StoreType() StoreType
-}
-
-func LoadSecretStoreConfig(secretStoreType string) ISecretStoreConfig {
-	// This function should grab all relevant information for whatever provider
-	// specified in the secret store type from the environment. Data is passed
-	// through env variables at runtime with docker. There shouldn't be any sensitive
-	// data needed.
-	switch secretStoreType {
-	default:
-		return NewMockSecretStoreConfig()
-	}
-}
-
-type MockSecretStoreConfig struct {
-	//
-}
-
-func NewMockSecretStoreConfig() *MockSecretStoreConfig {
-	return &MockSecretStoreConfig{}
-}
-
-func (mssc *MockSecretStoreConfig) StoreType() StoreType { return MockStoreType }
+func (mss *MockSecretStore) getAllSecrets()                                 {}
+func (mss *MockSecretStore) GetServiceCacheSecrets() *ServiceCacheSecrets   { return nil }
+func (mss *MockSecretStore) GetAuthProviderSecrets() *AuthProviderSecrets   { return nil }
+func (mss *MockSecretStore) GetDatabaseStoreSecrets() *DatabaseStoreSecrets { return nil }

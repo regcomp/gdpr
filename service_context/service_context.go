@@ -8,6 +8,7 @@ import (
 	"github.com/regcomp/gdpr/config"
 	"github.com/regcomp/gdpr/database"
 	"github.com/regcomp/gdpr/logging"
+	"github.com/regcomp/gdpr/secrets"
 )
 
 var STX *ServiceContext
@@ -20,23 +21,32 @@ type ServiceContext struct {
 
 	ConfigStore config.IConfigStore
 
-	DatabaseStore database.IDatabaseStore
+	DatabaseStore *database.DatabaseStore
 	RequestStore  caching.IRequestStore
 
 	RequestLogger logging.ILogger
 }
 
-func CreateServiceContext(serviceCache caching.IServiceCache, configStore config.IConfigStore) (*ServiceContext, error) {
+func CreateServiceContext(
+	serviceCache caching.IServiceCache,
+	configStore config.IConfigStore,
+	secretStore secrets.ISecretStore,
+) (*ServiceContext, error) {
 	// other context setup goes here, like getting certs/keys
-	authProvider, err := auth.GetProvider(configStore.GetAuthProvider())
+	authProvider, err := auth.CreateAuthProvider(
+		configStore.GetAuthProviderConfig(),
+		secretStore.GetAuthProviderSecrets(),
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	requestlogger := logging.NewRequestLogger(os.Stdout)
-	logging.NewTracer(configStore.GetTracerLevel())
 
-	databaseStore, err := database.CreateDatabaseStore(getConfig)
+	databaseStore, err := database.CreateDatabaseStore(
+		configStore.GetDatabaseStoreConfig(),
+		secretStore.GetDatabaseStoreSecrets(),
+	)
 	if err != nil {
 		// TODO:
 		// NOTE: a databaseProvider can fail to initialize. This should halt the service from running

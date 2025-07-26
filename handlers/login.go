@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -21,8 +22,8 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 
 func SubmitLoginCredentials(authProvider auth.IAuthProvider, config config.IConfigStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logging.RT.UpdateRequestTrace(r, "SubmotLoginCredentials")
-		urlString := config.GetServiceURL() + constants.PathAuthRenewToken
+		logging.RT.UpdateRequestTrace(r, "SubmitLoginCredentials")
+		urlString := config.GetServiceURL() + ":" + config.GetDefaultPort() + constants.RouterAuthPathPrefix + constants.EndpointLoginCallback
 		callbackURL, err := url.Parse(urlString)
 		if err != nil {
 			// TODO:
@@ -41,13 +42,15 @@ func LoginCallback(
 		credentials := auth.Credentials{}
 
 		switch authProvider.GetProviderType() {
-		// TODO: Vendor implementations go here
-		case auth.MOCK:
+		// NOTE: Vendor implementations go here
+		case auth.MockProviderType:
 			credentials.AccessToken = r.URL.Query().Get(constants.QueryParamAccessToken)
 			credentials.RefreshToken = r.URL.Query().Get(constants.QueryParamRefreshToken)
 		default:
 			http.Error(w, "auth provider not implemented", http.StatusInternalServerError)
 		}
+
+		// TODO: VALIDATE THE JWTS RECIEVED
 
 		accessCookie, err := cookieManager.CreateAccessCookie(credentials.AccessToken)
 		if err != nil {
@@ -79,16 +82,16 @@ func RenewAccessToken(authProvider auth.IAuthProvider, cookieManager *auth.Cooki
 
 		refreshToken, err := cookieManager.GetRefreshToken(r)
 		if err != nil {
-			// TODO:
+			http.Error(w, fmt.Sprintf("could not get refresh token, err=%s", err.Error()), http.StatusInternalServerError)
 		}
 		accessToken, err := authProvider.GetNewAccessToken(refreshToken, r)
 		if err != nil {
-			// TODO:
+			http.Error(w, "could not renew access token", http.StatusInternalServerError)
 		}
 
 		accessCookie, err := cookieManager.CreateAccessCookie(accessToken)
 		if err != nil {
-			// TODO:
+			http.Error(w, "could not create access cookie", http.StatusInternalServerError)
 		}
 
 		http.SetCookie(w, accessCookie)

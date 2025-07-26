@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	sc "github.com/gorilla/securecookie"
@@ -19,7 +20,6 @@ var cookieNames = []string{
 type cookieOption func(*http.Cookie)
 
 type CookieManager struct {
-	// cache caching.IServiceCache
 	keys *sc.SecureCookie
 }
 
@@ -28,7 +28,7 @@ type cookieKeys struct {
 	Block []byte `json:"block"`
 }
 
-func newCookieKeys() *cookieKeys {
+func newCookieHashes() *cookieKeys {
 	return &cookieKeys{
 		Hash:  sc.GenerateRandomKey(64),
 		Block: sc.GenerateRandomKey(32),
@@ -36,25 +36,37 @@ func newCookieKeys() *cookieKeys {
 }
 
 func CreateCookieManager(serviceCache caching.IServiceCache) *CookieManager {
-	cookieHashes := serviceCache.CookieHashesGet()
-	var freshKeys *cookieKeys
-	if cookieHashes == nil {
-		freshKeys = newCookieKeys()
-		cookieHashesBytes, err := json.Marshal(freshKeys)
+	var freshHashes *cookieKeys
+
+	cookieHashesBytes, err := serviceCache.CookieHashesGet()
+	if err != nil {
+		// TODO: Error with the cache service
+		log.Panicf("cache service error=%s\n", err.Error())
+	}
+
+	if len(cookieHashesBytes) == 0 {
+		freshHashes = newCookieHashes()
+		cookieHashesBytes, err = json.Marshal(freshHashes)
 		if err != nil {
 			// TODO:
+			log.Panicf("malformed cookie hashes. err=%s\n", err.Error())
 		}
-		serviceCache.CookieHashesSet(cookieHashesBytes)
+		err = serviceCache.CookieHashesSet(cookieHashesBytes)
+		if err != nil {
+			// TODO: Error with cache service
+			log.Panicf("cache service error=%s\n", err.Error())
+		}
 	} else {
-		err := json.Unmarshal(cookieHashes, freshKeys)
+		freshHashes = &cookieKeys{}
+		err = json.Unmarshal(cookieHashesBytes, freshHashes)
 		if err != nil {
 			// TODO:
+			log.Panicf("could not unmarshall cookie hashes. err=%s\n", err.Error())
 		}
 	}
 
-	keys := sc.New(freshKeys.Hash, freshKeys.Block)
+	keys := sc.New(freshHashes.Hash, freshHashes.Block)
 	return &CookieManager{
-		// cache: serviceCache,
 		keys: keys,
 	}
 }

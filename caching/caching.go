@@ -1,6 +1,9 @@
 package caching
 
 import (
+	"fmt"
+
+	"github.com/regcomp/gdpr/config"
 	"github.com/regcomp/gdpr/secrets"
 )
 
@@ -22,30 +25,34 @@ Things that should live in the cache:
 
 */
 
+const localCacheType = "LOCAL"
+
 // NOTE: This will likely be a large and cluttered interface
 type IServiceCache interface {
 	// Nonce Handling
-	NonceAdd(string)
+	NonceAdd(string) error
 
 	// Session Handling
-	SessionAdd(string, []byte)
+	SessionAdd(string, []byte) error
 	SessionGet(string) ([]byte, error)
 
 	// Cookie Hashes
-	CookieHashesGet() []byte
-	CookieHashesSet([]byte)
+	CookieHashesGet() ([]byte, error)
+	CookieHashesSet([]byte) error
 
 	// Requests
 	RequestAdd(string, []byte) error
 	RequestRetrieve(string) ([]byte, error)
-
-	// Database
-	DatabaseGetConfig() any
 }
 
-func CreateServiceCache(secretStore secrets.ISecretStore, cacheType string) (IServiceCache, error) {
-	switch cacheType {
+func CreateServiceCache(
+	config *config.ServiceCacheConfig,
+	secrets *secrets.ServiceCacheSecrets,
+) (IServiceCache, error) {
+	switch config.CacheType {
+	case localCacheType:
+		return createLocalCache(), nil
 	default:
-		return createLocalCache(secretStore), nil
+		return nil, fmt.Errorf("unknown cache type=%s", config.CacheType)
 	}
 }

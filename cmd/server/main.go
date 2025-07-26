@@ -1,3 +1,5 @@
+//go:generate go run ../../constants/generators/gen_shared.go
+
 package main
 
 import (
@@ -7,7 +9,11 @@ import (
 
 func main() {
 	ctx := context.Background()
-	err := run(ctx, os.Getenv, os.Stdin, os.Stderr)
+	err := run(
+		ctx,
+		os.Getenv,
+		os.Stderr,
+	)
 	if err != nil {
 		// TODO: log the server crash
 	}

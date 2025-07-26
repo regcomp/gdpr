@@ -1,84 +1,108 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/regcomp/gdpr/auth"
+	"github.com/regcomp/gdpr/config"
+	"github.com/regcomp/gdpr/constants"
+	"github.com/regcomp/gdpr/logging"
 	"github.com/regcomp/gdpr/templates/pages"
 )
 
-func (stx *ServiceContext) GetLogin(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateRequestTrace(r, "GetLogin")
+// Will likely need some context from the config for what to display
+func LoginPage(w http.ResponseWriter, r *http.Request) {
+	logging.RT.UpdateRequestTrace(r, "LoginPage")
 	page := pages.Login()
 	page.Render(r.Context(), w)
 }
 
-func (stx *ServiceContext) PostLogin(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateRequestTrace(r, "PostLogin")
-	callbackURL := NewURL("https", stx.HostPath, AuthRouterPathPrefix+LoginCallbackPath)
-	stx.AuthProvider.AuthenticateUser(w, r, callbackURL)
+func SubmitLoginCredentials(authProvider auth.IAuthProvider, config config.IConfigStore) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logging.RT.UpdateRequestTrace(r, "SubmitLoginCredentials")
+		urlString := config.GetServiceURL() + ":" + config.GetDefaultPort() + constants.RouterAuthPathPrefix + constants.EndpointLoginCallback
+		callbackURL, err := url.Parse(urlString)
+		if err != nil {
+			// TODO:
+		}
+		authProvider.AuthenticateUser(w, r, callbackURL)
+	})
 }
 
-func (stx *ServiceContext) LoginCallback(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateRequestTrace(r, "LoginCallback")
-	credentials := auth.Credentials{}
+func LoginCallback(
+	authProvider auth.IAuthProvider,
+	cookieManager *auth.CookieManager,
+	sessionStore auth.ISessionStore,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logging.RT.UpdateRequestTrace(r, "LoginCallback")
+		credentials := auth.Credentials{}
 
-	switch stx.AuthProvider.GetProviderType() {
-	// TODO: Vendor implementations go here
-	case auth.MOCK:
-		credentials.AccessToken = r.URL.Query().Get("access")
-		credentials.RefreshToken = r.URL.Query().Get("refresh")
-	default:
-		http.Error(w, "auth provider not implemented", http.StatusInternalServerError)
+		switch authProvider.GetProviderType() {
+		// NOTE: Vendor implementations go here
+		case auth.MockProviderType:
+			credentials.AccessToken = r.URL.Query().Get(constants.QueryParamAccessToken)
+			credentials.RefreshToken = r.URL.Query().Get(constants.QueryParamRefreshToken)
+		default:
+			http.Error(w, "auth provider not implemented", http.StatusInternalServerError)
+		}
+
+		// TODO: VALIDATE THE JWTS RECIEVED
+
+		accessCookie, err := cookieManager.CreateAccessCookie(credentials.AccessToken)
+		if err != nil {
+			log.Panic("could not create access cookie")
+		}
+		http.SetCookie(w, accessCookie)
+
+		refreshCookie, err := cookieManager.CreateRefreshCookie(credentials.RefreshToken)
+		if err != nil {
+			// TODO:
+		}
+		http.SetCookie(w, refreshCookie)
+
+		sessionID := sessionStore.CreateSession()
+		sessionCookie, err := cookieManager.CreateSessionCookie(sessionID)
+		if err != nil {
+			// TODO:
+		}
+		http.SetCookie(w, sessionCookie)
+
+		// NOTE: This redirect may want to instead reference where a user was when a refresh token expired.
+		http.Redirect(w, r, constants.EndpointDashboard, http.StatusSeeOther)
 	}
-
-	accessCookie, err := auth.CreateAccessCookie(credentials.AccessToken, stx.CookieKeys)
-	if err != nil {
-		log.Panic("could not create access cookie")
-	}
-	http.SetCookie(w, accessCookie)
-
-	refreshCookie, err := auth.CreateRefreshCookie(credentials.RefreshToken, stx.CookieKeys)
-	if err != nil {
-		// TODO:
-	}
-	http.SetCookie(w, refreshCookie)
-
-	sessionID := stx.SessionStore.CreateSession()
-	sessionCookie, err := auth.CreateSessionCookie(sessionID, stx.CookieKeys)
-	if err != nil {
-		// TODO:
-	}
-	http.SetCookie(w, sessionCookie)
-
-	// NOTE: This redirect may want to instead reference where a user was when a refresh token expired.
-	http.Redirect(w, r, DashboardPath, http.StatusSeeOther)
 }
 
-func (stx *ServiceContext) PostRefresh(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateRequestTrace(r, "PostRefresh")
+func RenewAccessToken(authProvider auth.IAuthProvider, cookieManager *auth.CookieManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logging.RT.UpdateRequestTrace(r, "RenewAccessToken")
 
-	refreshToken, err := auth.GetRefreshToken(r, stx.CookieKeys)
-	if err != nil {
-		// TODO:
-	}
-	accessToken, err := stx.AuthProvider.GetNewAccessToken(refreshToken, r)
-	if err != nil {
-		// TODO:
-	}
+		refreshToken, err := cookieManager.GetRefreshToken(r)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("could not get refresh token, err=%s", err.Error()), http.StatusInternalServerError)
+		}
+		accessToken, err := authProvider.GetNewAccessToken(refreshToken, r)
+		if err != nil {
+			http.Error(w, "could not renew access token", http.StatusInternalServerError)
+		}
 
-	accessCookie, err := auth.CreateAccessCookie(accessToken, stx.CookieKeys)
-	if err != nil {
-		// TODO:
-	}
+		accessCookie, err := cookieManager.CreateAccessCookie(accessToken)
+		if err != nil {
+			http.Error(w, "could not create access cookie", http.StatusInternalServerError)
+		}
 
-	http.SetCookie(w, accessCookie)
-	w.WriteHeader(http.StatusOK)
+		http.SetCookie(w, accessCookie)
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
-func (stx *ServiceContext) PostLogout(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateRequestTrace(r, "PostLogout")
-	auth.DestroyAllCookies(w, r)
-	w.WriteHeader(http.StatusOK)
+func Logout(cookieManager *auth.CookieManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logging.RT.UpdateRequestTrace(r, "PostLogout")
+		cookieManager.DestroyAllCookies(w, r)
+		w.WriteHeader(http.StatusOK)
+	}
 }

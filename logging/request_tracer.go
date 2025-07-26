@@ -5,25 +5,40 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/regcomp/gdpr/config"
 )
 
-const shouldTraceRequestsConfigString = "SHOULD_TRACE_REQUESTS"
+const configRequestTracerOnValue = "TRUE"
+
+var RT IRequestTracer
 
 type IRequestTracer interface {
 	NewRequestTrace(*http.Request)
 	UpdateRequestTrace(*http.Request, string) error
 	DumpRequestTrace(*http.Request) error
+	DisplayResponses() bool
+}
+
+func NewRequestTracer(config *config.RequestTracerConfig) {
+	if config.TracerOn == configRequestTracerOnValue {
+		RT = createRequestTracer()
+	} else {
+		RT = &NoOpRequestTracer{}
+	}
 }
 
 type RequestTracer struct {
 	requestToTrace map[*http.Request]*RequestTrace
 }
 
-func createRequestTraces() *RequestTracer {
+func createRequestTracer() *RequestTracer {
 	return &RequestTracer{
 		requestToTrace: make(map[*http.Request]*RequestTrace),
 	}
 }
+
+func (rts *RequestTracer) DisplayResponses() bool { return true }
 
 func (rts *RequestTracer) addRequestTrace(r *http.Request, rt *RequestTrace) {
 	rts.requestToTrace[r] = rt
@@ -43,13 +58,6 @@ func (rts *RequestTracer) deleteTrace(r *http.Request) error {
 
 	delete(rts.requestToTrace, r)
 	return nil
-}
-
-func NewTracer(getenv func(string) string) IRequestTracer {
-	if getenv(shouldTraceRequestsConfigString) == "TRUE" {
-		return createRequestTraces()
-	}
-	return &NoOpRequestTracer{}
 }
 
 func (rts *RequestTracer) NewRequestTrace(r *http.Request) {
@@ -142,4 +150,8 @@ type NoOpRequestTracer struct{}
 
 func (not *NoOpRequestTracer) NewRequestTrace(*http.Request)                  {}
 func (not *NoOpRequestTracer) UpdateRequestTrace(*http.Request, string) error { return nil }
-func (not *NoOpRequestTracer) DumpRequestTrace(*http.Request) error           { return nil }
+func (not *NoOpRequestTracer) DumpRequestTrace(*http.Request) error {
+	fmt.Println("NoOp Tracer Dump")
+	return nil
+}
+func (not *NoOpRequestTracer) DisplayResponses() bool { return false }

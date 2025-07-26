@@ -1,24 +1,79 @@
 package config
 
-/*
-The idea for this package is that the .env file should not be
-edited that much because it has sensitive contents. This file contains
-general server configuration.
-*/
+import (
+	"github.com/regcomp/gdpr/constants"
+)
 
-type Config struct {
-	Port    string // 16 bit uint
-	TLSKey  string
-	TLSCert string
+type IConfigStore interface {
+	GetServiceURL() string
+	GetDefaultPort() string
+	GetSessionDuration() string
+
+	GetSecretStoreConfig() *SecretStoreConfig
+	GetServiceCacheConfig() *ServiceCacheConfig
+	GetAuthProviderConfig() *AuthProviderConfig
+	GetDatabaseStoreConfig() *DatabaseStoreConfig
 }
 
-func LoadConfig(getenv func(string) string) *Config {
-	config := &Config{}
+type LocalConfigStore struct {
+	// mu    sync.RWMutex // May need in the future
+	attrs map[string]string
+}
 
-	config.Port = getenv("CONFIG_PORT")
+func NewLocalConfigStore(getters ...func(string) string) *LocalConfigStore {
+	store := &LocalConfigStore{
+		attrs: make(map[string]string),
+	}
+	store.initializeStore(getters...)
+	return store
+}
 
-	config.TLSKey = "/auth/local_certs/server.key"
-	config.TLSCert = "/auth/local_certs/server.crt"
+func (cs *LocalConfigStore) initializeStore(getters ...func(string) string) {
+	for _, getter := range getters {
+		for _, attr := range constants.ConfigAttrs {
+			cs.attrs[attr] = getter(attr)
+		}
+	}
+}
 
-	return config
+func (cs *LocalConfigStore) GetServiceURL() string {
+	return cs.attrs[constants.ConfigServiceURLKey]
+}
+
+func (cs *LocalConfigStore) GetDefaultPort() string {
+	return cs.attrs[constants.ConfigDefaultPortKey]
+}
+
+func (cs *LocalConfigStore) GetSessionDuration() string {
+	return cs.attrs[constants.ConfigSessionDurationKey]
+}
+
+func (cs *LocalConfigStore) GetTracerConfig() *RequestTracerConfig {
+	return &RequestTracerConfig{
+		TracerOn: cs.attrs[constants.ConfigRequestTracerOnKey],
+	}
+}
+
+func (cs *LocalConfigStore) GetSecretStoreConfig() *SecretStoreConfig {
+	return &SecretStoreConfig{
+		StoreType: cs.attrs[constants.ConfigSecretStoreTypeKey],
+	}
+}
+
+func (cs *LocalConfigStore) GetServiceCacheConfig() *ServiceCacheConfig {
+	return &ServiceCacheConfig{
+		CacheType: cs.attrs[constants.ConfigServiceCacheTypeKey],
+	}
+}
+
+func (cs *LocalConfigStore) GetAuthProviderConfig() *AuthProviderConfig {
+	return &AuthProviderConfig{
+		ProviderType: cs.attrs[constants.ConfigAuthProvierTypeKey],
+	}
+}
+
+func (cs *LocalConfigStore) GetDatabaseStoreConfig() *DatabaseStoreConfig {
+	return &DatabaseStoreConfig{
+		//
+	}
 }

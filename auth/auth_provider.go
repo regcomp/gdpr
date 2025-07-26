@@ -8,7 +8,45 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/regcomp/gdpr/config"
+	"github.com/regcomp/gdpr/secrets"
 )
+
+const MockProviderType = "MOCK"
+
+// NOTE: The shape of this may change. This is the struct that Auth responses will be converted into for the
+// service to manage auth
+type Credentials struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	SessionID    string `json:"session_id"`
+}
+
+type IAuthProvider interface {
+	GetProviderType() string
+	AuthenticateUser(http.ResponseWriter, *http.Request, *url.URL) // NOTE: This may require more fields
+	ValidateAccessToken(string) (*CustomClaims, error)
+
+	// NOTE: This likely doesnt need the request as information can be passed from
+	// the access token
+	GetNewAccessToken(string, *http.Request) (string, error)
+}
+
+func CreateAuthProvider(config *config.AuthProviderConfig, secrets *secrets.AuthProviderSecrets) (IAuthProvider, error) {
+	switch config.ProviderType {
+	case MockProviderType:
+		return createMockAuthProvider(), nil
+	default:
+		return nil, fmt.Errorf("unknown auth provider type=%s", config.ProviderType)
+	}
+}
+
+// func FillCredentialsFromRequestBody(r *http.Request, credentials *Credentials) {
+// 	err := json.NewDecoder(r.Body).Decode(credentials)
+// 	if err != nil {
+// 		log.Panicf("could not decode request body: %s", err.Error())
+// 	}
+// }
 
 type MockProvider struct {
 	publicKey  *rsa.PublicKey
@@ -55,11 +93,11 @@ func getUserID() string {
 	return "user"
 }
 
-func (mp *MockProvider) GetProviderType() ProviderType {
-	return MOCK
+func (mp *MockProvider) GetProviderType() string {
+	return MockProviderType
 }
 
-func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request, callback url.URL) {
+func (mp *MockProvider) AuthenticateUser(w http.ResponseWriter, r *http.Request, callback *url.URL) {
 	// NOTE: This assumes that there has been valid authentication and issues credentials
 
 	redirectURL, err := url.Parse(callback.String())

@@ -4,7 +4,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/regcomp/gdpr/constants"
 	"github.com/regcomp/gdpr/handlers"
+	"github.com/regcomp/gdpr/middleware"
+	servicecontext "github.com/regcomp/gdpr/service_context"
 )
 
 type SubRouter struct {
@@ -12,21 +15,22 @@ type SubRouter struct {
 	Router *chi.Mux
 }
 
-func CreateRouter() *chi.Mux {
+func CreateRouter(stx *servicecontext.ServiceContext) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(
-		handlers.STX.TraceRequests,
+		middleware.TraceRequests,
 	)
 
-	router.Get(handlers.HealthzPath, healthz)
-	router.Get(handlers.RegisterServiceWorkerPath, handlers.STX.RegisterAuthRetryWorker())
-	router.Get(handlers.Test1Path, handlers.STX.TestEndpoint1)
-	router.Get(handlers.Test2Path, handlers.STX.TestEndpoint2)
+	router.Get(constants.EndpointHealthz, healthz)
+	router.Get(
+		constants.EndpointRegisterServiceWorker,
+		handlers.RegisterServiceWorker(stx.RequestStore, stx.ConfigStore),
+	)
 
 	mountRouters(router,
 		CreateStaticRouter(),
-		CreateServiceRouter(),
+		CreateServiceRouter(stx),
 	)
 
 	return router
@@ -36,7 +40,7 @@ func CreateStaticRouter() SubRouter {
 	static := chi.NewRouter()
 
 	static.Use(
-		handlers.STX.ScopeAuthRetryAccess(),
+		middleware.ScopeAuthRetryAccess(),
 	)
 
 	static.Handle("/*", http.StripPrefix("/static/",
@@ -45,63 +49,73 @@ func CreateStaticRouter() SubRouter {
 	return SubRouter{"/static", static}
 }
 
-func CreateServiceRouter() SubRouter {
+func CreateServiceRouter(stx *servicecontext.ServiceContext) SubRouter {
 	service := chi.NewRouter()
 
 	service.Use(
-		// handlers.STX.Logging,
-		handlers.STX.SetHSTSPolicy,
+		// middleware.RequestLogging(stx.RequestLogger),
+		middleware.SetHSTSPolicy,
 		// TODO: Content policies/CORS/ect... go here
 
-		handlers.STX.VerifyAuthRetryIsRunning(),
+		middleware.VerifyAuthRetryIsRunning(stx.RequestStore),
 	)
 
 	mountRouters(service,
-		CreateAuthRouter(),
-		CreateClientRouter(),
-		CreateAPIRouter(),
+		CreateAuthRouter(stx),
+		CreateClientRouter(stx),
+		CreateAPIRouter(stx),
 	)
 	return SubRouter{"/", service}
 }
 
-func CreateAuthRouter() SubRouter {
+func CreateAuthRouter(stx *servicecontext.ServiceContext) SubRouter {
 	auth := chi.NewRouter()
 
-	auth.Get(handlers.LoginPath, handlers.STX.GetLogin)
-	auth.Post(handlers.LoginPath, handlers.STX.PostLogin)
+	auth.Use(
+		middleware.SkipIfAuthenticated(stx.AuthProvider, stx.CookieManager, stx.ConfigStore),
+	)
 
-	auth.Get(handlers.LoginCallbackPath, handlers.STX.LoginCallback)
-	auth.Post(handlers.LoginCallbackPath, handlers.STX.LoginCallback)
+	auth.Get(constants.EndpointLogin, handlers.LoginPage)
+	auth.Post(constants.EndpointLogin, handlers.SubmitLoginCredentials(stx.AuthProvider, stx.ConfigStore))
 
-	auth.Post(handlers.RefreshPath, handlers.STX.PostRefresh)
-	auth.Post(handlers.LogoutPath, handlers.STX.PostLogout)
+	// Apparently some providers will hit with either GET or POST
+	loginCallback := handlers.LoginCallback(stx.AuthProvider, stx.CookieManager, stx.SessionStore)
+	auth.Get(constants.EndpointLoginCallback, loginCallback)
+	auth.Post(constants.EndpointLoginCallback, loginCallback)
 
-	return SubRouter{Path: handlers.AuthRouterPathPrefix, Router: auth}
+	auth.Post(constants.EndpointRenewToken, handlers.RenewAccessToken(stx.AuthProvider, stx.CookieManager))
+
+	return SubRouter{Path: constants.RouterAuthPathPrefix, Router: auth}
 }
 
-func CreateClientRouter() SubRouter {
+func CreateClientRouter(stx *servicecontext.ServiceContext) SubRouter {
 	client := chi.NewRouter()
 
 	client.Use(
-		handlers.STX.IsAuthenticated,
-		handlers.STX.HasActiveSession,
-		handlers.STX.AddNonceToRequest,
+		middleware.RequiresAuthentication(stx.AuthProvider, stx.CookieManager),
+		middleware.HasActiveSession(stx.SessionStore, stx.CookieManager),
+		middleware.AddNonceToRequest(stx.NonceStore),
 	)
 
-	client.Get(handlers.DashboardPath, handlers.STX.GetDashboard)
+	client.Get(constants.EndpointDashboard, handlers.DashboardPage(stx.CookieManager))
+	client.Get(constants.EndpointTest1, handlers.TestEndpoint1)
+	client.Get(constants.EndpointTest2, handlers.TestEndpoint2)
 
-	return SubRouter{Path: handlers.ClientRouterPathPrefix, Router: client}
+	// NOTE: Not sure were this should go
+	client.Post(constants.EndpointLogout, handlers.Logout(stx.CookieManager))
+
+	return SubRouter{Path: constants.RouterClientPathPrefix, Router: client}
 }
 
-func CreateAPIRouter() SubRouter {
+func CreateAPIRouter(stx *servicecontext.ServiceContext) SubRouter {
 	api := chi.NewRouter()
 
 	api.Use(
-		handlers.STX.IsAuthenticated,
-		handlers.STX.HasActiveSession,
+		middleware.RequiresAuthentication(stx.AuthProvider, stx.CookieManager),
+		middleware.HasActiveSession(stx.SessionStore, stx.CookieManager),
 	)
 
-	return SubRouter{Path: handlers.ApiRouterPathPrefix, Router: api}
+	return SubRouter{Path: constants.RouterApiPathPrefix, Router: api}
 }
 
 func mountRouters(main *chi.Mux, subrouters ...SubRouter) {

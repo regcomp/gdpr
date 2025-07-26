@@ -5,31 +5,34 @@ import (
 	"net/http"
 
 	"github.com/regcomp/gdpr/auth"
+	"github.com/regcomp/gdpr/logging"
 	"github.com/regcomp/gdpr/templates/pages"
 )
 
-func (stx *ServiceContext) GetDashboard(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateRequestTrace(r, "GetDashboard")
+func DashboardPage(cookieManager *auth.CookieManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logging.RT.UpdateRequestTrace(r, "DashboardPage")
 
-	// WARN: TEMPORARY!!
+		// WARN: TEMPORARY!!
 
-	accessToken, err := auth.GetAccessToken(r, stx.CookieKeys)
-	if err != nil {
-		log.Panicf("%s", err.Error())
+		accessToken, err := cookieManager.GetAccessToken(r)
+		if err != nil {
+			log.Panicf("%s", err.Error())
+		}
+		// refreshToken, err := auth.GetRefreshToken(r, stx.CookieKeys)
+		// if err != nil {
+		// 	log.Panicf("%s", err.Error())
+		// }
+
+		sessionID, err := cookieManager.GetSessionID(r)
+		if err != nil {
+			log.Panicf("%s", err.Error())
+		}
+
+		pages.Dashboard(accessToken, "---", sessionID).Render(r.Context(), w)
+		// -----
+
+		// dashboard := pages.Dashboard()
+		// dashboard.Render(r.Context(), w)
 	}
-	// refreshToken, err := auth.GetRefreshToken(r, stx.CookieKeys)
-	// if err != nil {
-	// 	log.Panicf("%s", err.Error())
-	// }
-
-	sessionID, err := auth.GetSessionID(r, stx.CookieKeys)
-	if err != nil {
-		log.Panicf("%s", err.Error())
-	}
-
-	pages.Dashboard(accessToken, "---", sessionID).Render(r.Context(), w)
-	// -----
-
-	// dashboard := pages.Dashboard()
-	// dashboard.Render(r.Context(), w)
 }

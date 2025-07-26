@@ -1,63 +1,131 @@
 package auth
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
-	"github.com/gorilla/securecookie"
-)
-
-// WARN: reusable module level keys. does not appear to have a use anymore
-var (
-	hashKey        []byte = nil
-	blockKey       []byte = nil
-	hasInitialized        = false
-)
-
-// Cookies
-const (
-	AccessCookieName  = "access-token"
-	RefreshCookieName = "refresh-token"
-	SessionCookieName = "session-id"
+	sc "github.com/gorilla/securecookie"
+	"github.com/regcomp/gdpr/caching"
+	"github.com/regcomp/gdpr/constants"
 )
 
 var cookieNames = []string{
-	AccessCookieName,
-	RefreshCookieName,
-	SessionCookieName,
+	constants.AccessCookieName,
+	constants.RefreshCookieName,
+	constants.SessionCookieName,
 }
 
 type cookieOption func(*http.Cookie)
 
-func createSecrets() {
-	if hasInitialized {
-		return
-	}
-	hashKey = securecookie.GenerateRandomKey(64)
-	blockKey = securecookie.GenerateRandomKey(32)
-	hasInitialized = true
+type CookieManager struct {
+	keys *sc.SecureCookie
 }
 
-func CreateCookieKeys() *securecookie.SecureCookie {
-	createSecrets()
-	return securecookie.New(hashKey, blockKey)
+type cookieKeys struct {
+	Hash  []byte `json:"hash"`
+	Block []byte `json:"block"`
 }
 
-func DecodeCookie(
-	name string,
-	sc *securecookie.SecureCookie,
-	encryptedCookie *http.Cookie,
-) (map[string]string, error) {
-	value := make(map[string]string)
-	if err := sc.Decode(name, encryptedCookie.Value, &value); err != nil {
-		return nil, err
+func newCookieHashes() *cookieKeys {
+	return &cookieKeys{
+		Hash:  sc.GenerateRandomKey(64),
+		Block: sc.GenerateRandomKey(32),
 	}
-	return value, nil
+}
+
+func CreateCookieManager(serviceCache caching.IServiceCache) *CookieManager {
+	var freshHashes *cookieKeys
+
+	cookieHashesBytes, err := serviceCache.CookieHashesGet()
+	if err != nil {
+		// TODO: Error with the cache service
+		log.Panicf("cache service error=%s\n", err.Error())
+	}
+
+	if len(cookieHashesBytes) == 0 {
+		freshHashes = newCookieHashes()
+		cookieHashesBytes, err = json.Marshal(freshHashes)
+		if err != nil {
+			// TODO:
+			log.Panicf("malformed cookie hashes. err=%s\n", err.Error())
+		}
+		err = serviceCache.CookieHashesSet(cookieHashesBytes)
+		if err != nil {
+			// TODO: Error with cache service
+			log.Panicf("cache service error=%s\n", err.Error())
+		}
+	} else {
+		freshHashes = &cookieKeys{}
+		err = json.Unmarshal(cookieHashesBytes, freshHashes)
+		if err != nil {
+			// TODO:
+			log.Panicf("could not unmarshall cookie hashes. err=%s\n", err.Error())
+		}
+	}
+
+	keys := sc.New(freshHashes.Hash, freshHashes.Block)
+	return &CookieManager{
+		keys: keys,
+	}
+}
+
+func (cm *CookieManager) CreateAccessCookie(accessToken string) (*http.Cookie, error) {
+	return createCookie(
+		constants.AccessCookieName,
+		accessToken,
+		cm.keys,
+		// TODO: Configure
+	)
+}
+
+func (cm *CookieManager) GetAccessToken(r *http.Request) (string, error) {
+	return getTokenFromCookie(r, constants.AccessCookieName, cm.keys)
+}
+
+func (cm *CookieManager) CreateRefreshCookie(refreshToken string) (*http.Cookie, error) {
+	return createCookie(
+		constants.RefreshCookieName,
+		refreshToken,
+		cm.keys,
+		// TODO: Configure
+		func(c *http.Cookie) {
+			c.Path = constants.RouterAuthPathPrefix + constants.EndpointRenewToken
+		},
+	)
+}
+
+func (cm *CookieManager) GetRefreshToken(r *http.Request) (string, error) {
+	return getTokenFromCookie(r, constants.RefreshCookieName, cm.keys)
+}
+
+func (cm *CookieManager) CreateSessionCookie(sessionID string) (*http.Cookie, error) {
+	return createCookie(
+		constants.SessionCookieName,
+		sessionID,
+		cm.keys,
+		// TODO: Configure
+	)
+}
+
+func (cm *CookieManager) GetSessionID(r *http.Request) (string, error) {
+	return getTokenFromCookie(r, constants.SessionCookieName, cm.keys)
+}
+
+func (cm *CookieManager) DestroyAllCookies(w http.ResponseWriter, r *http.Request) {
+	for _, cookieName := range cookieNames {
+		cookie, err := r.Cookie(cookieName)
+		if err != nil {
+			continue
+		}
+		destroyCookie(w, cookie)
+	}
 }
 
 func createCookie(
 	name, value string,
-	sc *securecookie.SecureCookie,
+	sc *sc.SecureCookie,
 	options ...cookieOption,
 ) (*http.Cookie, error) {
 	values := map[string]string{
@@ -86,31 +154,16 @@ func createCookie(
 	return cookie, nil
 }
 
-func DestroyAllCookies(w http.ResponseWriter, r *http.Request) {
-	for _, cookieName := range cookieNames {
-		cookie, err := r.Cookie(cookieName)
-		if err != nil {
-			continue
-		}
-		destroyCookie(w, cookie)
-	}
-}
-
-func destroyCookie(w http.ResponseWriter, cookie *http.Cookie) {
-	cookie.MaxAge = -1
-	http.SetCookie(w, cookie)
-}
-
 func getTokenFromCookie(
-	name string,
 	r *http.Request,
-	sc *securecookie.SecureCookie,
+	name string,
+	sc *sc.SecureCookie,
 ) (string, error) {
 	cookie, err := r.Cookie(name)
 	if err != nil {
 		return "", fmt.Errorf("could not find %s cookie=%s", name, err.Error())
 	}
-	decodedValues, err := DecodeCookie(name, sc, cookie)
+	decodedValues, err := decodeCookie(name, sc, cookie)
 	if err != nil {
 		return "", fmt.Errorf("could not decode %s cookie=%s", name, err.Error())
 	}
@@ -123,44 +176,19 @@ func getTokenFromCookie(
 	return token, nil
 }
 
-func CreateAccessCookie(accessToken string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
-	return createCookie(
-		AccessCookieName,
-		accessToken,
-		sc,
-		// TODO: Configure
-	)
+func decodeCookie(
+	name string,
+	sc *sc.SecureCookie,
+	encryptedCookie *http.Cookie,
+) (map[string]string, error) {
+	value := make(map[string]string)
+	if err := sc.Decode(name, encryptedCookie.Value, &value); err != nil {
+		return nil, err
+	}
+	return value, nil
 }
 
-func GetAccessToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
-	return getTokenFromCookie(AccessCookieName, r, sc)
-}
-
-func CreateRefreshCookie(refreshToken string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
-	return createCookie(
-		RefreshCookieName,
-		refreshToken,
-		sc,
-		// TODO: Configure
-		func(c *http.Cookie) {
-			c.Path = "/auth/refresh/"
-		},
-	)
-}
-
-func GetRefreshToken(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
-	return getTokenFromCookie(RefreshCookieName, r, sc)
-}
-
-func CreateSessionCookie(sessionID string, sc *securecookie.SecureCookie) (*http.Cookie, error) {
-	return createCookie(
-		SessionCookieName,
-		sessionID,
-		sc,
-		// TODO: Configure
-	)
-}
-
-func GetSessionID(r *http.Request, sc *securecookie.SecureCookie) (string, error) {
-	return getTokenFromCookie(SessionCookieName, r, sc)
+func destroyCookie(w http.ResponseWriter, cookie *http.Cookie) {
+	cookie.MaxAge = -1
+	http.SetCookie(w, cookie)
 }

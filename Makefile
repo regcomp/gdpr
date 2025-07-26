@@ -5,7 +5,10 @@ TARGET=server
 gen-certs:
 	@ ${MAKE} -C ./auth/local_certs/ gen_certs
 
-build-local:
+gen-shared:
+	@ go generate ./...
+
+build-local: gen-shared
 	@ templ generate
 	@ mkdir $(BUILD_TARGETS) -p
 	@ go build -o $(BUILD_TARGETS)/$(TARGET) $(SOURCE)

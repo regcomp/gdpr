@@ -3,11 +3,18 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/regcomp/gdpr/templates/pages"
+	"github.com/regcomp/gdpr/logging"
+	"github.com/regcomp/gdpr/templates/components"
 )
 
-func (stx *ServiceContext) TestEndpoint(w http.ResponseWriter, r *http.Request) {
-	stx.RequestTracer.UpdateRequestTrace(r, "TestEndpoint")
-	page := pages.TestPage()
-	page.Render(r.Context(), w)
+func TestEndpoint1(w http.ResponseWriter, r *http.Request) {
+	logging.RT.UpdateRequestTrace(r, "TestEndpoint1")
+	component := components.TestComponent1()
+	component.Render(r.Context(), w)
+}
+
+func TestEndpoint2(w http.ResponseWriter, r *http.Request) {
+	logging.RT.UpdateRequestTrace(r, "TestEndpoint2")
+	component := components.TestComponent2()
+	component.Render(r.Context(), w)
 }

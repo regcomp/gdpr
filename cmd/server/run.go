@@ -15,38 +15,53 @@ import (
 
 	"github.com/joho/godotenv"
 	certs "github.com/regcomp/gdpr/auth/local_certs"
+	"github.com/regcomp/gdpr/caching"
 	"github.com/regcomp/gdpr/config"
-	"github.com/regcomp/gdpr/handlers"
+	"github.com/regcomp/gdpr/constants"
+	"github.com/regcomp/gdpr/logging"
 	"github.com/regcomp/gdpr/routers"
-)
-
-const (
-	envPath    = ".env"
-	configPath = "config/default.config"
+	"github.com/regcomp/gdpr/secrets"
+	servicecontext "github.com/regcomp/gdpr/service_context"
 )
 
 func run(
 	ctx context.Context,
-	// args []string, // TODO: add later as further configuration
 	getenv func(string) string,
-	inStream io.Reader,
 	outStream io.Writer,
 ) error {
-	// Loads files in parameter order
-	if err := godotenv.Load(configPath, envPath); err != nil {
+	if err := godotenv.Load(constants.LocalConfigPath); err != nil {
 		log.Fatalf("error loading .env: %s", err.Error())
 	}
 
-	// TODO: Load args
+	// pull in and parse relevant env variables for external secrets store
+	// should be passed in by docker env variables at runtime
+	configStore := config.NewLocalConfigStore(getenv)
 
-	// TODO: if --config-path=... exists, load that into env last
+	// establish connection to secrets store
+	secretStore, err := secrets.CreateSecretStore(configStore.GetSecretStoreConfig())
+	if err != nil {
+		return err
+	}
 
-	config := config.LoadConfig(getenv)
+	// establish connection to/instantiate cache
+	// cache needs secret store to get missing information
+	serviceCache, err := caching.CreateServiceCache(
+		configStore.GetServiceCacheConfig(),
+		secretStore.GetServiceCacheSecrets(),
+	)
+	if err != nil {
+		// TODO:
+	}
 
-	stx := handlers.CreateServiceContext(getenv)
-	handlers.LinkServiceContext(stx)
+	// service context needs cache to pull neccessary data from
+	stx, err := servicecontext.CreateServiceContext(serviceCache, configStore, secretStore)
+	if err != nil {
+		return err
+	}
 
-	router := routers.CreateRouter()
+	logging.NewRequestTracer(configStore.GetTracerConfig())
+
+	router := routers.CreateRouter(stx)
 
 	cert, err := tls.X509KeyPair(certs.ServerCertPEMBlock, certs.ServerKeyPEMBlock)
 	if err != nil {
@@ -58,7 +73,7 @@ func run(
 	}
 
 	server := &http.Server{
-		Addr:      ":" + config.Port,
+		Addr:      ":" + stx.ConfigStore.GetDefaultPort(),
 		Handler:   router,
 		TLSConfig: tlsConfig,
 	}

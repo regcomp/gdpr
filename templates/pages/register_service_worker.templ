@@ -47,21 +47,6 @@ templ RegisterServiceWorker(swPath, swScope string, req any) {
           // NOTE: needs better error handling
           if (isReady && navigator.serviceWorker.controller) {
             window.location.href = originalRequest.url // retrying the url with a GET
-            // TODO: Handle all types of requests? Maybe only GETS is good enough
-
-            // NOTE: this isn't good enough. fetch doesn't navigate
-            // try {
-            //   const response = await fetch(originalRequest.url, {
-            //     method: originalRequest.method,
-            //     headers: originalRequest.header,
-            //     body: originalRequest.method === 'GET' || originalRequest.method === 'HEAD' 
-            //       ? null 
-            //       : originalRequest.body,
-            //   });
-            // } catch (error) {
-            //   console.error('Request failed:', error);
-            //   throw error;
-            // }
           }
         }
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/regcomp/gdpr/caching"
 	"github.com/regcomp/gdpr/constants"
@@ -39,7 +38,7 @@ func verifyServiceWorkerIsRunning(
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logging.RT.UpdateRequestTrace(r, "VerifyServiceWorkerIsRunning")
 
-			if r.Header.Get(workerHeader) != constants.ValueTrueString {
+			if r.Header.Get(workerHeader) != constants.ValueTrue {
 				log.Printf("HEADER=%s, VALUE=%s\n", workerHeader, r.Header.Get(workerHeader))
 				requestID, err := requestStore.StoreRequest(r)
 				if err != nil {
@@ -49,7 +48,7 @@ func verifyServiceWorkerIsRunning(
 				// construct registration url
 				registrationURL := fmt.Sprintf("%s?%s=%s&%s=%s&%s=%s",
 					constants.EndpointRegisterServiceWorker,
-					constants.QueryParamRequestID, requestID,
+					constants.QueryParamRequestId, requestID,
 					constants.QueryParamWorkerPath, workerPath,
 					constants.QueryParamWorkerScope, workerScope,
 				)
@@ -90,14 +89,8 @@ func SetHSTSPolicy(next http.Handler) http.Handler {
 func TraceRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cw := &logging.CustomWriter{ResponseWriter: w, Code: http.StatusOK}
-		logging.RT.NewRequestTrace(r)
+		logging.RT.NewRequestTrace(cw, r)
 		next.ServeHTTP(cw, r)
 		logging.RT.DumpRequestTrace(r)
-		if logging.RT.DisplayResponses() == true {
-			fmt.Printf("[RESPONSE HEADER %d]\n", cw.Code)
-			cw.Header().Write(os.Stdout)
-			fmt.Printf("[BODY]\n%s\n", cw.Body.String())
-			fmt.Println("")
-		}
 	})
 }

@@ -1,0 +1,12 @@
+
+// This file is auto-generated. Do not edit manually.
+// Shared constants for {{.SubfieldName}}
+
+const {{.ConstantName}} = {
+{{- range $key, $value := .Data}}
+  {{$key}}: "{{$value}}",
+{{- end}}
+};
+
+export default {{.ConstantName}};
+

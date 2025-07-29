@@ -29,13 +29,13 @@ func run(
 	getenv func(string) string,
 	outStream io.Writer,
 ) error {
-	if err := godotenv.Load(constants.LocalConfigPath); err != nil {
+	if err := godotenv.Load(constants.LocalDefaultconfigPath); err != nil {
 		log.Fatalf("error loading .env: %s", err.Error())
 	}
 
 	// pull in and parse relevant env variables for external secrets store
 	// should be passed in by docker env variables at runtime
-	configStore := config.NewLocalConfigStore(getenv)
+	configStore := config.NewConfigStore(getenv, getenv)
 
 	// establish connection to secrets store
 	secretStore, err := secrets.CreateSecretStore(configStore.GetSecretStoreConfig())
@@ -59,7 +59,11 @@ func run(
 		return err
 	}
 
-	logging.NewRequestTracer(configStore.GetTracerConfig())
+	// WARN: FOR DEBUGGING
+	logging.NewRequestTracer(&config.RequestTracerConfig{
+		TracerOn:         true,
+		DisplayResponses: true,
+	})
 
 	router := routers.CreateRouter(stx)
 

@@ -1,7 +1,8 @@
 package config
 
 type RequestTracerConfig struct {
-	TracerOn string
+	TracerOn         bool
+	DisplayResponses bool
 }
 
 type SecretStoreConfig struct {

@@ -13,7 +13,7 @@ import (
 func RegisterServiceWorker(requestStore caching.IRequestStore, configStore config.IConfigStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logging.RT.UpdateRequestTrace(r, "RegisterServiceWorker")
-		requestID := r.URL.Query().Get(constants.QueryParamRequestID)
+		requestID := r.URL.Query().Get(constants.QueryParamRequestId)
 		if requestID == "" {
 			// TODO: fatal
 		}

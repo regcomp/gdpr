@@ -12,9 +12,9 @@ import (
 )
 
 var cookieNames = []string{
-	constants.AccessCookieName,
-	constants.RefreshCookieName,
-	constants.SessionCookieName,
+	constants.AccessTokenCookieName,
+	constants.RefreshTokenCookieName,
+	constants.SessionIdCookieName,
 }
 
 type cookieOption func(*http.Cookie)
@@ -73,7 +73,7 @@ func CreateCookieManager(serviceCache caching.IServiceCache) *CookieManager {
 
 func (cm *CookieManager) CreateAccessCookie(accessToken string) (*http.Cookie, error) {
 	return createCookie(
-		constants.AccessCookieName,
+		constants.AccessTokenCookieName,
 		accessToken,
 		cm.keys,
 		// TODO: Configure
@@ -81,12 +81,12 @@ func (cm *CookieManager) CreateAccessCookie(accessToken string) (*http.Cookie, e
 }
 
 func (cm *CookieManager) GetAccessToken(r *http.Request) (string, error) {
-	return getTokenFromCookie(r, constants.AccessCookieName, cm.keys)
+	return getTokenFromCookie(r, constants.AccessTokenCookieName, cm.keys)
 }
 
 func (cm *CookieManager) CreateRefreshCookie(refreshToken string) (*http.Cookie, error) {
 	return createCookie(
-		constants.RefreshCookieName,
+		constants.RefreshTokenCookieName,
 		refreshToken,
 		cm.keys,
 		// TODO: Configure
@@ -97,12 +97,12 @@ func (cm *CookieManager) CreateRefreshCookie(refreshToken string) (*http.Cookie,
 }
 
 func (cm *CookieManager) GetRefreshToken(r *http.Request) (string, error) {
-	return getTokenFromCookie(r, constants.RefreshCookieName, cm.keys)
+	return getTokenFromCookie(r, constants.RefreshTokenCookieName, cm.keys)
 }
 
 func (cm *CookieManager) CreateSessionCookie(sessionID string) (*http.Cookie, error) {
 	return createCookie(
-		constants.SessionCookieName,
+		constants.SessionIdCookieName,
 		sessionID,
 		cm.keys,
 		// TODO: Configure
@@ -110,7 +110,7 @@ func (cm *CookieManager) CreateSessionCookie(sessionID string) (*http.Cookie, er
 }
 
 func (cm *CookieManager) GetSessionID(r *http.Request) (string, error) {
-	return getTokenFromCookie(r, constants.SessionCookieName, cm.keys)
+	return getTokenFromCookie(r, constants.SessionIdCookieName, cm.keys)
 }
 
 func (cm *CookieManager) DestroyAllCookies(w http.ResponseWriter, r *http.Request) {

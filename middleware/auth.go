@@ -48,7 +48,7 @@ func RequiresAuthentication(authProvider auth.IAuthProvider, cookieManager *auth
 
 			claims, err := authProvider.ValidateAccessToken(accessToken)
 			if err != nil {
-				w.Header().Add(constants.HeaderRenewAccessToken, constants.ValueTrueString)
+				w.Header().Add(constants.HeaderRenewAccessToken, constants.ValueTrue)
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
@@ -78,7 +78,7 @@ func HasActiveSession(sessionStore auth.ISessionStore, cookieManager *auth.Cooki
 				// no registered session. old cookie?
 				log.Panic("sessionID not found")
 			}
-			ctx := context.WithValue(r.Context(), constants.ContextKetSessionID, sessionID)
+			ctx := context.WithValue(r.Context(), constants.ContextKeySessionId, sessionID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

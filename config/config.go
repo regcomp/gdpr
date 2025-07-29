@@ -1,11 +1,14 @@
 package config
 
 import (
+	"log"
+
 	"github.com/regcomp/gdpr/constants"
 )
 
 type IConfigStore interface {
 	GetServiceURL() string
+	GetServiceURLWithPort() string
 	GetDefaultPort() string
 	GetSessionDuration() string
 
@@ -20,15 +23,26 @@ type LocalConfigStore struct {
 	attrs map[string]string
 }
 
-func NewLocalConfigStore(getters ...func(string) string) *LocalConfigStore {
+func NewConfigStore(getenv func(string) string, getters ...func(string) string) IConfigStore {
+	storeType := getenv(constants.ConfigConfigStoreTypeKey)
+	switch storeType {
+	case "LOCAL":
+		return newLocalConfigStore(getters...)
+	default:
+		log.Fatalf("unknown config store type: %s", storeType)
+		return nil
+	}
+}
+
+func newLocalConfigStore(getters ...func(string) string) *LocalConfigStore {
 	store := &LocalConfigStore{
 		attrs: make(map[string]string),
 	}
-	store.initializeStore(getters...)
+	store.initializeLocalStore(getters...)
 	return store
 }
 
-func (cs *LocalConfigStore) initializeStore(getters ...func(string) string) {
+func (cs *LocalConfigStore) initializeLocalStore(getters ...func(string) string) {
 	for _, getter := range getters {
 		for _, attr := range constants.ConfigAttrs {
 			cs.attrs[attr] = getter(attr)
@@ -37,21 +51,19 @@ func (cs *LocalConfigStore) initializeStore(getters ...func(string) string) {
 }
 
 func (cs *LocalConfigStore) GetServiceURL() string {
-	return cs.attrs[constants.ConfigServiceURLKey]
+	return cs.attrs[constants.ConfigServiceUrlKey]
 }
 
 func (cs *LocalConfigStore) GetDefaultPort() string {
 	return cs.attrs[constants.ConfigDefaultPortKey]
 }
 
-func (cs *LocalConfigStore) GetSessionDuration() string {
-	return cs.attrs[constants.ConfigSessionDurationKey]
+func (cs *LocalConfigStore) GetServiceURLWithPort() string {
+	return cs.attrs[constants.ConfigServiceUrlKey] + ":" + cs.GetDefaultPort()
 }
 
-func (cs *LocalConfigStore) GetTracerConfig() *RequestTracerConfig {
-	return &RequestTracerConfig{
-		TracerOn: cs.attrs[constants.ConfigRequestTracerOnKey],
-	}
+func (cs *LocalConfigStore) GetSessionDuration() string {
+	return cs.attrs[constants.ConfigSessionDurationKey]
 }
 
 func (cs *LocalConfigStore) GetSecretStoreConfig() *SecretStoreConfig {
@@ -68,7 +80,7 @@ func (cs *LocalConfigStore) GetServiceCacheConfig() *ServiceCacheConfig {
 
 func (cs *LocalConfigStore) GetAuthProviderConfig() *AuthProviderConfig {
 	return &AuthProviderConfig{
-		ProviderType: cs.attrs[constants.ConfigAuthProvierTypeKey],
+		ProviderType: cs.attrs[constants.ConfigAuthProviderTypeKey],
 	}
 }
 

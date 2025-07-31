@@ -8,7 +8,6 @@ import (
 
 	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/config"
-	"github.com/regcomp/gdpr/constants"
 	"github.com/regcomp/gdpr/logging"
 	"github.com/regcomp/gdpr/templates/pages"
 )
@@ -20,10 +19,10 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 	page.Render(r.Context(), w)
 }
 
-func SubmitLoginCredentials(authProvider auth.IAuthProvider, config config.IConfigStore) http.HandlerFunc {
+func SubmitLoginCredentials(authProvider auth.IAuthProvider, configStore config.IConfigStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logging.RT.UpdateRequestTrace(r, "SubmitLoginCredentials")
-		urlString := config.GetServiceURL() + ":" + config.GetDefaultPort() + constants.RouterAuthPathPrefix + constants.EndpointLoginCallback
+		urlString := configStore.GetServiceURLWithPort() + config.PathAuthLoginCallback
 		callbackURL, err := url.Parse(urlString)
 		if err != nil {
 			// TODO:
@@ -44,8 +43,8 @@ func LoginCallback(
 		switch authProvider.GetProviderType() {
 		// NOTE: Vendor implementations go here
 		case auth.MockProviderType:
-			credentials.AccessToken = r.URL.Query().Get(constants.QueryParamAccessToken)
-			credentials.RefreshToken = r.URL.Query().Get(constants.QueryParamRefreshToken)
+			credentials.AccessToken = r.URL.Query().Get(config.QueryParamAccessToken)
+			credentials.RefreshToken = r.URL.Query().Get(config.QueryParamRefreshToken)
 		default:
 			http.Error(w, "auth provider not implemented", http.StatusInternalServerError)
 		}
@@ -72,7 +71,7 @@ func LoginCallback(
 		http.SetCookie(w, sessionCookie)
 
 		// NOTE: This redirect may want to instead reference where a user was when a refresh token expired.
-		http.Redirect(w, r, constants.EndpointDashboard, http.StatusSeeOther)
+		http.Redirect(w, r, config.EndpointDashboard, http.StatusSeeOther)
 	}
 }
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/regcomp/gdpr/caching"
-	"github.com/regcomp/gdpr/constants"
+	"github.com/regcomp/gdpr/config"
 	"github.com/regcomp/gdpr/logging"
 )
 
@@ -23,9 +23,9 @@ func RequestLogging(requestLogger logging.ILogger) func(http.Handler) http.Handl
 
 func VerifyAuthRetryIsRunning(requestStore caching.IRequestStore) func(http.Handler) http.Handler {
 	return verifyServiceWorkerIsRunning(
-		constants.WorkerAuthRetryPath,
-		constants.WorkerAuthRetryScope,
-		constants.HeaderAuthRetryWorkerRunning,
+		config.WorkerAuthRetryPath,
+		config.WorkerAuthRetryScope,
+		config.HeaderAuthRetryWorkerRunning,
 		requestStore,
 	)
 }
@@ -38,7 +38,7 @@ func verifyServiceWorkerIsRunning(
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logging.RT.UpdateRequestTrace(r, "VerifyServiceWorkerIsRunning")
 
-			if r.Header.Get(workerHeader) != constants.ValueTrue {
+			if r.Header.Get(workerHeader) != config.ValueTrue {
 				log.Printf("HEADER=%s, VALUE=%s\n", workerHeader, r.Header.Get(workerHeader))
 				requestID, err := requestStore.StoreRequest(r)
 				if err != nil {
@@ -47,10 +47,10 @@ func verifyServiceWorkerIsRunning(
 
 				// construct registration url
 				registrationURL := fmt.Sprintf("%s?%s=%s&%s=%s&%s=%s",
-					constants.EndpointRegisterServiceWorker,
-					constants.QueryParamRequestId, requestID,
-					constants.QueryParamWorkerPath, workerPath,
-					constants.QueryParamWorkerScope, workerScope,
+					config.PathBaseRegisterServiceWorker,
+					config.QueryParamRequestId, requestID,
+					config.QueryParamWorkerPath, workerPath,
+					config.QueryParamWorkerScope, workerScope,
 				)
 
 				// redirect to the url
@@ -63,7 +63,7 @@ func verifyServiceWorkerIsRunning(
 }
 
 func ScopeAuthRetryAccess() func(http.Handler) http.Handler {
-	return ScopeServiceWorkerAccess(constants.WorkerAuthRetryPath, constants.WorkerAuthRetryScope)
+	return ScopeServiceWorkerAccess(config.WorkerAuthRetryPath, config.WorkerAuthRetryScope)
 }
 
 func ScopeServiceWorkerAccess(swPath, accessPath string) func(http.Handler) http.Handler {
@@ -71,7 +71,7 @@ func ScopeServiceWorkerAccess(swPath, accessPath string) func(http.Handler) http
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logging.RT.UpdateRequestTrace(r, "ScopeServiceWorkerAccess")
 			if r.URL.Path == swPath {
-				w.Header().Add(constants.HeaderServiceWorkerAllowed, accessPath)
+				w.Header().Add(config.HeaderServiceWorkerAllowed, accessPath)
 			}
 			next.ServeHTTP(w, r)
 		})

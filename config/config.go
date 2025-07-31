@@ -2,8 +2,6 @@ package config
 
 import (
 	"log"
-
-	"github.com/regcomp/gdpr/constants"
 )
 
 type IConfigStore interface {
@@ -24,7 +22,7 @@ type LocalConfigStore struct {
 }
 
 func NewConfigStore(getenv func(string) string, getters ...func(string) string) IConfigStore {
-	storeType := getenv(constants.ConfigConfigStoreTypeKey)
+	storeType := getenv(ConfigConfigStoreTypeKey)
 	switch storeType {
 	case "LOCAL":
 		return newLocalConfigStore(getters...)
@@ -44,43 +42,43 @@ func newLocalConfigStore(getters ...func(string) string) *LocalConfigStore {
 
 func (cs *LocalConfigStore) initializeLocalStore(getters ...func(string) string) {
 	for _, getter := range getters {
-		for _, attr := range constants.ConfigAttrs {
+		for _, attr := range ConfigAttrs {
 			cs.attrs[attr] = getter(attr)
 		}
 	}
 }
 
 func (cs *LocalConfigStore) GetServiceURL() string {
-	return cs.attrs[constants.ConfigServiceUrlKey]
+	return cs.attrs[ConfigServiceUrlKey]
 }
 
 func (cs *LocalConfigStore) GetDefaultPort() string {
-	return cs.attrs[constants.ConfigDefaultPortKey]
+	return cs.attrs[ConfigDefaultPortKey]
 }
 
 func (cs *LocalConfigStore) GetServiceURLWithPort() string {
-	return cs.attrs[constants.ConfigServiceUrlKey] + ":" + cs.GetDefaultPort()
+	return cs.attrs[ConfigServiceUrlKey] + ":" + cs.GetDefaultPort()
 }
 
 func (cs *LocalConfigStore) GetSessionDuration() string {
-	return cs.attrs[constants.ConfigSessionDurationKey]
+	return cs.attrs[ConfigSessionDurationKey]
 }
 
 func (cs *LocalConfigStore) GetSecretStoreConfig() *SecretStoreConfig {
 	return &SecretStoreConfig{
-		StoreType: cs.attrs[constants.ConfigSecretStoreTypeKey],
+		StoreType: cs.attrs[ConfigSecretStoreTypeKey],
 	}
 }
 
 func (cs *LocalConfigStore) GetServiceCacheConfig() *ServiceCacheConfig {
 	return &ServiceCacheConfig{
-		CacheType: cs.attrs[constants.ConfigServiceCacheTypeKey],
+		CacheType: cs.attrs[ConfigServiceCacheTypeKey],
 	}
 }
 
 func (cs *LocalConfigStore) GetAuthProviderConfig() *AuthProviderConfig {
 	return &AuthProviderConfig{
-		ProviderType: cs.attrs[constants.ConfigAuthProviderTypeKey],
+		ProviderType: cs.attrs[ConfigAuthProviderTypeKey],
 	}
 }
 

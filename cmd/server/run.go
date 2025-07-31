@@ -17,7 +17,6 @@ import (
 	certs "github.com/regcomp/gdpr/auth/local_certs"
 	"github.com/regcomp/gdpr/caching"
 	"github.com/regcomp/gdpr/config"
-	"github.com/regcomp/gdpr/constants"
 	"github.com/regcomp/gdpr/logging"
 	"github.com/regcomp/gdpr/routers"
 	"github.com/regcomp/gdpr/secrets"
@@ -29,7 +28,7 @@ func run(
 	getenv func(string) string,
 	outStream io.Writer,
 ) error {
-	if err := godotenv.Load(constants.LocalDefaultconfigPath); err != nil {
+	if err := godotenv.Load(config.LocalDefaultConfigPath); err != nil {
 		log.Fatalf("error loading .env: %s", err.Error())
 	}
 

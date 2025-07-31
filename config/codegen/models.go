@@ -14,12 +14,12 @@ type ConfigData struct {
 	Routers            map[string]RouterConfig        `json:"ROUTERS"`
 	ServiceWorkers     map[string]ServiceWorkerConfig `json:"SERVICE_WORKERS"`
 	Cookies            map[string]string              `json:"COOKIES"`
-	QueryParameters    []string                       `json:"QUERY_PARAMETERS"`
+	QueryParameters    map[string]string              `json:"QUERY_PARAMETERS"`
 	Headers            map[string]string              `json:"HEADERS"`
 	Values             map[string]string              `json:"VALUES"`
-	RequestContextKeys []string                       `json:"REQUEST_CONTEXT_KEYS"`
-	ConfigKeys         []string                       `json:"CONFIG_KEYS"`
-	FormValues         []string                       `json:"FORM_VALUES"`
+	RequestContextKeys map[string]string              `json:"REQUEST_CONTEXT_KEYS"`
+	ConfigKeys         map[string]string              `json:"CONFIG_KEYS"`
+	FormValues         map[string]string              `json:"FORM_VALUES"`
 	LocalFiles         map[string]string              `json:"LOCAL_FILES"`
 	Shared             map[string]map[string]string   `json:"SHARED"`
 }
@@ -31,7 +31,7 @@ type ServiceTemplateData struct {
 	FullPaths      []FullPath
 	ServiceWorkers []ServiceWorker
 	ConfigKeys     []ConfigKey
-	ConfigSlice    string
+	ConfigAttrs    []ConfigAttr // used to iterate over
 	Cookies        []Cookie
 	QueryParams    []QueryParam
 	ContextKeys    []ContextKey
@@ -52,19 +52,19 @@ type Endpoint struct {
 	Name     string
 	Value    string
 	GoName   string
-	Category string
+	Category string // used for comments in the template and sorting
 }
 
 type FullPath struct {
 	Name     string
 	Value    string
 	GoName   string
-	Category string
+	Category string // used for comments in the template and sorting
 }
 
 type ServiceWorker struct {
 	Name   string
-	Field  string
+	Field  string // which field of the struct this represents
 	Value  string
 	GoName string
 }
@@ -72,6 +72,10 @@ type ServiceWorker struct {
 type ConfigKey struct {
 	Name   string
 	Value  string
+	GoName string
+}
+
+type ConfigAttr struct {
 	GoName string
 }
 

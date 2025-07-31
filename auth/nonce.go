@@ -6,7 +6,7 @@ import (
 
 	sc "github.com/gorilla/securecookie"
 	"github.com/regcomp/gdpr/caching"
-	"github.com/regcomp/gdpr/constants"
+	"github.com/regcomp/gdpr/config"
 )
 
 const (
@@ -35,9 +35,9 @@ func (ns *NonceStore) Generate() string {
 }
 
 func (ns *NonceStore) Validate(r *http.Request) bool {
-	nonce := r.FormValue(constants.FormValueNonce)
+	nonce := r.FormValue(config.FormValueNonce)
 	if nonce == "" {
-		nonce = r.Header.Get(constants.HeaderNonceToken) // ajax
+		nonce = r.Header.Get(config.HeaderNonceToken) // ajax
 	}
 
 	// TODO: ACTUALLY VALIDATE

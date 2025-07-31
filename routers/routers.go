@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/regcomp/gdpr/constants"
+	"github.com/regcomp/gdpr/config"
 	"github.com/regcomp/gdpr/handlers"
 	"github.com/regcomp/gdpr/middleware"
 	servicecontext "github.com/regcomp/gdpr/service_context"
@@ -22,10 +22,10 @@ func CreateRouter(stx *servicecontext.ServiceContext) *chi.Mux {
 		middleware.TraceRequests,
 	)
 
-	router.Get(constants.EndpointHealthz, healthz)
+	router.Get(config.EndpointHealthz, healthz)
 	router.Get(
-		constants.EndpointRegisterServiceWorker,
-		handlers.RegisterServiceWorker(stx.RequestStore, stx.ConfigStore),
+		config.EndpointRegisterServiceWorker,
+		handlers.RegisterServiceWorker(stx.RequestStore),
 	)
 
 	mountRouters(router,
@@ -75,17 +75,17 @@ func CreateAuthRouter(stx *servicecontext.ServiceContext) SubRouter {
 		middleware.SkipIfAuthenticated(stx.AuthProvider, stx.CookieManager, stx.ConfigStore),
 	)
 
-	auth.Get(constants.EndpointLogin, handlers.LoginPage)
-	auth.Post(constants.EndpointLogin, handlers.SubmitLoginCredentials(stx.AuthProvider, stx.ConfigStore))
+	auth.Get(config.EndpointLogin, handlers.LoginPage)
+	auth.Post(config.EndpointLogin, handlers.SubmitLoginCredentials(stx.AuthProvider, stx.ConfigStore))
 
 	// Apparently some providers will hit with either GET or POST
 	loginCallback := handlers.LoginCallback(stx.AuthProvider, stx.CookieManager, stx.SessionStore)
-	auth.Get(constants.EndpointLoginCallback, loginCallback)
-	auth.Post(constants.EndpointLoginCallback, loginCallback)
+	auth.Get(config.EndpointLoginCallback, loginCallback)
+	auth.Post(config.EndpointLoginCallback, loginCallback)
 
-	auth.Post(constants.EndpointRenewToken, handlers.RenewAccessToken(stx.AuthProvider, stx.CookieManager))
+	auth.Post(config.EndpointRenewToken, handlers.RenewAccessToken(stx.AuthProvider, stx.CookieManager))
 
-	return SubRouter{Path: constants.RouterAuthPathPrefix, Router: auth}
+	return SubRouter{Path: config.RouterAuthPathPrefix, Router: auth}
 }
 
 func CreateClientRouter(stx *servicecontext.ServiceContext) SubRouter {
@@ -97,14 +97,14 @@ func CreateClientRouter(stx *servicecontext.ServiceContext) SubRouter {
 		middleware.AddNonceToRequest(stx.NonceStore),
 	)
 
-	client.Get(constants.EndpointDashboard, handlers.DashboardPage(stx.CookieManager))
-	client.Get(constants.EndpointTest1, handlers.TestEndpoint1)
-	client.Get(constants.EndpointTest2, handlers.TestEndpoint2)
+	client.Get(config.EndpointDashboard, handlers.DashboardPage(stx.CookieManager))
+	client.Get(config.EndpointTest1, handlers.TestEndpoint1)
+	client.Get(config.EndpointTest2, handlers.TestEndpoint2)
 
 	// NOTE: Not sure were this should go
-	client.Post(constants.EndpointLogout, handlers.Logout(stx.CookieManager))
+	client.Post(config.EndpointLogout, handlers.Logout(stx.CookieManager))
 
-	return SubRouter{Path: constants.RouterClientPathPrefix, Router: client}
+	return SubRouter{Path: config.RouterClientPathPrefix, Router: client}
 }
 
 func CreateAPIRouter(stx *servicecontext.ServiceContext) SubRouter {
@@ -115,7 +115,7 @@ func CreateAPIRouter(stx *servicecontext.ServiceContext) SubRouter {
 		middleware.HasActiveSession(stx.SessionStore, stx.CookieManager),
 	)
 
-	return SubRouter{Path: constants.RouterApiPathPrefix, Router: api}
+	return SubRouter{Path: config.RouterApiPathPrefix, Router: api}
 }
 
 func mountRouters(main *chi.Mux, subrouters ...SubRouter) {

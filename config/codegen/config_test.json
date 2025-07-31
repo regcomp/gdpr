@@ -1,0 +1,92 @@
+{
+  "ROUTERS": {
+    "BASE": {
+      "PATH_PREFIX": "/",
+      "ENDPOINTS": [
+        "healthz",
+        "register-service-worker"
+      ]
+    },
+    "CLIENT": {
+      "PATH_PREFIX": "/",
+      "ENDPOINTS": [
+        "dashboard",
+        "logout",
+        "test1",
+        "test2"
+      ]
+    },
+    "AUTH": {
+      "PATH_PREFIX": "/auth",
+      "ENDPOINTS": [
+        "login",
+        "login-callback",
+        "renew-token"
+      ]
+    },
+    "API": {
+      "PATH_PREFIX": "/api",
+      "ENDPOINTS": []
+    }
+  },
+  "SERVICE_WORKERS": {
+    "AUTH_RETRY": {
+      "PATH": "/static/sw/auth_retry.js",
+      "SCOPE": "/"
+    }
+  },
+  "COOKIES": {
+    "ACCESS_TOKEN": "access-token",
+    "REFRESH_TOKEN": "refresh-token",
+    "SESSION_ID": "session-id"
+  },
+  "QUERY_PARAMETERS": {
+    "REDIRECT_URL": "redirect-url",
+    "REQUEST_ID": "request-id",
+    "ACCESS_TOKEN": "access-token",
+    "REFRESH_TOKEN": "refresh-token",
+    "WORKER_PATH": "worker-path",
+    "WORKER_SCOPE": "worker-scope"
+  },
+  "HEADERS": {
+    "NONCE_TOKEN": "Nonce-Token",
+    "RENEW_ACCESS_TOKEN": "Renew-Access-Token",
+    "SERVICE_WORKER_ALLOWED": "Service-Worker-Allowed",
+    "AUTH_RETRY_WORKER_RUNNING": "Auth-Retry-Worker-Running"
+  },
+  "REQUEST_CONTEXT_KEYS": {
+    "CLAIMS": "claims",
+    "SESSION_ID": "session-id",
+    "NONCE_TOKEN": "nonce-token"
+  },
+  "CONFIG_KEYS": {
+    "CONFIG_STORE_TYPE": "CONFIG_STORE_TYPE",
+    "SERVICE_URL": "SERVICE_URL",
+    "DEFAULT_PORT": "DEFAULT_PORT",
+    "SESSION_DURATION": "SESSION_DURATION",
+    "SERVICE_CACHE_TYPE": "SERVICE_CACHE_TYPE",
+    "SECRET_STORE_TYPE": "SECRET_STORE_TYPE",
+    "AUTH_PROVIDER_TYPE": "AUTH_PROVIDER_TYPE"
+  },
+  "FORM_VALUES": {
+    "NONCE": "nonce"
+  },
+  "LOCAL_FILES": {
+    "ENV": ".env",
+    "DEFAULT_CONFIG": "config/default.config"
+  },
+  "VALUES": {
+    "TRUE": "true"
+  },
+  "SHARED": {
+    "AUTH_RETRY_WORKER": {
+      "RENEW_HEADER": "@HEADERS.RENEW_ACCESS_TOKEN",
+      "STATUS_HEADER": "@HEADERS.AUTH_RETRY_WORKER_RUNNING",
+      "RENEW_ENDPOINT": "@ROUTERS.AUTH.ENDPOINTS.renew-token",
+      "TRUE": "@VALUES.TRUE"
+    },
+    "TESTING": {
+      "REDIRECT_PARAM": "@QUERY_PARAMETERS.REDIRECT_URL"
+    }
+  }
+}

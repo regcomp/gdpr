@@ -5,15 +5,14 @@ import (
 
 	"github.com/regcomp/gdpr/caching"
 	"github.com/regcomp/gdpr/config"
-	"github.com/regcomp/gdpr/constants"
 	"github.com/regcomp/gdpr/logging"
 	"github.com/regcomp/gdpr/templates/pages"
 )
 
-func RegisterServiceWorker(requestStore caching.IRequestStore, configStore config.IConfigStore) http.HandlerFunc {
+func RegisterServiceWorker(requestStore caching.IRequestStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logging.RT.UpdateRequestTrace(r, "RegisterServiceWorker")
-		requestID := r.URL.Query().Get(constants.QueryParamRequestId)
+		requestID := r.URL.Query().Get(config.QueryParamRequestId)
 		if requestID == "" {
 			// TODO: fatal
 		}
@@ -23,8 +22,8 @@ func RegisterServiceWorker(requestStore caching.IRequestStore, configStore confi
 			return
 		}
 
-		swPath := r.URL.Query().Get(constants.QueryParamWorkerPath)
-		swScope := r.URL.Query().Get(constants.QueryParamWorkerScope)
+		swPath := r.URL.Query().Get(config.QueryParamWorkerPath)
+		swScope := r.URL.Query().Get(config.QueryParamWorkerScope)
 		if swPath == "" || swScope == "" {
 			http.Error(w, "missing service worker information", http.StatusBadRequest)
 		}

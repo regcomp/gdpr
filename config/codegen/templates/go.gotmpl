@@ -1,5 +1,5 @@
 {{.Header}}
-package constants
+package config 
 
 // Subrouter path prefixes
 const (
@@ -50,7 +50,9 @@ const (
 )
 
 var ConfigAttrs = []string{
-	{{.ConfigSlice}},
+{{- range .ConfigAttrs}}
+	{{.GoName}},
+{{- end}}
 }
 {{- end}}
 

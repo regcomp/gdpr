@@ -7,14 +7,13 @@ import (
 
 	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/config"
-	"github.com/regcomp/gdpr/constants"
 	"github.com/regcomp/gdpr/logging"
 )
 
 func SkipIfAuthenticated(
 	authProvider auth.IAuthProvider,
 	cookieManager *auth.CookieManager,
-	config config.IConfigStore,
+	configStore config.IConfigStore,
 ) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +30,10 @@ func SkipIfAuthenticated(
 				return
 			}
 
-			http.Redirect(w, r, config.GetServiceURL()+":"+config.GetDefaultPort()+constants.EndpointDashboard, http.StatusSeeOther)
+			http.Redirect(w, r,
+				configStore.GetServiceURLWithPort()+config.PathClientDashboard,
+				http.StatusSeeOther,
+			)
 		})
 	}
 }
@@ -48,14 +50,14 @@ func RequiresAuthentication(authProvider auth.IAuthProvider, cookieManager *auth
 
 			claims, err := authProvider.ValidateAccessToken(accessToken)
 			if err != nil {
-				w.Header().Add(constants.HeaderRenewAccessToken, constants.ValueTrue)
+				w.Header().Add(config.HeaderRenewAccessToken, config.ValueTrue)
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
 
 			// TODO: Add the claims to the request context
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, constants.ContextKeyClaims, claims)
+			ctx = context.WithValue(ctx, config.ContextKeyClaims, claims)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -78,7 +80,7 @@ func HasActiveSession(sessionStore auth.ISessionStore, cookieManager *auth.Cooki
 				// no registered session. old cookie?
 				log.Panic("sessionID not found")
 			}
-			ctx := context.WithValue(r.Context(), constants.ContextKeySessionId, sessionID)
+			ctx := context.WithValue(r.Context(), config.ContextKeySessionId, sessionID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -90,9 +92,9 @@ func AddNonceToRequest(nonceStore *auth.NonceStore) func(http.Handler) http.Hand
 			logging.RT.UpdateRequestTrace(r, "AddNonceToRequest")
 			nonce := nonceStore.Generate()
 			// adding to response header
-			w.Header().Set(constants.HeaderNonceToken, nonce)
+			w.Header().Set(config.HeaderNonceToken, nonce)
 			// adding to context so it can be passed to templates
-			r = r.WithContext(context.WithValue(r.Context(), constants.ContextKeyNonceToken, nonce))
+			r = r.WithContext(context.WithValue(r.Context(), config.ContextKeyNonceToken, nonce))
 
 			next.ServeHTTP(w, r)
 		})

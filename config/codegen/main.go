@@ -12,12 +12,12 @@ import (
 )
 
 const (
-	WarningHeader = "// Auto-generated from /config/service.json - DO NOT EDIT\n"
+	WarningHeader = "// Auto-generated from /config/config.json - DO NOT EDIT\n"
 )
 
 const (
-	sourceServiceFile             = "../../config/service.json"
-	targetGoFilePath              = "../../constants/service.go"
+	sourceServiceFile             = "../../config/config.json"
+	targetGoFilePath              = "../../config/constants.go"
 	javascriptSharedDirectoryPath = "../../static/js/shared/"
 	jsTemplatePath                = "./templates/js.gotmpl"
 	goTemplatePath                = "./templates/go.gotmpl"
@@ -59,68 +59,27 @@ func main() {
 		log.Fatal("Error creating output directory:", err)
 	}
 
+	// generating all the specified .js files to share constants
+	flattenedMapping := generateFlattenedDataMapping(data)
 	for subfieldName, subfieldData := range data.Shared {
 		filename := strings.ToLower(subfieldName) + "_shared.js"
 		filepath := fmt.Sprintf("%s/%s", javascriptSharedDirectoryPath, filename)
 
-		sharedData := generateSharedDataMapping(data, subfieldData)
+		sharedData := generateSharedDataMapping(flattenedMapping, subfieldData)
 
 		generateSingleJSFile(filepath, subfieldName, sharedData)
 	}
 }
 
-func processData(data *ConfigData) *ServiceTemplateData {
-	td := &ServiceTemplateData{}
-	td.Header = WarningHeader
-
-	processFuncs := []func(*ConfigData, *ServiceTemplateData){
-		processRouters,
-		processPaths,
-		processServiceWorkers,
-		processConfigKeys,
-		processCookies,
-		processRequestContextKeys,
-		processFormValues,
-		processLocalFiles,
-		processHeaders,
-		processValues,
-	}
-
-	for _, processFunc := range processFuncs {
-		processFunc(data, td)
-	}
-
-	return td
-}
-
-func generateSharedDataMapping(data *ConfigData, subfieldMap map[string]string) map[string]string {
+func generateSharedDataMapping(flattenedMapping map[string]string, subfieldData map[string]string) map[string]string {
 	sharedData := make(map[string]string)
-	valueLookup := make(map[string]string)
 
-	mappingFuncs := []func(*ConfigData, map[string]string){
-		mapRouterData,
-		mapHeaderData,
-		mapValuesData,
-		mapServiceWorkerData,
-		mapCookieData,
-		mapQueryParamData,
-	}
-
-	for _, mappingFunc := range mappingFuncs {
-		mappingFunc(data, valueLookup)
-	}
-
-	// Process the subfield data
-	for key, value := range subfieldMap {
-		if after, ok := strings.CutPrefix(value, "@"); ok {
-			refKey := after
-			if refValue, exists := valueLookup[refKey]; exists {
-				sharedData[key] = refValue
-			} else {
-				sharedData[key] = value
-			}
+	for finalName, referenceKey := range subfieldData {
+		trimmedKey := strings.TrimPrefix(referenceKey, "@")
+		if referencedValue, exists := flattenedMapping[trimmedKey]; exists {
+			sharedData[finalName] = referencedValue
 		} else {
-			sharedData[key] = value
+			sharedData[finalName] = "NULL"
 		}
 	}
 

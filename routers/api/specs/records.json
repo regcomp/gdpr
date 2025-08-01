@@ -1,0 +1,331 @@
+{
+  "api": "Records to Delete Management API",
+  "version": "1.0",
+  "endpoints": {
+    "get": {
+      "method": "GET",
+      "path": "/api/records",
+      "description": "Get paginated list of records with cursor-based pagination",
+      "query_parameters": {
+        "limit": {
+          "type": "integer",
+          "required": false,
+          "default": 20,
+          "min": 1,
+          "max": 100,
+          "description": "Number of records to return"
+        },
+        "after": {
+          "type": "string",
+          "required": false,
+          "format": "ISO 8601 timestamp",
+          "example": "2024-01-15T10:30:45.555666Z",
+          "description": "Cursor timestamp - return records created after this time"
+        }
+      },
+      "response": {
+        "success": {
+          "status": 200,
+          "content_type": "application/json",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "John Doe"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "example": "john.doe@example.com"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "ISO 8601 timestamp",
+                      "example": "2024-01-15T10:30:45.555666Z"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "ISO 8601 timestamp",
+                      "example": "2024-01-15T10:35:22.123456Z"
+                    },
+                    "delete_by": {
+                      "type": "string",
+                      "format": "ISO 8601 timestamp",
+                      "example": "2024-01-15T10:35:22.123456Z"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "created_at",
+                    "delete_by"
+                  ]
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "hasMore": {
+                    "type": "boolean",
+                    "description": "Whether more pages are available"
+                  },
+                  "nextCursor": {
+                    "type": "string",
+                    "format": "ISO 8601 timestamp",
+                    "nullable": true,
+                    "description": "Cursor for next page (null if no more pages)"
+                  },
+                  "total": {
+                    "type": "integer",
+                    "nullable": true,
+                    "description": "Total number of records (optional, may be expensive to compute)"
+                  }
+                },
+                "required": [
+                  "hasMore",
+                  "nextCursor"
+                ]
+              }
+            },
+            "required": [
+              "data",
+              "pagination"
+            ]
+          }
+        },
+        "error": {
+          "status": [
+            400,
+            500
+          ],
+          "content_type": "application/json",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "string",
+                "description": "Human-readable error message"
+              },
+              "code": {
+                "type": "string",
+                "description": "Machine-readable error code"
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        }
+      },
+      "examples": {
+        "initial_request": {
+          "request": "GET /api/records?limit=20",
+          "response": {
+            "status": 200,
+            "body": {
+              "data": [
+                {
+                  "id": "550e8400-e29b-41d4-a716-446655440000",
+                  "name": "John Doe",
+                  "email": "john.doe@example.com",
+                  "created_at": "2024-01-15T10:30:45.555666Z",
+                  "updated_at": "2024-01-15T10:35:22.123456Z"
+                },
+                {
+                  "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+                  "name": "Jane Smith",
+                  "email": "jane.smith@example.com",
+                  "created_at": "2024-01-15T10:31:12.789123Z",
+                  "updated_at": "2024-01-15T10:31:12.789123Z"
+                }
+              ],
+              "pagination": {
+                "hasMore": true,
+                "nextCursor": "2024-01-15T10:31:12.789123Z",
+                "total": 1250
+              }
+            }
+          }
+        },
+        "pagination_request": {
+          "request": "GET /api/records?limit=20&after=2024-01-15T10:31:12.789123Z",
+          "response": {
+            "status": 200,
+            "body": {
+              "data": [
+                {
+                  "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                  "name": "Bob Johnson",
+                  "email": "bob.johnson@example.com",
+                  "created_at": "2024-01-15T10:32:05.444555Z",
+                  "updated_at": "2024-01-15T10:32:05.444555Z"
+                }
+              ],
+              "pagination": {
+                "hasMore": false,
+                "nextCursor": null,
+                "total": 1250
+              }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "method": "DELETE",
+      "path": "/api/records/{id}",
+      "description": "Delete a record by ID",
+      "path_parameters": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "required": true,
+          "description": "UUID of the record to delete"
+        }
+      },
+      "response": {
+        "success": {
+          "status": 204,
+          "description": "Record successfully deleted, no content returned"
+        },
+        "not_found": {
+          "status": 404,
+          "content_type": "application/json",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "string",
+                "example": "Record not found"
+              },
+              "code": {
+                "type": "string",
+                "example": "RECORD_NOT_FOUND"
+              }
+            }
+          }
+        },
+        "forbidden": {
+          "status": 403,
+          "content_type": "application/json",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "string",
+                "example": "Not authorized to delete this record"
+              },
+              "code": {
+                "type": "string",
+                "example": "INSUFFICIENT_PERMISSIONS"
+              }
+            }
+          }
+        }
+      },
+      "examples": {
+        "success": {
+          "request": "DELETE /api/records/550e8400-e29b-41d4-a716-446655440000",
+          "response": {
+            "status": 204
+          }
+        },
+        "not_found": {
+          "request": "DELETE /api/records/00000000-0000-0000-0000-000000000000",
+          "response": {
+            "status": 404,
+            "body": {
+              "error": "Record not found",
+              "code": "RECORD_NOT_FOUND"
+            }
+          }
+        }
+      }
+    },
+    "search": {
+      "method": "GET",
+      "path": "/api/records/search",
+      "description": "Search records by name or email with cursor-based pagination",
+      "query_parameters": {
+        "q": {
+          "type": "string",
+          "required": true,
+          "min_length": 2,
+          "description": "Search query (name or email)"
+        },
+        "limit": {
+          "type": "integer",
+          "required": false,
+          "default": 20,
+          "min": 1,
+          "max": 100
+        },
+        "after": {
+          "type": "string",
+          "required": false,
+          "format": "ISO 8601 timestamp"
+        }
+      },
+      "response": {
+        "success": {
+          "status": 200,
+          "content_type": "application/json",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/endpoints/records/response/success/schema/properties/data/items"
+                }
+              },
+              "pagination": {
+                "$ref": "#/endpoints/records/response/success/schema/properties/pagination"
+              }
+            },
+            "required": [
+              "data",
+              "pagination"
+            ]
+          }
+        }
+      },
+      "examples": {
+        "search_request": {
+          "request": "GET /api/records/search?q=john&limit=10",
+          "response": {
+            "status": 200,
+            "body": {
+              "data": [
+                {
+                  "id": "550e8400-e29b-41d4-a716-446655440000",
+                  "name": "John Doe",
+                  "email": "john.doe@example.com",
+                  "created_at": "2024-01-15T10:30:45.555666Z",
+                  "updated_at": "2024-01-15T10:35:22.123456Z"
+                }
+              ],
+              "pagination": {
+                "hasMore": false,
+                "nextCursor": null,
+                "total": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

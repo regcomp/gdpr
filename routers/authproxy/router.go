@@ -4,7 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/regcomp/gdpr/config"
 	"github.com/regcomp/gdpr/middleware"
-	"github.com/regcomp/gdpr/routers/auth_proxy/handlers"
+	"github.com/regcomp/gdpr/routers/authproxy/handlers"
 	servicecontext "github.com/regcomp/gdpr/service_context"
 )
 

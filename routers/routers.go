@@ -7,7 +7,7 @@ import (
 	"github.com/regcomp/gdpr/config"
 	"github.com/regcomp/gdpr/middleware"
 	"github.com/regcomp/gdpr/routers/api"
-	authproxy "github.com/regcomp/gdpr/routers/auth_proxy"
+	authproxy "github.com/regcomp/gdpr/routers/authproxy"
 	"github.com/regcomp/gdpr/routers/client"
 	"github.com/regcomp/gdpr/routers/handlers"
 	servicecontext "github.com/regcomp/gdpr/service_context"

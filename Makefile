@@ -5,7 +5,7 @@ TARGET=server
 gen-certs:
 	@ ${MAKE} -C ./auth/local_certs/ gen_certs
 
-gen-config:
+gen-variables:
 	@ go generate ./config/codegen/
 
 build-local: gen-variables

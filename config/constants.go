@@ -68,9 +68,9 @@ var ConfigAttrs = []string{
 }
 // Cookies
 const (
+	CookieNameSessionId = "session-id"
 	CookieNameAccessToken = "access-token"
 	CookieNameRefreshToken = "refresh-token"
-	CookieNameSessionId = "session-id"
 )
 // form values
 const FormValueNonce = "nonce"
@@ -96,10 +96,10 @@ const (
 )
 // headers
 const (
+	HeaderAuthRetryWorkerRunning = "Auth-Retry-Worker-Running"
 	HeaderNonceToken = "Nonce-Token"
 	HeaderRenewAccessToken = "Renew-Access-Token"
 	HeaderServiceWorkerAllowed = "Service-Worker-Allowed"
-	HeaderAuthRetryWorkerRunning = "Auth-Retry-Worker-Running"
 )
 // values
 const (

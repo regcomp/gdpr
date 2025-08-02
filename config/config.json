@@ -48,7 +48,9 @@
     "ACCESS_TOKEN": "access-token",
     "REFRESH_TOKEN": "refresh-token",
     "WORKER_PATH": "worker-path",
-    "WORKER_SCOPE": "worker-scope"
+    "WORKER_SCOPE": "worker-scope",
+    "LIMIT": "limit",
+    "AFTER": "after"
   },
   "HEADERS": {
     "NONCE_TOKEN": "Nonce-Token",

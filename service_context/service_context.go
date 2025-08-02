@@ -21,7 +21,7 @@ type ServiceContext struct {
 
 	ConfigStore config.IConfigStore
 
-	DatabaseStore *database.DatabaseStore
+	DatabaseStore database.IDatabaseManager
 	RequestStore  caching.IRequestStore
 
 	RequestLogger logging.ILogger

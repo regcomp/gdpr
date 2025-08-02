@@ -85,12 +85,14 @@ const (
 )
 // query parameters
 const (
+	QueryParamWorkerPath = "worker-path"
+	QueryParamWorkerScope = "worker-scope"
+	QueryParamLimit = "limit"
+	QueryParamAfter = "after"
 	QueryParamRedirectUrl = "redirect-url"
 	QueryParamRequestId = "request-id"
 	QueryParamAccessToken = "access-token"
 	QueryParamRefreshToken = "refresh-token"
-	QueryParamWorkerPath = "worker-path"
-	QueryParamWorkerScope = "worker-scope"
 )
 // request context keys
 const (

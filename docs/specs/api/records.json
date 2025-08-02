@@ -1,5 +1,5 @@
 {
-  "api": "Records to Delete Management API",
+  "api": "Records of Deletion Request API",
   "version": "1.0",
   "endpoints": {
     "get": {

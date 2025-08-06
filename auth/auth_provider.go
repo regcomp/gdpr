@@ -32,12 +32,12 @@ type IAuthProvider interface {
 	GetNewAccessToken(string, *http.Request) (string, error)
 }
 
-func CreateAuthProvider(config *config.AuthProviderConfig, secrets *secrets.AuthProviderSecrets) (IAuthProvider, error) {
-	switch config.ProviderType {
+func CreateAuthProvider(cfg *config.AuthProviderConfig, secrets *secrets.AuthProviderSecrets) (IAuthProvider, error) {
+	switch cfg.ProviderType {
 	case MockProviderType:
 		return createMockAuthProvider(), nil
 	default:
-		return nil, fmt.Errorf("unknown auth provider type=%s", config.ProviderType)
+		return nil, fmt.Errorf("unknown auth provider type=%s", cfg.ProviderType)
 	}
 }
 

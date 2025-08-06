@@ -21,7 +21,7 @@ type ServiceContext struct {
 
 	ConfigStore config.IConfigStore
 
-	DatabaseStore database.IDatabaseManager
+	DatabaseStore *database.DatabaseManager
 	RequestStore  caching.IRequestStore
 
 	RequestLogger logging.ILogger
@@ -43,8 +43,13 @@ func CreateServiceContext(
 
 	requestlogger := logging.NewRequestLogger(os.Stdout)
 
-	databaseStore, err := database.CreateDatabaseStore(
-		configStore.GetDatabaseStoreConfig(),
+	databaseManagerConfig, err := configStore.GetDatabaseManagerConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	databaseManager, err := database.CreateDatabaseManager(
+		databaseManagerConfig,
 		secretStore.GetDatabaseStoreSecrets(),
 	)
 	if err != nil {
@@ -63,7 +68,7 @@ func CreateServiceContext(
 		RequestLogger: requestlogger,
 		CookieManager: cookieManager,
 		SessionStore:  sessionStore,
-		DatabaseStore: databaseStore,
+		DatabaseStore: databaseManager,
 		RequestStore:  requestStore,
 		NonceStore:    nonceStore,
 		ConfigStore:   configStore,

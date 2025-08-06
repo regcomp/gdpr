@@ -17,10 +17,17 @@ type AuthProviderConfig struct {
 	ProviderType string
 }
 
-type DatabaseStoreConfig struct {
-	//
+type DatabaseManagerConfig struct {
+	RecordsConfig   RecordsDatabaseConfig
+	ProviderConfigs []ProviderDatabaseConfig
 }
 
-type DatabaseProviderConfig struct {
-	//
+type ProviderDatabaseConfig struct {
+	ProviderName string
+	ProviderType string
+	TableNames   []string
+}
+
+type RecordsDatabaseConfig struct {
+	ProviderType string
 }

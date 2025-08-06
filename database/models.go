@@ -7,11 +7,12 @@ import (
 )
 
 type RecordOfDeletionRequest struct {
-	ID          uuid.UUID
-	CustomerID  uuid.UUID
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	RequestedOn time.Time
+	ID           uuid.UUID
+	CustomerID   uuid.UUID
+	CustomerName string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	RequestedOn  time.Time
 }
 
 type PaginationInfo struct {

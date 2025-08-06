@@ -29,7 +29,7 @@ type ISecretStore interface {
 
 	GetServiceCacheSecrets() *ServiceCacheSecrets
 	GetAuthProviderSecrets() *AuthProviderSecrets
-	GetDatabaseStoreSecrets() *DatabaseStoreSecrets
+	GetDatabaseStoreSecrets() *DatabaseManagerSecrets
 }
 
 func CreateSecretStore(config *config.SecretStoreConfig) (ISecretStore, error) {
@@ -51,7 +51,15 @@ func createMockSecretStore() *MockSecretStore {
 	return &MockSecretStore{}
 }
 
-func (mss *MockSecretStore) getAllSecrets()                                 {}
-func (mss *MockSecretStore) GetServiceCacheSecrets() *ServiceCacheSecrets   { return nil }
-func (mss *MockSecretStore) GetAuthProviderSecrets() *AuthProviderSecrets   { return nil }
-func (mss *MockSecretStore) GetDatabaseStoreSecrets() *DatabaseStoreSecrets { return nil }
+func (mss *MockSecretStore) getAllSecrets() {}
+func (mss *MockSecretStore) GetServiceCacheSecrets() *ServiceCacheSecrets {
+	return &ServiceCacheSecrets{}
+}
+
+func (mss *MockSecretStore) GetAuthProviderSecrets() *AuthProviderSecrets {
+	return &AuthProviderSecrets{}
+}
+
+func (mss *MockSecretStore) GetDatabaseStoreSecrets() *DatabaseManagerSecrets {
+	return &DatabaseManagerSecrets{}
+}

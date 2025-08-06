@@ -53,22 +53,30 @@ const (
 // config keys
 const (
 	ConfigConfigStoreTypeKey = "CONFIG_STORE_TYPE"
-	ConfigServiceUrlKey = "SERVICE_URL"
 	ConfigDefaultPortKey = "DEFAULT_PORT"
-	ConfigSessionDurationKey = "SESSION_DURATION"
 	ConfigServiceCacheTypeKey = "SERVICE_CACHE_TYPE"
 	ConfigSecretStoreTypeKey = "SECRET_STORE_TYPE"
 	ConfigAuthProviderTypeKey = "AUTH_PROVIDER_TYPE"
+	ConfigRecordsDatabaseTypeKey = "RECORDS_DATABASE_TYPE"
+	ConfigDatabaseProviderNamesKey = "DATABASE_PROVIDER_NAMES"
+	ConfigDatabaseProviderTypesKey = "DATABASE_PROVIDER_TYPES"
+	ConfigServiceUrlKey = "SERVICE_URL"
+	ConfigSessionDurationKey = "SESSION_DURATION"
+	ConfigDatabaseProviderTableNamesKey = "DATABASE_PROVIDER_TABLE_NAMES"
 )
 
 var ConfigAttrs = []string{
 	ConfigConfigStoreTypeKey,
-	ConfigServiceUrlKey,
 	ConfigDefaultPortKey,
-	ConfigSessionDurationKey,
 	ConfigServiceCacheTypeKey,
 	ConfigSecretStoreTypeKey,
 	ConfigAuthProviderTypeKey,
+	ConfigRecordsDatabaseTypeKey,
+	ConfigDatabaseProviderNamesKey,
+	ConfigDatabaseProviderTypesKey,
+	ConfigServiceUrlKey,
+	ConfigSessionDurationKey,
+	ConfigDatabaseProviderTableNamesKey,
 }
 // Cookies
 const (
@@ -85,7 +93,6 @@ const (
 )
 // query parameters
 const (
-	QueryParamWorkerPath = "worker-path"
 	QueryParamWorkerScope = "worker-scope"
 	QueryParamLimit = "limit"
 	QueryParamAfter = "after"
@@ -93,6 +100,7 @@ const (
 	QueryParamRequestId = "request-id"
 	QueryParamAccessToken = "access-token"
 	QueryParamRefreshToken = "refresh-token"
+	QueryParamWorkerPath = "worker-path"
 )
 // request context keys
 const (
@@ -110,5 +118,9 @@ const (
 // values
 const (
 	ValueTrue = "true"
+	ValueLocalType = "LOCAL"
+	ValueEntryDelim = ";"
+	ValueNameDelim = ":"
+	ValueItemDelim = ","
 )
 

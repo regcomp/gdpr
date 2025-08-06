@@ -10,7 +10,7 @@ import (
 	"github.com/regcomp/gdpr/database"
 )
 
-func GetRecordsWithPagination(dbStore database.IDatabaseManager) http.HandlerFunc {
+func GetRecordsWithPagination(dbm *database.DatabaseManager) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get query params
 		paginationLimitString := r.URL.Query().Get(config.QueryParamLimit)
@@ -32,7 +32,7 @@ func GetRecordsWithPagination(dbStore database.IDatabaseManager) http.HandlerFun
 		}
 
 		// make database call
-		records, paginationInfo, err := dbStore.GetScheduledDeletionRecords(paginationLimit, queryStart)
+		records, paginationInfo, err := dbm.GetDeletionRequestsAndPaginationInfo(paginationLimit, queryStart)
 		if err != nil {
 			// TODO:
 		}

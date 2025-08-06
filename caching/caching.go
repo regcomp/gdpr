@@ -25,8 +25,6 @@ Things that should live in the cache:
 
 */
 
-const localCacheType = "LOCAL"
-
 // NOTE: This will likely be a large and cluttered interface
 type IServiceCache interface {
 	// Nonce Handling
@@ -46,13 +44,13 @@ type IServiceCache interface {
 }
 
 func CreateServiceCache(
-	config *config.ServiceCacheConfig,
+	cfg *config.ServiceCacheConfig,
 	secrets *secrets.ServiceCacheSecrets,
 ) (IServiceCache, error) {
-	switch config.CacheType {
-	case localCacheType:
+	switch cfg.CacheType {
+	case config.ValueLocalType:
 		return createLocalCache(), nil
 	default:
-		return nil, fmt.Errorf("unknown cache type=%s", config.CacheType)
+		return nil, fmt.Errorf("unknown cache type=%s", cfg.CacheType)
 	}
 }

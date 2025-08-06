@@ -49,7 +49,7 @@ func run(
 		secretStore.GetServiceCacheSecrets(),
 	)
 	if err != nil {
-		// TODO:
+		return err
 	}
 
 	// service context needs cache to pull neccessary data from
@@ -68,7 +68,7 @@ func run(
 
 	cert, err := tls.X509KeyPair(certs.ServerCertPEMBlock, certs.ServerKeyPEMBlock)
 	if err != nil {
-		// TODO:
+		return err
 	}
 
 	tlsConfig := &tls.Config{

@@ -12,10 +12,11 @@ type AuthProviderSecrets struct {
 	//
 }
 
-type DatabaseStoreSecrets struct {
-	//
+type DatabaseManagerSecrets struct {
+	RecordsSecrets  DatabaseSecrets
+	ProviderSecrets map[string]DatabaseSecrets
 }
 
-type DatabaseProviderSecrets struct {
-	//
+type DatabaseSecrets struct {
+	// All possible information that any database host could need
 }

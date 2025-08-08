@@ -1,5 +1,9 @@
-importScripts("/static/js/shared/auth_retry_worker_shared.js")
-const CONST = AUTH_RETRY_WORKER_CONSTANTS
+try {
+  importScripts("/static/js/shared/auth_retry_worker_constants.js")
+} catch (e) {
+  throw e
+}
+const CONSTANTS = AUTH_RETRY_WORKER_CONSTANTS
 
 self.addEventListener('activate', event => {
   event.waitUntil(clients.claim());
@@ -14,7 +18,7 @@ async function handleFetchWithAuth(request) {
     const response = await fetch(addHeaderAndClone(request));
 
     if (response.status === 401) {
-      if (response.headers.get(CONST.RENEW_HEADER)) {
+      if (response.headers.get(CONSTANTS.RENEW_TOKEN_HEADER)) {
         const isRefreshSuccess = await refreshToken();
 
         if (isRefreshSuccess) {
@@ -33,12 +37,12 @@ async function handleFetchWithAuth(request) {
 
 async function refreshToken() {
   try {
-    const refreshResponse = await fetch(CONST.RENEW_ENDPOINT, {
+    const refreshResponse = await fetch(CONSTANTS.RENEW_TOKEN_PATH, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        [CONST.STATUS_HEADER]: CONST.TRUE,
+        [CONSTANTS.RETRY_STATUS_HEADER]: CONSTANTS.TRUE,
       }
     });
 
@@ -51,7 +55,7 @@ async function refreshToken() {
 
 function addHeaderAndClone(request) {
   const headers = new Headers(request.headers);
-  headers.set(CONST.STATUS_HEADER, CONST.TRUE)
+  headers.set(CONSTANTS.RETRY_STATUS_HEADER, CONSTANTS.TRUE)
   return new Request(request, {
     headers: headers,
     credentials: 'include',

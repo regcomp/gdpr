@@ -62,7 +62,7 @@ func main() {
 	// generating all the specified .js files to share constants
 	flattenedMapping := generateFlattenedDataMapping(data)
 	for subfieldName, subfieldData := range data.Shared {
-		filename := strings.ToLower(subfieldName) + "_shared.js"
+		filename := strings.ToLower(subfieldName) + "_constants.js"
 		filepath := fmt.Sprintf("%s/%s", javascriptSharedDirectoryPath, filename)
 
 		sharedData := generateSharedDataMapping(flattenedMapping, subfieldData)

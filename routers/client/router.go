@@ -12,7 +12,7 @@ func CreateClientRouter(stx *servicecontext.ServiceContext) *chi.Mux {
 	mux := chi.NewRouter()
 
 	mux.Use(
-		middleware.AddNonceToRequest(stx.NonceStore),
+		middleware.AddNonceToRequest(stx.NonceManager),
 	)
 
 	mux.Get(config.EndpointDashboard, handlers.DashboardPage(stx.CookieManager))

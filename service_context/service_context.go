@@ -11,18 +11,16 @@ import (
 	"github.com/regcomp/gdpr/secrets"
 )
 
-var STX *ServiceContext
-
 type ServiceContext struct {
 	AuthProvider  auth.IAuthProvider
-	SessionStore  auth.ISessionStore
-	NonceStore    *auth.NonceStore
+	SessionStore  *auth.SessionStore
+	NonceManager  *auth.NonceManager
 	CookieManager *auth.CookieManager
 
 	ConfigStore config.IConfigStore
 
-	DatabaseStore *database.DatabaseManager
-	RequestStore  caching.IRequestStore
+	DatabaseManager *database.DatabaseManager
+	RequestStash    *caching.RequestStash
 
 	RequestLogger logging.ILogger
 }
@@ -33,10 +31,16 @@ func CreateServiceContext(
 	secretStore secrets.ISecretStore,
 ) (*ServiceContext, error) {
 	// other context setup goes here, like getting certs/keys
-	authProvider, err := auth.CreateAuthProvider(
-		configStore.GetAuthProviderConfig(),
-		secretStore.GetAuthProviderSecrets(),
-	)
+	authConfig, err := configStore.GetAuthProviderConfig()
+	if err != nil {
+		return nil, err
+	}
+	authSecrets, err := secretStore.GetAuthProviderSecrets()
+	if err != nil {
+		return nil, err
+	}
+
+	authProvider, err := auth.CreateAuthProvider(authConfig, authSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -47,12 +51,14 @@ func CreateServiceContext(
 	if err != nil {
 		return nil, err
 	}
-
-	databaseManager, err := database.CreateDatabaseManager(
-		databaseManagerConfig,
-		secretStore.GetDatabaseStoreSecrets(),
-	)
+	databaseManagerSecrets, err := secretStore.GetDatabaseManagerSecrets()
 	if err != nil {
+		return nil, err
+	}
+	databaseManager, err := database.CreateDatabaseManager(databaseManagerConfig, databaseManagerSecrets)
+	if err != nil {
+		return nil, err
+
 		// TODO:
 		// NOTE: a databaseProvider can fail to initialize. This should halt the service from running
 		// NOTE: Shouldn't need to establish database connections until necessary
@@ -60,17 +66,17 @@ func CreateServiceContext(
 
 	cookieManager := auth.CreateCookieManager(serviceCache)
 	sessionStore := auth.CreateSessionStore(serviceCache)
-	nonceStore := auth.CreateNonceStore(serviceCache)
-	requestStore := caching.CreateRequestStore(serviceCache)
+	nonceStash := auth.CreateNonceStash(serviceCache)
+	requestStash := caching.CreateRequestStash(serviceCache)
 
 	return &ServiceContext{
-		AuthProvider:  authProvider,
-		RequestLogger: requestlogger,
-		CookieManager: cookieManager,
-		SessionStore:  sessionStore,
-		DatabaseStore: databaseManager,
-		RequestStore:  requestStore,
-		NonceStore:    nonceStore,
-		ConfigStore:   configStore,
+		AuthProvider:    authProvider,
+		RequestLogger:   requestlogger,
+		CookieManager:   cookieManager,
+		SessionStore:    sessionStore,
+		DatabaseManager: databaseManager,
+		RequestStash:    requestStash,
+		NonceManager:    nonceStash,
+		ConfigStore:     configStore,
 	}, nil
 }

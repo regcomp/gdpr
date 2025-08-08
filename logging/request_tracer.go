@@ -23,20 +23,28 @@ type RequestTracer struct {
 }
 
 func NewRequestTracer(config *config.RequestTracerConfig) {
-	if config.TracerOn == true {
+	if config.TracerOn {
 		RT = createRequestTracer(config)
 	} else {
 		RT = &NoOpRequestTracer{}
 	}
 }
 
-func (rts *RequestTracer) NewRequestTrace(cw *CustomWriter, r *http.Request) {
-	newTrace := newRequestTrace()
-	err := newTrace.initRequestTrace(cw, r)
-	if err != nil {
-		// TODO:
+func createRequestTracer(config *config.RequestTracerConfig) *RequestTracer {
+	var displayResponses bool
+	if config.DisplayResponses {
+		displayResponses = true
+	} else {
+		displayResponses = false
 	}
+	return &RequestTracer{
+		requestToTrace:   make(map[*http.Request]*RequestTrace),
+		displayResponses: displayResponses,
+	}
+}
 
+func (rts *RequestTracer) NewRequestTrace(cw *CustomWriter, r *http.Request) {
+	newTrace := newRequestTrace(cw, r)
 	rts.addRequestTrace(r, newTrace)
 }
 
@@ -57,25 +65,8 @@ func (rts *RequestTracer) DumpRequestTrace(r *http.Request) error {
 		return err
 	}
 	trace.printTrace(rts.displayResponses)
-	trace.zeroOutTrace()
 	rts.deleteTrace(r)
 	return nil
-}
-
-func createRequestTracer(config *config.RequestTracerConfig) *RequestTracer {
-	var displayResponses bool
-	if config.DisplayResponses == true {
-		displayResponses = true
-	} else {
-		displayResponses = false
-	}
-	return &RequestTracer{
-		requestToTrace:   make(map[*http.Request]*RequestTrace),
-		displayResponses: displayResponses,
-	}
-}
-
-func (rt *RequestTracer) AddResponseToOutput(cw *CustomWriter) {
 }
 
 func (rts *RequestTracer) addRequestTrace(r *http.Request, rt *RequestTrace) {
@@ -90,10 +81,12 @@ func (rts *RequestTracer) getTrace(r *http.Request) (*RequestTrace, error) {
 }
 
 func (rts *RequestTracer) deleteTrace(r *http.Request) error {
-	if _, ok := rts.requestToTrace[r]; !ok {
+	trace, ok := rts.requestToTrace[r]
+	if !ok {
 		return fmt.Errorf("could not find trace in deleteTrace")
 	}
 
+	trace.zeroOutTrace()
 	delete(rts.requestToTrace, r)
 	return nil
 }
@@ -104,20 +97,12 @@ type RequestTrace struct {
 	cw    *CustomWriter
 }
 
-func newRequestTrace() *RequestTrace {
+func newRequestTrace(cw *CustomWriter, r *http.Request) *RequestTrace {
 	return &RequestTrace{
-		req:   nil,
-		trace: nil,
-		cw:    nil,
+		req:   r.Clone(r.Context()),
+		trace: make([]string, 0, 32),
+		cw:    cw,
 	}
-}
-
-func (rt *RequestTrace) initRequestTrace(cw *CustomWriter, r *http.Request) error {
-	rt.req = r.Clone(r.Context())
-	rt.trace = make([]string, 0, 32)
-	rt.cw = cw
-
-	return nil
 }
 
 func (rt *RequestTrace) logCurrentFunction(t string) {
@@ -162,6 +147,7 @@ func (rt *RequestTrace) constructPrintTraceOutput(buf *bytes.Buffer, displayResp
 func (rt *RequestTrace) zeroOutTrace() {
 	rt.req = nil
 	rt.trace = nil
+	rt.cw = nil
 }
 
 type NoOpRequestTracer struct{}

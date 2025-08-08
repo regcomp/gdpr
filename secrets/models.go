@@ -17,6 +17,8 @@ type DatabaseManagerSecrets struct {
 	ProviderSecrets map[string]DatabaseSecrets
 }
 
+// DatabaseSecrets put all possible fields in here
 type DatabaseSecrets struct {
-	// All possible information that any database host could need
+	URL string
+	Key string
 }

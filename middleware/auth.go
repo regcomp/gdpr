@@ -7,6 +7,7 @@ import (
 
 	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/config"
+	"github.com/regcomp/gdpr/helpers"
 	"github.com/regcomp/gdpr/logging"
 )
 
@@ -29,9 +30,14 @@ func SkipIfAuthenticated(
 				next.ServeHTTP(w, r)
 				return
 			}
+			urlWithPort, err := configStore.GetServiceURLWithPort()
+			if err != nil {
+				helpers.RespondWithError(w, err, http.StatusInternalServerError)
+				return
+			}
 
 			http.Redirect(w, r,
-				configStore.GetServiceURLWithPort()+config.PathClientDashboard,
+				urlWithPort+config.PathClientDashboard,
 				http.StatusSeeOther,
 			)
 		})
@@ -44,7 +50,7 @@ func RequiresAuthentication(authProvider auth.IAuthProvider, cookieManager *auth
 			logging.RT.UpdateRequestTrace(r, "RequiresAuthentication")
 			accessToken, err := cookieManager.GetAccessToken(r)
 			if err != nil {
-				http.Error(w, "requires authentication", http.StatusUnauthorized)
+				helpers.RespondWithError(w, err, http.StatusUnauthorized)
 				return
 			}
 
@@ -64,7 +70,7 @@ func RequiresAuthentication(authProvider auth.IAuthProvider, cookieManager *auth
 	}
 }
 
-func HasActiveSession(sessionStore auth.ISessionStore, cookieManager *auth.CookieManager) func(http.Handler) http.Handler {
+func HasActiveSession(sessionStore *auth.SessionStore, cookieManager *auth.CookieManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logging.RT.UpdateRequestTrace(r, "HasActiveSession")
@@ -86,7 +92,7 @@ func HasActiveSession(sessionStore auth.ISessionStore, cookieManager *auth.Cooki
 	}
 }
 
-func AddNonceToRequest(nonceStore *auth.NonceStore) func(http.Handler) http.Handler {
+func AddNonceToRequest(nonceStore *auth.NonceManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logging.RT.UpdateRequestTrace(r, "AddNonceToRequest")

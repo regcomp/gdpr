@@ -38,7 +38,7 @@ func newCookieHashes() *cookieKeys {
 func CreateCookieManager(serviceCache caching.IServiceCache) *CookieManager {
 	var freshHashes *cookieKeys
 
-	cookieHashesBytes, err := serviceCache.CookieHashesGet()
+	cookieHashesBytes, err := serviceCache.GetCookieHashes()
 	if err != nil {
 		// TODO: Error with the cache service
 		log.Panicf("cache service error=%s\n", err.Error())
@@ -51,7 +51,7 @@ func CreateCookieManager(serviceCache caching.IServiceCache) *CookieManager {
 			// TODO:
 			log.Panicf("malformed cookie hashes. err=%s\n", err.Error())
 		}
-		err = serviceCache.CookieHashesSet(cookieHashesBytes)
+		err = serviceCache.SetCookieHashes(cookieHashesBytes)
 		if err != nil {
 			// TODO: Error with cache service
 			log.Panicf("cache service error=%s\n", err.Error())

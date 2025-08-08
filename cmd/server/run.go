@@ -34,20 +34,32 @@ func run(
 
 	// pull in and parse relevant env variables for external secrets store
 	// should be passed in by docker env variables at runtime
-	configStore := config.NewConfigStore(getenv, getenv)
+	configStore, err := config.NewConfigStore(getenv, getenv)
+	if err != nil {
+		return err
+	}
 
 	// establish connection to secrets store
-	secretStore, err := secrets.CreateSecretStore(configStore.GetSecretStoreConfig())
+	secretStoreConfig, err := configStore.GetSecretStoreConfig()
+	if err != nil {
+		return err
+	}
+	secretStore, err := secrets.CreateSecretStore(secretStoreConfig)
 	if err != nil {
 		return err
 	}
 
 	// establish connection to/instantiate cache
 	// cache needs secret store to get missing information
-	serviceCache, err := caching.CreateServiceCache(
-		configStore.GetServiceCacheConfig(),
-		secretStore.GetServiceCacheSecrets(),
-	)
+	serviceCacheConfig, err := configStore.GetServiceCacheConfig()
+	if err != nil {
+		return err
+	}
+	serviceCacheSecrets, err := secretStore.GetServiceCacheSecrets()
+	if err != nil {
+		return err
+	}
+	serviceCache, err := caching.CreateServiceCache(serviceCacheConfig, serviceCacheSecrets)
 	if err != nil {
 		return err
 	}
@@ -75,8 +87,12 @@ func run(
 		Certificates: []tls.Certificate{cert},
 	}
 
+	defaultPort, err := configStore.GetDefaultPort()
+	if err != nil {
+		return nil
+	}
 	server := &http.Server{
-		Addr:      ":" + stx.ConfigStore.GetDefaultPort(),
+		Addr:      ":" + defaultPort,
 		Handler:   router,
 		TLSConfig: tlsConfig,
 	}

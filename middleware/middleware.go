@@ -2,11 +2,12 @@ package middleware
 
 import (
 	"fmt"
-	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/regcomp/gdpr/caching"
 	"github.com/regcomp/gdpr/config"
+	"github.com/regcomp/gdpr/helpers"
 	"github.com/regcomp/gdpr/logging"
 )
 
@@ -21,28 +22,36 @@ func RequestLogging(requestLogger logging.ILogger) func(http.Handler) http.Handl
 	}
 }
 
-func VerifyAuthRetryIsRunning(requestStore caching.IRequestStore) func(http.Handler) http.Handler {
+func VerifyAuthRetryIsRunning(requestStash *caching.RequestStash) func(http.Handler) http.Handler {
 	return verifyServiceWorkerIsRunning(
 		config.WorkerAuthRetryPath,
 		config.WorkerAuthRetryScope,
 		config.HeaderAuthRetryWorkerRunning,
-		requestStore,
+		requestStash,
 	)
 }
 
 func verifyServiceWorkerIsRunning(
 	workerPath, workerScope, workerHeader string,
-	requestStore caching.IRequestStore,
+	requestStash *caching.RequestStash,
 ) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logging.RT.UpdateRequestTrace(r, "VerifyServiceWorkerIsRunning")
+			favicon, err := url.Parse("/favicon.ico")
+			if err != nil {
+				helpers.RespondWithError(w, err, http.StatusInternalServerError)
+			}
+			if r.URL.Path == favicon.Path {
+				next.ServeHTTP(w, r)
+				return
+			}
 
 			if r.Header.Get(workerHeader) != config.ValueTrue {
-				log.Printf("HEADER=%s, VALUE=%s\n", workerHeader, r.Header.Get(workerHeader))
-				requestID, err := requestStore.StoreRequest(r)
+				// log.Printf("HEADER=%s, VALUE=%s\n", workerHeader, r.Header.Get(workerHeader))
+				requestID, err := requestStash.StashRequest(r)
 				if err != nil {
-					log.Panicf("could not cache request, err=%s", err.Error())
+					helpers.RespondWithError(w, err, http.StatusInternalServerError)
 				}
 
 				// construct registration url
@@ -63,10 +72,10 @@ func verifyServiceWorkerIsRunning(
 }
 
 func ScopeAuthRetryAccess() func(http.Handler) http.Handler {
-	return ScopeServiceWorkerAccess(config.WorkerAuthRetryPath, config.WorkerAuthRetryScope)
+	return scopeServiceWorkerAccess(config.WorkerAuthRetryPath, config.WorkerAuthRetryScope)
 }
 
-func ScopeServiceWorkerAccess(swPath, accessPath string) func(http.Handler) http.Handler {
+func scopeServiceWorkerAccess(swPath, accessPath string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logging.RT.UpdateRequestTrace(r, "ScopeServiceWorkerAccess")

@@ -42,12 +42,15 @@ templ RegisterServiceWorker(swPath, swScope string, req any) {
         }
 
         async function resendRequest() {
+          console.log("topping registration")
           const isReady = await registerAndWaitForServiceWorker();
           
           // NOTE: needs better error handling
           if (isReady && navigator.serviceWorker.controller) {
             window.location.href = originalRequest.url // retrying the url with a GET
+            return
           }
+         console.log("Bottomed out registering service worker")
         }
 
         resendRequest();

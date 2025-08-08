@@ -7,35 +7,28 @@ import (
 	"github.com/regcomp/gdpr/caching"
 )
 
-type SessionData struct {
-	//
-}
-
-type ISessionStore interface {
-	CreateSession() string
-	GetSession(string) (*SessionData, error)
-	UpdateSession(*SessionData) error
-	DeleteSession(string)
-}
-
 type SessionStore struct {
 	cache caching.IServiceCache
+}
+
+type SessionData struct {
+	//
 }
 
 func CreateSessionStore(serviceCache caching.IServiceCache) *SessionStore {
 	return &SessionStore{cache: serviceCache}
 }
 
-func (ss *SessionStore) CreateSession() string {
+func (ss *SessionStore) CreateSession() (string, error) {
 	id := generateSessionID()
 	sessionData := &SessionData{}
 	sessionBytes, err := json.Marshal(sessionData)
 	if err != nil {
-		// TODO:
+		return "", err
 	}
 
-	ss.cache.SessionAdd(id, sessionBytes)
-	return id
+	ss.cache.AddSession(id, sessionBytes)
+	return id, nil
 }
 
 func (ss *SessionStore) UpdateSession(data *SessionData) error {
@@ -44,7 +37,7 @@ func (ss *SessionStore) UpdateSession(data *SessionData) error {
 }
 
 func (ss *SessionStore) GetSession(sessionID string) (*SessionData, error) {
-	sessionBytes, err := ss.cache.SessionGet(sessionID)
+	sessionBytes, err := ss.cache.GetSession(sessionID)
 	if err != nil {
 		return nil, err
 	}

@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/regcomp/gdpr/auth"
+	"github.com/regcomp/gdpr/helpers"
 	"github.com/regcomp/gdpr/logging"
 )
 
@@ -14,16 +14,19 @@ func RenewAccessToken(authProvider auth.IAuthProvider, cookieManager *auth.Cooki
 
 		refreshToken, err := cookieManager.GetRefreshToken(r)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("could not get refresh token, err=%s", err.Error()), http.StatusInternalServerError)
+			helpers.RespondWithError(w, err, http.StatusInternalServerError)
+			return
 		}
 		accessToken, err := authProvider.GetNewAccessToken(refreshToken, r)
 		if err != nil {
-			http.Error(w, "could not renew access token", http.StatusInternalServerError)
+			helpers.RespondWithError(w, err, http.StatusInternalServerError)
+			return
 		}
 
 		accessCookie, err := cookieManager.CreateAccessCookie(accessToken)
 		if err != nil {
-			http.Error(w, "could not create access cookie", http.StatusInternalServerError)
+			helpers.RespondWithError(w, err, http.StatusInternalServerError)
+			return
 		}
 
 		http.SetCookie(w, accessCookie)

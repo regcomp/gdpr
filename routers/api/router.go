@@ -10,7 +10,7 @@ import (
 func CreateApiRouter(stx *servicecontext.ServiceContext) *chi.Mux {
 	mux := chi.NewRouter()
 
-	mux.Get(config.EndpointRecords, handlers.GetRecordsWithPagination(stx.DatabaseStore))
+	mux.Get(config.EndpointRecords, handlers.GetRecordsWithPagination(stx.DatabaseManager))
 
 	return mux
 }

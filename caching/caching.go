@@ -25,22 +25,31 @@ Things that should live in the cache:
 
 */
 
-// NOTE: This will likely be a large and cluttered interface
 type IServiceCache interface {
-	// Nonce Handling
-	NonceAdd(string) error
+	INonceStash
+	IRequestStash
+	ISessionStore
+	ICookieHashesStore
+}
 
-	// Session Handling
-	SessionAdd(string, []byte) error
-	SessionGet(string) ([]byte, error)
+type IRequestStash interface {
+	StashRequest(string, []byte) error
+	RetrieveRequest(string) ([]byte, error)
+}
 
-	// Cookie Hashes
-	CookieHashesGet() ([]byte, error)
-	CookieHashesSet([]byte) error
+type INonceStash interface {
+	StashNonce(string, string) error
+	RetrieveNonce(string) (string, error)
+}
 
-	// Requests
-	RequestAdd(string, []byte) error
-	RequestRetrieve(string) ([]byte, error)
+type ISessionStore interface {
+	AddSession(string, []byte) error
+	GetSession(string) ([]byte, error)
+}
+
+type ICookieHashesStore interface {
+	SetCookieHashes([]byte) error
+	GetCookieHashes() ([]byte, error)
 }
 
 func CreateServiceCache(

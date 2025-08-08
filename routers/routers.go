@@ -28,7 +28,7 @@ func CreateRouter(stx *servicecontext.ServiceContext) *chi.Mux {
 	router.Get(config.EndpointHealthz, handlers.Healthz)
 	router.Get(
 		config.EndpointRegisterServiceWorker,
-		handlers.RegisterServiceWorker(stx.RequestStore),
+		handlers.RegisterServiceWorker(stx.RequestStash),
 	)
 
 	mountRouters(router,
@@ -60,7 +60,7 @@ func CreateServiceRouter(stx *servicecontext.ServiceContext) SubRouter {
 		middleware.SetHSTSPolicy,
 		// TODO: Content policies/CORS/ect... go here
 
-		middleware.VerifyAuthRetryIsRunning(stx.RequestStore),
+		middleware.VerifyAuthRetryIsRunning(stx.RequestStash),
 	)
 
 	mountRouters(service,

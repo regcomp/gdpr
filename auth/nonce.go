@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/hex"
 	"net/http"
+	"time"
 
 	sc "github.com/gorilla/securecookie"
 	"github.com/regcomp/gdpr/caching"
@@ -14,27 +15,28 @@ const (
 	nonceCleanupInterval = 5
 )
 
-type NonceStore struct {
+type NonceManager struct {
 	cache caching.IServiceCache
 }
 
-func CreateNonceStore(serviceCache caching.IServiceCache) *NonceStore {
-	store := &NonceStore{cache: serviceCache}
+func CreateNonceStash(serviceCache caching.IServiceCache) *NonceManager {
+	store := &NonceManager{cache: serviceCache}
 
 	return store
 }
 
-func (ns *NonceStore) Generate() string {
+func (ns *NonceManager) Generate() string {
 	bytes := sc.GenerateRandomKey(32)
 
 	nonce := hex.EncodeToString(bytes)
+	timestamp := time.UTC.String()
 
-	ns.cache.NonceAdd(nonce)
+	ns.cache.StashNonce(nonce, timestamp)
 
 	return nonce
 }
 
-func (ns *NonceStore) Validate(r *http.Request) bool {
+func (ns *NonceManager) Validate(r *http.Request) bool {
 	nonce := r.FormValue(config.FormValueNonce)
 	if nonce == "" {
 		nonce = r.Header.Get(config.HeaderNonceToken) // ajax

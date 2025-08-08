@@ -1,18 +1,19 @@
 package handlers
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 
 	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/config"
+	"github.com/regcomp/gdpr/helpers"
 	"github.com/regcomp/gdpr/logging"
 )
 
 func LoginCallback(
 	authProvider auth.IAuthProvider,
 	cookieManager *auth.CookieManager,
-	sessionStore auth.ISessionStore,
+	sessionStore *auth.SessionStore,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logging.RT.UpdateRequestTrace(r, "LoginCallback")
@@ -24,27 +25,36 @@ func LoginCallback(
 			credentials.AccessToken = r.URL.Query().Get(config.QueryParamAccessToken)
 			credentials.RefreshToken = r.URL.Query().Get(config.QueryParamRefreshToken)
 		default:
-			http.Error(w, "auth provider not implemented", http.StatusInternalServerError)
+			err := fmt.Errorf("unknown auth provider")
+			helpers.RespondWithError(w, err, http.StatusInternalServerError)
+			return
 		}
 
 		// TODO: VALIDATE THE JWTS RECIEVED
 
 		accessCookie, err := cookieManager.CreateAccessCookie(credentials.AccessToken)
 		if err != nil {
-			log.Panic("could not create access cookie")
+			helpers.RespondWithError(w, err, http.StatusInternalServerError)
+			return
 		}
 		http.SetCookie(w, accessCookie)
 
 		refreshCookie, err := cookieManager.CreateRefreshCookie(credentials.RefreshToken)
 		if err != nil {
-			// TODO:
+			helpers.RespondWithError(w, err, http.StatusInternalServerError)
+			return
 		}
 		http.SetCookie(w, refreshCookie)
 
-		sessionID := sessionStore.CreateSession()
+		sessionID, err := sessionStore.CreateSession()
+		if err != nil {
+			helpers.RespondWithError(w, err, http.StatusInternalServerError)
+			return
+		}
 		sessionCookie, err := cookieManager.CreateSessionCookie(sessionID)
 		if err != nil {
-			// TODO:
+			helpers.RespondWithError(w, err, http.StatusInternalServerError)
+			return
 		}
 		http.SetCookie(w, sessionCookie)
 

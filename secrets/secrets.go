@@ -27,9 +27,9 @@ const (
 type ISecretStore interface {
 	getAllSecrets()
 
-	GetServiceCacheSecrets() *ServiceCacheSecrets
-	GetAuthProviderSecrets() *AuthProviderSecrets
-	GetDatabaseStoreSecrets() *DatabaseManagerSecrets
+	GetServiceCacheSecrets() (*ServiceCacheSecrets, error)
+	GetAuthProviderSecrets() (*AuthProviderSecrets, error)
+	GetDatabaseManagerSecrets() (*DatabaseManagerSecrets, error)
 }
 
 func CreateSecretStore(config *config.SecretStoreConfig) (ISecretStore, error) {
@@ -37,29 +37,8 @@ func CreateSecretStore(config *config.SecretStoreConfig) (ISecretStore, error) {
 	// a connection to a secret store that satisfies the interface
 	switch config.StoreType {
 	case mockStoreType:
-		return createMockSecretStore(), nil
+		return createLocalSecretStore(), nil
 	default:
 		return nil, fmt.Errorf("unknown store type=%s", config.StoreType)
 	}
-}
-
-type MockSecretStore struct {
-	//
-}
-
-func createMockSecretStore() *MockSecretStore {
-	return &MockSecretStore{}
-}
-
-func (mss *MockSecretStore) getAllSecrets() {}
-func (mss *MockSecretStore) GetServiceCacheSecrets() *ServiceCacheSecrets {
-	return &ServiceCacheSecrets{}
-}
-
-func (mss *MockSecretStore) GetAuthProviderSecrets() *AuthProviderSecrets {
-	return &AuthProviderSecrets{}
-}
-
-func (mss *MockSecretStore) GetDatabaseStoreSecrets() *DatabaseManagerSecrets {
-	return &DatabaseManagerSecrets{}
 }

@@ -9,6 +9,8 @@ type SecretStoreConfig struct {
 	StoreType string
 }
 
+// NOTE: This may need configurations for all of the kinds of data that
+// will be stored
 type ServiceCacheConfig struct {
 	CacheType string
 }

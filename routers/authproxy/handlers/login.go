@@ -6,11 +6,12 @@ import (
 
 	"github.com/regcomp/gdpr/auth"
 	"github.com/regcomp/gdpr/config"
+	"github.com/regcomp/gdpr/helpers"
 	"github.com/regcomp/gdpr/logging"
 	"github.com/regcomp/gdpr/templates/pages"
 )
 
-// Will likely need some context from the config for what to display
+// LoginPage Will likely need some context from the config for what to display
 func LoginPage(w http.ResponseWriter, r *http.Request) {
 	logging.RT.UpdateRequestTrace(r, "LoginPage")
 	page := pages.Login()
@@ -20,10 +21,16 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 func SubmitLoginCredentials(authProvider auth.IAuthProvider, configStore config.IConfigStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logging.RT.UpdateRequestTrace(r, "SubmitLoginCredentials")
-		urlString := configStore.GetServiceURLWithPort() + config.PathAuthLoginCallback
+		urlWithPort, err := configStore.GetServiceURLWithPort()
+		if err != nil {
+			helpers.RespondWithError(w, err, http.StatusInternalServerError)
+			return
+		}
+		urlString := urlWithPort + config.EndpointLoginCallback
 		callbackURL, err := url.Parse(urlString)
 		if err != nil {
-			// TODO:
+			helpers.RespondWithError(w, err, http.StatusInternalServerError)
+			return
 		}
 		authProvider.AuthenticateUser(w, r, callbackURL)
 	})

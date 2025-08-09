@@ -3,6 +3,7 @@ package main
 type RouterConfig struct {
 	PathPrefix string   `json:"PATH_PREFIX"`
 	Endpoints  []string `json:"ENDPOINTS"`
+	Parent     *string  `json:"PARENT"`
 }
 
 type ServiceWorkerConfig struct {
@@ -43,9 +44,11 @@ type ServiceTemplateData struct {
 }
 
 type RouterPrefix struct {
-	Name   string
-	Value  string
-	GoName string
+	Name      string
+	Value     string
+	FullValue string
+	GoName    string
+	Parent    string
 }
 
 type Endpoint struct {

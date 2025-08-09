@@ -8,7 +8,7 @@ package pages
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func RegisterServiceWorker(swPath, swScope string, req any) templ.Component {
+func RegisterServiceWorker(path, scope string, req any) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -37,55 +37,31 @@ func RegisterServiceWorker(swPath, swScope string, req any) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script>\n        const originalRequest = JSON.parse(document.getElementById('requestData').textContent);\n        \n        async function registerAndWaitForServiceWorker() {\n          if (!('serviceWorker' in navigator)) {\n            return false;\n          }\n          try {\n            const registration = await navigator.serviceWorker.getRegistration(")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script>\n        const swPath = ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var2, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swScope)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(path)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 18, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 11, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, ");\n          \n            if (!(registration && \n                registration.active && \n                registration.active.scriptURL.includes(")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, ";\n        const swScope = ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var3, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swPath)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(scope)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 22, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 12, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "))) {\n              const registration = await navigator.serviceWorker.register(")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Var4, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swPath)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 23, Col: 83}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, ", { \n                scope: ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Var5, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(swScope)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/pages/register_service_worker.templ`, Line: 24, Col: 33}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " \n              });\n            }\n            \n            await navigator.serviceWorker.ready;\n    \n            if (!navigator.serviceWorker.controller) {\n              await new Promise(resolve => {\n                navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });\n              });\n            }\n            \n            return true;\n            \n          } catch (error) {\n            console.error('SW registration failed:', error);\n            return false;\n          }\n        }\n\n        async function resendRequest() {\n          console.log(\"topping registration\")\n          const isReady = await registerAndWaitForServiceWorker();\n          \n          // NOTE: needs better error handling\n          if (isReady && navigator.serviceWorker.controller) {\n            window.location.href = originalRequest.url // retrying the url with a GET\n            return\n          }\n         console.log(\"Bottomed out registering service worker\")\n        }\n\n        resendRequest();\n      </script></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, ";\n        const originalRequest = JSON.parse(document.getElementById('requestData').textContent);\n        \n        async function registerAndWaitForServiceWorker() {\n          console.log(\"Starting registration process\");\n          if (!('serviceWorker' in navigator)) {\n            console.log(\"Service workers not supported\");\n            return false;\n          }\n          try {\n            console.log(`Getting registration for scope: ${swScope}`);\n            let registration = await navigator.serviceWorker.getRegistration(swScope);\n            console.log(\"Got registration:\", registration);\n          \n            if (!(registration && \n                registration.active && \n                registration.active.scriptURL.includes(swPath))) {\n              console.log(`Registering service worker at: ${swPath}`);\n              registration = await navigator.serviceWorker.register(swPath, { \n                scope: swScope\n              });\n              console.log(\"Service worker registered:\", registration);\n              \n              // Wait for installation and activation if needed\n              if (registration.installing) {\n                console.log(\"Waiting for service worker to install and activate\");\n                await new Promise(resolve => {\n                  registration.installing.addEventListener('statechange', function() {\n                    console.log(`Service worker state: ${this.state}`);\n                    if (this.state === 'activated') {\n                      resolve();\n                    }\n                  });\n                });\n              }\n            }\n            \n            console.log(\"Waiting for service worker ready\");\n            await navigator.serviceWorker.ready;\n            console.log(\"Service worker ready\");\n    \n            if (!navigator.serviceWorker.controller) {\n              console.log(\"Service worker not controlling, waiting for control\");\n              \n              // Try to get the active service worker to claim this client\n              if (registration.active) {\n                registration.active.postMessage({action: 'claim'});\n              }\n              \n              await new Promise(resolve => {\n                navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });\n              });\n              console.log(\"Service worker now controlling\");\n            }\n            \n            return true;\n            \n          } catch (error) {\n            console.error('Service worker registration failed:', error);\n            return false;\n          }\n        }\n        \n        async function resendRequest() {\n          console.log(\"Starting service worker registration process\");\n          const isReady = await registerAndWaitForServiceWorker();\n          \n          if (isReady && navigator.serviceWorker.controller) {\n            console.log(`Redirecting to original request: ${originalRequest.url}`);\n            window.location.href = originalRequest.url;\n            return;\n          }\n          \n          console.log(\"Failed to register service worker - manual refresh may be needed\");\n          // You might want to show an error message to the user here\n        }\n        \n        resendRequest();\n      </script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

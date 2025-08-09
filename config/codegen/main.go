@@ -34,7 +34,10 @@ func main() {
 		log.Fatal("Invalid JSON:", err)
 	}
 
-	templateData := processData(data)
+	templateData, err := processData(data)
+	if err != nil {
+		log.Panic(err.Error())
+	}
 
 	tmpl, err := template.ParseFiles(goTemplatePath)
 	if err != nil {

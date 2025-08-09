@@ -1,6 +1,6 @@
 package pages
 
-templ RegisterServiceWorker(swPath, swScope string, req any) {
+templ RegisterServiceWorker(path, scope string, req any) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head></head>
@@ -8,51 +8,84 @@ templ RegisterServiceWorker(swPath, swScope string, req any) {
 			<h1>Loading service worker...</h1>
 			@templ.JSONScript("requestData", req)
 			<script>
+        const swPath = {{ path }};
+        const swScope = {{ scope }};
         const originalRequest = JSON.parse(document.getElementById('requestData').textContent);
         
         async function registerAndWaitForServiceWorker() {
+          console.log("Starting registration process");
           if (!('serviceWorker' in navigator)) {
+            console.log("Service workers not supported");
             return false;
           }
           try {
-            const registration = await navigator.serviceWorker.getRegistration({{ swScope }});
+            console.log(`Getting registration for scope: ${swScope}`);
+            let registration = await navigator.serviceWorker.getRegistration(swScope);
+            console.log("Got registration:", registration);
           
             if (!(registration && 
                 registration.active && 
-                registration.active.scriptURL.includes({{ swPath }}))) {
-              const registration = await navigator.serviceWorker.register({{ swPath }}, { 
-                scope: {{ swScope }} 
+                registration.active.scriptURL.includes(swPath))) {
+              console.log(`Registering service worker at: ${swPath}`);
+              registration = await navigator.serviceWorker.register(swPath, { 
+                scope: swScope
               });
+              console.log("Service worker registered:", registration);
+              
+              // Wait for installation and activation if needed
+              if (registration.installing) {
+                console.log("Waiting for service worker to install and activate");
+                await new Promise(resolve => {
+                  registration.installing.addEventListener('statechange', function() {
+                    console.log(`Service worker state: ${this.state}`);
+                    if (this.state === 'activated') {
+                      resolve();
+                    }
+                  });
+                });
+              }
             }
             
+            console.log("Waiting for service worker ready");
             await navigator.serviceWorker.ready;
+            console.log("Service worker ready");
     
             if (!navigator.serviceWorker.controller) {
+              console.log("Service worker not controlling, waiting for control");
+              
+              // Try to get the active service worker to claim this client
+              if (registration.active) {
+                registration.active.postMessage({action: 'claim'});
+              }
+              
               await new Promise(resolve => {
                 navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
               });
+              console.log("Service worker now controlling");
             }
             
             return true;
             
           } catch (error) {
-            console.error('SW registration failed:', error);
+            console.error('Service worker registration failed:', error);
             return false;
           }
         }
-
+        
         async function resendRequest() {
-          console.log("topping registration")
+          console.log("Starting service worker registration process");
           const isReady = await registerAndWaitForServiceWorker();
           
-          // NOTE: needs better error handling
           if (isReady && navigator.serviceWorker.controller) {
-            window.location.href = originalRequest.url // retrying the url with a GET
-            return
+            console.log(`Redirecting to original request: ${originalRequest.url}`);
+            window.location.href = originalRequest.url;
+            return;
           }
-         console.log("Bottomed out registering service worker")
+          
+          console.log("Failed to register service worker - manual refresh may be needed");
+          // You might want to show an error message to the user here
         }
-
+        
         resendRequest();
       </script>
 		</body>

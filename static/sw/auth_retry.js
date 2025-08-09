@@ -1,12 +1,15 @@
-try {
-  importScripts("/static/js/shared/auth_retry_worker_constants.js")
-} catch (e) {
-  throw e
-}
+importScripts("/static/js/shared/auth_retry_worker_constants.js")
+
 const CONSTANTS = AUTH_RETRY_WORKER_CONSTANTS
 
 self.addEventListener('activate', event => {
   event.waitUntil(clients.claim());
+});
+
+self.addEventListener('install', event => {
+  console.log('Service worker installing...');
+  // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {

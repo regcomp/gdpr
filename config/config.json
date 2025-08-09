@@ -2,13 +2,39 @@
   "ROUTERS": {
     "BASE": {
       "PATH_PREFIX": "/",
+      "PARENT": null,
       "ENDPOINTS": [
         "healthz",
         "register-service-worker"
       ]
     },
-    "CLIENT": {
+    "STATIC": {
+      "PATH_PREFIX": "/static",
+      "PARENT": "BASE",
+      "ENDPOINTS": []
+    },
+    "SERVICE": {
       "PATH_PREFIX": "/",
+      "PARENT": "BASE",
+      "ENDPOINTS": []
+    },
+    "AUTH": {
+      "PATH_PREFIX": "/auth",
+      "PARENT": "SERVICE",
+      "ENDPOINTS": [
+        "login",
+        "login-callback",
+        "renew-token"
+      ]
+    },
+    "APP": {
+      "PATH_PREFIX": "/app",
+      "PARENT": "SERVICE",
+      "ENDPOINTS": []
+    },
+    "CLIENT": {
+      "PATH_PREFIX": "/client",
+      "PARENT": "APP",
       "ENDPOINTS": [
         "dashboard",
         "logout",
@@ -16,16 +42,9 @@
         "test2"
       ]
     },
-    "AUTH": {
-      "PATH_PREFIX": "/auth",
-      "ENDPOINTS": [
-        "login",
-        "login-callback",
-        "renew-token"
-      ]
-    },
     "API": {
       "PATH_PREFIX": "/api",
+      "PARENT": "APP",
       "ENDPOINTS": [
         "records"
       ]

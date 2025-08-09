@@ -2,12 +2,35 @@ package logging
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
-	"os"
+	"strings"
+	"sync"
 
+	"github.com/google/uuid"
 	"github.com/regcomp/gdpr/config"
 )
+
+type CustomWriter struct {
+	http.ResponseWriter
+	Code int
+	Body bytes.Buffer
+}
+
+func CreateCustomWriter(w http.ResponseWriter) *CustomWriter {
+	return &CustomWriter{ResponseWriter: w, Code: http.StatusOK}
+}
+
+func (cw *CustomWriter) WriteHeader(code int) {
+	cw.Code = code
+	cw.ResponseWriter.WriteHeader(code)
+}
+
+func (cw *CustomWriter) Write(data []byte) (int, error) {
+	cw.Body.Write(data)
+	return cw.ResponseWriter.Write(data)
+}
 
 var RT IRequestTracer
 
@@ -18,7 +41,8 @@ type IRequestTracer interface {
 }
 
 type RequestTracer struct {
-	requestToTrace   map[*http.Request]*RequestTrace
+	mu               sync.RWMutex
+	requestIDToTrace map[string]*RequestTrace
 	displayResponses bool
 }
 
@@ -31,27 +55,43 @@ func NewRequestTracer(config *config.RequestTracerConfig) {
 }
 
 func createRequestTracer(config *config.RequestTracerConfig) *RequestTracer {
-	var displayResponses bool
-	if config.DisplayResponses {
-		displayResponses = true
-	} else {
-		displayResponses = false
-	}
 	return &RequestTracer{
-		requestToTrace:   make(map[*http.Request]*RequestTrace),
-		displayResponses: displayResponses,
+		mu:               sync.RWMutex{},
+		requestIDToTrace: make(map[string]*RequestTrace),
+		displayResponses: config.DisplayResponses,
 	}
 }
 
+type contextKey string
+
+const RequestIDKey contextKey = "tracer_id"
+
 func (rts *RequestTracer) NewRequestTrace(cw *CustomWriter, r *http.Request) {
+	id := generateRequestID()
+
+	ctx := context.WithValue(r.Context(), RequestIDKey, id)
+	*r = *r.WithContext(ctx)
+
 	newTrace := newRequestTrace(cw, r)
-	rts.addRequestTrace(r, newTrace)
+
+	rts.mu.Lock()
+	defer rts.mu.Unlock()
+	rts.storeTrace(id, newTrace)
+}
+
+func generateRequestID() string {
+	return uuid.New().String()
 }
 
 func (rts *RequestTracer) UpdateRequestTrace(r *http.Request, function string) error {
-	trace, err := rts.getTrace(r)
+	requestID, ok := r.Context().Value(RequestIDKey).(string)
+	if !ok {
+		return fmt.Errorf("no request ID found in context")
+	}
+	rts.mu.Lock()
+	defer rts.mu.Unlock()
+	trace, err := rts.getTrace(requestID)
 	if err != nil {
-		// TODO: error, that trace doesnt exist
 		return err
 	}
 	trace.logCurrentFunction(function)
@@ -59,49 +99,62 @@ func (rts *RequestTracer) UpdateRequestTrace(r *http.Request, function string) e
 }
 
 func (rts *RequestTracer) DumpRequestTrace(r *http.Request) error {
-	trace, err := rts.getTrace(r)
+	id, ok := r.Context().Value(RequestIDKey).(string)
+	if !ok {
+		return fmt.Errorf("no request ID found in context")
+	}
+
+	rts.mu.Lock()
+	defer rts.mu.Unlock()
+	trace, err := rts.getTrace(id)
 	if err != nil {
-		// TODO: error, that trace doesnt exist
 		return err
 	}
 	trace.printTrace(rts.displayResponses)
-	rts.deleteTrace(r)
+	err = rts.deleteTrace(id)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (rts *RequestTracer) addRequestTrace(r *http.Request, rt *RequestTrace) {
-	rts.requestToTrace[r] = rt
+func (rts *RequestTracer) storeTrace(id string, trace *RequestTrace) {
+	rts.requestIDToTrace[id] = trace
 }
 
-func (rts *RequestTracer) getTrace(r *http.Request) (*RequestTrace, error) {
-	if _, ok := rts.requestToTrace[r]; !ok {
-		return nil, fmt.Errorf("could not find trace in getTrace")
+func (rts *RequestTracer) getTrace(id string) (*RequestTrace, error) {
+	if _, ok := rts.requestIDToTrace[id]; !ok {
+		return nil, fmt.Errorf("could not find trace for request at=%s", id)
 	}
-	return rts.requestToTrace[r], nil
+	return rts.requestIDToTrace[id], nil
 }
 
-func (rts *RequestTracer) deleteTrace(r *http.Request) error {
-	trace, ok := rts.requestToTrace[r]
+func (rts *RequestTracer) deleteTrace(id string) error {
+	trace, ok := rts.requestIDToTrace[id]
 	if !ok {
-		return fmt.Errorf("could not find trace in deleteTrace")
+		return fmt.Errorf("could not find trace for request at=%s", id)
 	}
 
 	trace.zeroOutTrace()
-	delete(rts.requestToTrace, r)
+	delete(rts.requestIDToTrace, id)
 	return nil
 }
 
 type RequestTrace struct {
-	req   *http.Request
-	trace []string
-	cw    *CustomWriter
+	path   string
+	method string
+	header http.Header
+	trace  []string
+	cw     *CustomWriter
 }
 
 func newRequestTrace(cw *CustomWriter, r *http.Request) *RequestTrace {
 	return &RequestTrace{
-		req:   r.Clone(r.Context()),
-		trace: make([]string, 0, 32),
-		cw:    cw,
+		path:   r.URL.Path,
+		method: r.Method,
+		header: r.Header.Clone(),
+		trace:  make([]string, 0, 32),
+		cw:     cw,
 	}
 }
 
@@ -110,42 +163,38 @@ func (rt *RequestTrace) logCurrentFunction(t string) {
 }
 
 func (rt *RequestTrace) printTrace(displayResponses bool) {
-	var output []byte
-	buf := bytes.NewBuffer(output)
+	b := &strings.Builder{}
+	rt.constructPrintTraceOutput(b, displayResponses)
 
-	rt.constructPrintTraceOutput(buf, displayResponses)
-
-	fmt.Print(buf.String())
+	fmt.Print(b.String())
 }
 
-func (rt *RequestTrace) constructPrintTraceOutput(buf *bytes.Buffer, displayResponses bool) {
-	fmt.Fprintf(buf, "[REQUEST]\n")
-	fmt.Fprintf(buf, "%s | %s\n", rt.req.URL.Path, rt.req.Method)
-	fmt.Fprintf(buf, "[REQUEST HEADER]\n")
-	for name, values := range rt.req.Header {
+func (rt *RequestTrace) constructPrintTraceOutput(b *strings.Builder, displayResponses bool) {
+	fmt.Fprintf(b, "[REQUEST]\n")
+	fmt.Fprintf(b, "%s | %s\n", rt.path, rt.method)
+	fmt.Fprintf(b, "[REQUEST HEADER]\n")
+	for name, values := range rt.header {
 		if name == "Cookie" {
 			continue
 		}
-		fmt.Fprintf(buf, "%s: %s\n", name, values)
+		fmt.Fprintf(b, "%s: %s\n", name, values)
 	}
-	fmt.Fprintf(buf, "[CALLS]\n")
+	fmt.Fprintf(b, "[CALLS]\n")
 	for _, call := range rt.trace {
-		fmt.Fprintf(buf, "%s\n", call)
+		fmt.Fprintf(b, "%s\n", call)
 	}
 	if displayResponses {
-		fmt.Fprintf(buf, "[RESPONSE HEADER %d]\n", rt.cw.Code)
-		rt.cw.Header().Write(os.Stdout)
+		fmt.Fprintf(b, "[RESPONSE HEADER %d]\n", rt.cw.Code)
 		for name, values := range rt.cw.Header() {
-			fmt.Fprintf(buf, "%s: %s\n", name, values)
+			fmt.Fprintf(b, "%s: %s\n", name, values)
 		}
-		fmt.Fprintf(buf, "[BODY]\n")
-		fmt.Fprintf(buf, "%s\n", rt.cw.Body.String())
-		fmt.Println("")
+		fmt.Fprintf(b, "[BODY]\n")
+		fmt.Fprintf(b, "%s\n", rt.cw.Body.String())
+		fmt.Fprintf(b, "\n")
 	}
 }
 
 func (rt *RequestTrace) zeroOutTrace() {
-	rt.req = nil
 	rt.trace = nil
 	rt.cw = nil
 }

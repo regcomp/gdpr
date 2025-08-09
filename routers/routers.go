@@ -14,8 +14,8 @@ import (
 )
 
 type SubRouter struct {
-	Path   string
-	Router *chi.Mux
+	MountPath string
+	Router    *chi.Mux
 }
 
 func CreateRouter(stx *servicecontext.ServiceContext) *chi.Mux {
@@ -29,6 +29,12 @@ func CreateRouter(stx *servicecontext.ServiceContext) *chi.Mux {
 	router.Get(
 		config.EndpointRegisterServiceWorker,
 		handlers.RegisterServiceWorker(stx.RequestStash),
+	)
+	router.Get(
+		"/favicon.ico",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "/static/favicon.ico")
+		}),
 	)
 
 	mountRouters(router,
@@ -49,7 +55,7 @@ func CreateStaticRouter() SubRouter {
 	static.Handle("/*", http.StripPrefix("/static/",
 		http.FileServer(http.Dir("./static/"))))
 
-	return SubRouter{"/static", static}
+	return SubRouter{config.RouterStaticPathPrefix, static}
 }
 
 func CreateServiceRouter(stx *servicecontext.ServiceContext) SubRouter {
@@ -65,12 +71,12 @@ func CreateServiceRouter(stx *servicecontext.ServiceContext) SubRouter {
 
 	mountRouters(service,
 		CreateAuthProxyRouter(stx),
-		CreateRequiresValidAuthRouter(stx),
+		CreateAppRouter(stx),
 	)
-	return SubRouter{"/", service}
+	return SubRouter{config.RouterServicePathPrefix, service}
 }
 
-func CreateRequiresValidAuthRouter(stx *servicecontext.ServiceContext) SubRouter {
+func CreateAppRouter(stx *servicecontext.ServiceContext) SubRouter {
 	requiresValidAuth := chi.NewRouter()
 
 	requiresValidAuth.Use(
@@ -83,7 +89,7 @@ func CreateRequiresValidAuthRouter(stx *servicecontext.ServiceContext) SubRouter
 		CreateAPIRouter(stx),
 	)
 
-	return SubRouter{Path: "/", Router: requiresValidAuth}
+	return SubRouter{MountPath: config.RouterAppPathPrefix, Router: requiresValidAuth}
 }
 
 func mountRouters(main *chi.Mux, subrouters ...SubRouter) {
@@ -92,27 +98,27 @@ func mountRouters(main *chi.Mux, subrouters ...SubRouter) {
 	}
 
 	for _, subrouter := range subrouters {
-		main.Mount(subrouter.Path, subrouter.Router)
+		main.Mount(subrouter.MountPath, subrouter.Router)
 	}
 }
 
 func CreateAuthProxyRouter(stx *servicecontext.ServiceContext) SubRouter {
 	return SubRouter{
-		Path:   config.RouterAuthPathPrefix,
-		Router: authproxy.CreateAuthProxyRouter(stx),
+		MountPath: config.RouterAuthPathPrefix,
+		Router:    authproxy.CreateAuthProxyRouter(stx),
 	}
 }
 
 func CreateClientRouter(stx *servicecontext.ServiceContext) SubRouter {
 	return SubRouter{
-		Path:   config.RouterClientPathPrefix,
-		Router: client.CreateClientRouter(stx),
+		MountPath: config.RouterClientPathPrefix,
+		Router:    client.CreateClientRouter(stx),
 	}
 }
 
 func CreateAPIRouter(stx *servicecontext.ServiceContext) SubRouter {
 	return SubRouter{
-		Path:   config.RouterApiPathPrefix,
-		Router: api.CreateApiRouter(stx),
+		MountPath: config.RouterApiPathPrefix,
+		Router:    api.CreateApiRouter(stx),
 	}
 }

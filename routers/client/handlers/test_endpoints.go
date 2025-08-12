@@ -9,7 +9,7 @@ import (
 
 func TestEndpoint1(w http.ResponseWriter, r *http.Request) {
 	logging.RT.UpdateRequestTrace(r, "TestEndpoint1")
-	component := components.DeletionRequests()
+	component := components.RecordsManagement()
 	component.Render(r.Context(), w)
 }
 

@@ -59,6 +59,6 @@ func LoginCallback(
 		http.SetCookie(w, sessionCookie)
 
 		// NOTE: This redirect may want to instead reference where a user was when a refresh token expired.
-		http.Redirect(w, r, config.EndpointDashboard, http.StatusSeeOther)
+		http.Redirect(w, r, config.PathClientDashboard, http.StatusSeeOther)
 	}
 }

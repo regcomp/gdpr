@@ -26,7 +26,7 @@ func SubmitLoginCredentials(authProvider auth.IAuthProvider, configStore config.
 			helpers.RespondWithError(w, err, http.StatusInternalServerError)
 			return
 		}
-		urlString := urlWithPort + config.EndpointLoginCallback
+		urlString := urlWithPort + config.PathAuthLoginCallback
 		callbackURL, err := url.Parse(urlString)
 		if err != nil {
 			helpers.RespondWithError(w, err, http.StatusInternalServerError)

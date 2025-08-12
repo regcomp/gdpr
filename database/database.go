@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/regcomp/gdpr/config"
+	"github.com/regcomp/gdpr/helpers"
 	"github.com/regcomp/gdpr/secrets"
 )
 
@@ -96,7 +97,9 @@ func (dbm *DatabaseManager) GetDeletionRequestsAndPaginationInfo(limit int, star
 		NextCursor: nextCursor,
 	}
 
-	return deletionRequests[:len(deletionRequests)-1], paginationInfo, nil
+	return deletionRequests[:len(deletionRequests)-helpers.Btoi(hasMore)],
+		paginationInfo,
+		nil
 }
 
 func (dbm *DatabaseManager) AddToDataDeletionQueue(ids []uuid.UUID) error {

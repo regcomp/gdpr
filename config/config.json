@@ -52,7 +52,7 @@
   },
   "SERVICE_WORKERS": {
     "AUTH_RETRY": {
-      "PATH": "/static/sw/auth_retry.js",
+      "PATH": "/static/js/worker_auth_retry.js",
       "SCOPE": "/"
     }
   },
@@ -110,7 +110,7 @@
     "ITEM_DELIM": ","
   },
   "SHARED": {
-    "AUTH_RETRY_WORKER": {
+    "WORKER_AUTH_RETRY": {
       "RENEW_TOKEN_HEADER": "@HEADERS.RENEW_ACCESS_TOKEN",
       "RETRY_STATUS_HEADER": "@HEADERS.AUTH_RETRY_WORKER_RUNNING",
       "RENEW_TOKEN_PATH": "@ROUTERS.AUTH.ENDPOINTS.RENEW_TOKEN",

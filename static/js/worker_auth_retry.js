@@ -1,6 +1,10 @@
-importScripts("/static/js/shared/auth_retry_worker_constants.js")
+try {
+  importScripts("/static/js/shared/worker_auth_retry_constants.js")
+} catch (e) {
+  throw e
+}
 
-const CONSTANTS = AUTH_RETRY_WORKER_CONSTANTS
+const CONSTANTS = WORKER_AUTH_RETRY_CONSTANTS
 
 self.addEventListener('activate', event => {
   event.waitUntil(clients.claim());

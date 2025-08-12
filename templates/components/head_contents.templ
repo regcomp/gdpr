@@ -22,7 +22,18 @@ templ TestComponent1() {
 }
 
 templ TestComponent2() {
+	<script>
+		Alpine.data('boop', () => {
+			return {
+				chirp() {
+					console.log('CACAW');
+				}
+			}
+		});
+	</script>
 	<div id="content-inner">
-		component 2
+		<div x-data="boop" x-init="chirp">
+			component 2
+		</div>
 	</div>
 }

@@ -2,6 +2,7 @@ package database
 
 import (
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,9 +16,24 @@ type LocalRecordsDatabase struct {
 	// also audit trail of actions taken by users
 }
 
+func makeDummyData(n int) []RecordOfDeletionRequest {
+	records := make([]RecordOfDeletionRequest, 0, 16)
+	for i := range n {
+		records = append(records, RecordOfDeletionRequest{
+			ID:           uuid.New(),
+			CustomerID:   uuid.New(),
+			CustomerName: strconv.Itoa(i),
+			CreatedAt:    time.Now().UTC(),
+			UpdatedAt:    time.Now().UTC(),
+			RequestedOn:  time.Now().UTC(),
+		})
+	}
+	return records
+}
+
 func createLocalRecordsDatabase(cfg config.RecordsDatabaseConfig) *LocalRecordsDatabase {
 	return &LocalRecordsDatabase{
-		records:        make([]RecordOfDeletionRequest, 0, 16),
+		records:        makeDummyData(64),
 		deletionsQueue: make([]uuid.UUID, 0, 16),
 	}
 }

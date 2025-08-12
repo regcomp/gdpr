@@ -50,36 +50,36 @@ const (
 )
 // service workers
 const (
-	WorkerAuthRetryPath = "/static/sw/auth_retry.js"
+	WorkerAuthRetryPath = "/static/js/worker_auth_retry.js"
 	WorkerAuthRetryScope = "/"
 )
 // config keys
 const (
-	ConfigConfigStoreTypeKey = "CONFIG_STORE_TYPE"
 	ConfigDefaultPortKey = "DEFAULT_PORT"
-	ConfigSessionDurationKey = "SESSION_DURATION"
 	ConfigSecretStoreTypeKey = "SECRET_STORE_TYPE"
-	ConfigDatabaseProviderTableNamesKey = "DATABASE_PROVIDER_TABLE_NAMES"
-	ConfigServiceUrlKey = "SERVICE_URL"
+	ConfigSessionDurationKey = "SESSION_DURATION"
 	ConfigServiceCacheTypeKey = "SERVICE_CACHE_TYPE"
 	ConfigAuthProviderTypeKey = "AUTH_PROVIDER_TYPE"
 	ConfigRecordsDatabaseTypeKey = "RECORDS_DATABASE_TYPE"
 	ConfigDatabaseProviderNamesKey = "DATABASE_PROVIDER_NAMES"
 	ConfigDatabaseProviderTypesKey = "DATABASE_PROVIDER_TYPES"
+	ConfigDatabaseProviderTableNamesKey = "DATABASE_PROVIDER_TABLE_NAMES"
+	ConfigConfigStoreTypeKey = "CONFIG_STORE_TYPE"
+	ConfigServiceUrlKey = "SERVICE_URL"
 )
 
 var ConfigAttrs = []string{
-	ConfigConfigStoreTypeKey,
 	ConfigDefaultPortKey,
-	ConfigSessionDurationKey,
 	ConfigSecretStoreTypeKey,
-	ConfigDatabaseProviderTableNamesKey,
-	ConfigServiceUrlKey,
+	ConfigSessionDurationKey,
 	ConfigServiceCacheTypeKey,
 	ConfigAuthProviderTypeKey,
 	ConfigRecordsDatabaseTypeKey,
 	ConfigDatabaseProviderNamesKey,
 	ConfigDatabaseProviderTypesKey,
+	ConfigDatabaseProviderTableNamesKey,
+	ConfigConfigStoreTypeKey,
+	ConfigServiceUrlKey,
 }
 // Cookies
 const (
@@ -91,12 +91,11 @@ const (
 const FormValueNonce = "nonce"
 // local files
 const (
-	LocalDefaultConfigPath = "config/default.config"
 	LocalEnvPath = ".env"
+	LocalDefaultConfigPath = "config/default.config"
 )
 // query parameters
 const (
-	QueryParamWorkerScope = "worker-scope"
 	QueryParamLimit = "limit"
 	QueryParamAfter = "after"
 	QueryParamRedirectUrl = "redirect-url"
@@ -104,6 +103,7 @@ const (
 	QueryParamAccessToken = "access-token"
 	QueryParamRefreshToken = "refresh-token"
 	QueryParamWorkerPath = "worker-path"
+	QueryParamWorkerScope = "worker-scope"
 )
 // request context keys
 const (
@@ -113,17 +113,17 @@ const (
 )
 // headers
 const (
-	HeaderNonceToken = "Nonce-Token"
-	HeaderRenewAccessToken = "Renew-Access-Token"
 	HeaderServiceWorkerAllowed = "Service-Worker-Allowed"
 	HeaderAuthRetryWorkerRunning = "Auth-Retry-Worker-Running"
+	HeaderNonceToken = "Nonce-Token"
+	HeaderRenewAccessToken = "Renew-Access-Token"
 )
 // values
 const (
-	ValueNameDelim = ":"
-	ValueItemDelim = ","
 	ValueTrue = "true"
 	ValueLocalType = "LOCAL"
 	ValueEntryDelim = ";"
+	ValueNameDelim = ":"
+	ValueItemDelim = ","
 )
 

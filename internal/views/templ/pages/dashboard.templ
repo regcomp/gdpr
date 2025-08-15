@@ -1,0 +1,157 @@
+package pages
+
+import "github.com/regcomp/gdpr/internal/views/templ/components"
+
+templ Dashboard(accessToken, refreshToken, sessionID string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			@components.HeadContents("Dashboard")
+			<style>
+        :root {
+          --navbar-height: 40px;
+        }
+
+        .navbar {
+          height: var(--navbar-height);
+          min-height: var(--navbar-height);
+          padding: 0.25rem 1rem;
+        }
+
+        .main-container {
+          margin-top: var(--navbar-height);
+        }
+
+        .sidebar-height {
+          height: calc(100vh - var(--navbar-height));
+        }
+
+        .sidebar-nav {
+          margin-bottom: 0.5rem;
+        }
+
+        .navigable {
+          cursor: pointer;
+          tabindex: 0
+        }
+      </style>
+			<script>
+      document.addEventListener('alpine:init', () => {
+        Alpine.data('ajaxButton', () => ({
+          fetchAJAXWithScripts() {
+            const endpoint = this.$el.dataset.endpoint;
+
+            fetch(endpoint)
+              .then(r => r.text())
+              .then(html => {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = html;
+
+                // Extract and execute script tags
+                wrapper.querySelectorAll('script').forEach(oldScript => {
+                  const newScript = document.createElement('script');
+
+                  if (oldScript.src) {
+                    // External script — copy src
+                    newScript.src = oldScript.src;
+                    newScript.async = false; // preserve order
+                  } else {
+                    // Inline script
+                    newScript.textContent = oldScript.textContent;
+                  }
+
+                  // Preserve attributes (like type, nonce)
+                  [...oldScript.attributes].forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                  });
+
+                  document.body.appendChild(newScript); // executes script
+                  oldScript.remove();
+                });
+
+                // Append remaining HTML
+                const target = document.getElementById('content-inner');
+                target.innerHTML = '';
+                target.append(...wrapper.childNodes);
+
+                // Initialize Alpine
+                Alpine.initTree(target);
+              });
+          }
+        }));
+      });
+    </script>
+		</head>
+		<body>
+			<!-- Top Bar - Full Width -->
+			<nav class="navbar navbar-expand-lg py-0 border-bottom fixed-top">
+				<div class="container-fluid">
+					<!-- Logo/Brand -->
+					<div class="navbar-brand mb-0 h5">
+						GDPR Compliance Utility
+					</div>
+				</div>
+			</nav>
+			<!-- Main Layout Container - Below Fixed Top Bar -->
+			<div class="container-fluid p-0 main-container">
+				<div class="row g-0">
+					<!-- Sidebar -->
+					<div class="col-md-3 col-lg-2 sidebar border-end">
+						<div class="d-flex flex-column sidebar-height">
+							<!-- Navigation -->
+							<nav class="flex-grow-1 p-3">
+								<ul class="nav nav-pills flex-column">
+									<li>
+										<button
+											class="nav-item nav-link sidebar-nav"
+											x-data="ajaxButton"
+											data-endpoint="/app/client/records"
+											x-on:click="fetchAJAXWithScripts"
+										>
+											Records Management	
+										</button>
+									</li>
+									<li>
+										<button
+											class="nav-item nav-link sidebar-nav"
+											x-data="ajaxButton"
+											data-endpoint="/app/client/test"
+											x-on:click="fetchAJAXWithScripts"
+										>
+											testing
+										</button>
+									</li>
+								</ul>
+							</nav>
+							<!-- Sidebar Footer -->
+							<div class="p-3 border-top border-secondary">
+								<div class="d-flex align-items-center">
+									<div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+										<small class="fw-bold">ID</small>
+									</div>
+									<div class="flex-grow-1">
+										<div class="small">Identifier</div>
+										<div class="text-muted small">Admin</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- Main Content Area -->
+					<div class="col-md-9 col-lg-10" id="content-area">
+						<div id="content-inner">
+							<main class="p-4">
+								<div class="mb-4">
+									<h2 class="mb-1">Dashboard</h2>
+									<div>access token: { accessToken } </div>
+									<div>refresh token: { refreshToken } </div>
+									<div>session id: { sessionID } </div>
+								</div>
+							</main>
+						</div>
+					</div>
+				</div>
+			</div>
+		</body>
+	</html>
+}

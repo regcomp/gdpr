@@ -1,0 +1,120 @@
+{
+  "ROUTERS": {
+    "BASE": {
+      "PATH_PREFIX": "/",
+      "PARENT": null,
+      "ENDPOINTS": [
+        "healthz",
+        "register-service-worker"
+      ]
+    },
+    "STATIC": {
+      "PATH_PREFIX": "/static",
+      "PARENT": "BASE",
+      "ENDPOINTS": []
+    },
+    "SERVICE": {
+      "PATH_PREFIX": "/",
+      "PARENT": "BASE",
+      "ENDPOINTS": []
+    },
+    "AUTH": {
+      "PATH_PREFIX": "/auth",
+      "PARENT": "SERVICE",
+      "ENDPOINTS": [
+        "login",
+        "login-callback",
+        "renew-token"
+      ]
+    },
+    "APP": {
+      "PATH_PREFIX": "/app",
+      "PARENT": "SERVICE",
+      "ENDPOINTS": []
+    },
+    "CLIENT": {
+      "PATH_PREFIX": "/client",
+      "PARENT": "APP",
+      "ENDPOINTS": [
+        "dashboard",
+        "logout",
+        "records",
+        "test"
+      ]
+    },
+    "API": {
+      "PATH_PREFIX": "/api",
+      "PARENT": "APP",
+      "ENDPOINTS": [
+        "records"
+      ]
+    }
+  },
+  "SERVICE_WORKERS": {
+    "AUTH_RETRY": {
+      "PATH": "/static/js/worker_auth_retry.js",
+      "SCOPE": "/"
+    }
+  },
+  "COOKIES": {
+    "ACCESS_TOKEN": "access-token",
+    "REFRESH_TOKEN": "refresh-token",
+    "SESSION_ID": "session-id"
+  },
+  "QUERY_PARAMETERS": {
+    "REDIRECT_URL": "redirect-url",
+    "REQUEST_ID": "request-id",
+    "ACCESS_TOKEN": "access-token",
+    "REFRESH_TOKEN": "refresh-token",
+    "WORKER_PATH": "worker-path",
+    "WORKER_SCOPE": "worker-scope",
+    "LIMIT": "limit",
+    "AFTER": "after"
+  },
+  "HEADERS": {
+    "NONCE_TOKEN": "Nonce-Token",
+    "RENEW_ACCESS_TOKEN": "Renew-Access-Token",
+    "SERVICE_WORKER_ALLOWED": "Service-Worker-Allowed",
+    "AUTH_RETRY_WORKER_RUNNING": "Auth-Retry-Worker-Running"
+  },
+  "REQUEST_CONTEXT_KEYS": {
+    "CLAIMS": "claims",
+    "SESSION_ID": "session-id",
+    "NONCE_TOKEN": "nonce-token"
+  },
+  "CONFIG_KEYS": {
+    "CONFIG_STORE_TYPE": "CONFIG_STORE_TYPE",
+    "SERVICE_URL": "SERVICE_URL",
+    "DEFAULT_PORT": "DEFAULT_PORT",
+    "SESSION_DURATION": "SESSION_DURATION",
+    "SERVICE_CACHE_TYPE": "SERVICE_CACHE_TYPE",
+    "SECRET_STORE_TYPE": "SECRET_STORE_TYPE",
+    "AUTH_PROVIDER_TYPE": "AUTH_PROVIDER_TYPE",
+    "RECORDS_DATABASE_TYPE": "RECORDS_DATABASE_TYPE",
+    "DATABASE_PROVIDER_NAMES": "DATABASE_PROVIDER_NAMES",
+    "DATABASE_PROVIDER_TYPES": "DATABASE_PROVIDER_TYPES",
+    "DATABASE_PROVIDER_TABLE_NAMES": "DATABASE_PROVIDER_TABLE_NAMES"
+  },
+  "FORM_VALUES": {
+    "NONCE": "nonce"
+  },
+  "LOCAL_FILES": {
+    "ENV": ".env",
+    "DEFAULT_CONFIG": "internal/config/default.config"
+  },
+  "VALUES": {
+    "TRUE": "true",
+    "LOCAL_TYPE": "LOCAL",
+    "ENTRY_DELIM": ";",
+    "NAME_DELIM": ":",
+    "ITEM_DELIM": ","
+  },
+  "SHARED": {
+    "WORKER_AUTH_RETRY": {
+      "RENEW_TOKEN_HEADER": "@HEADERS.RENEW_ACCESS_TOKEN",
+      "RETRY_STATUS_HEADER": "@HEADERS.AUTH_RETRY_WORKER_RUNNING",
+      "RENEW_TOKEN_PATH": "@ROUTERS.AUTH.ENDPOINTS.RENEW_TOKEN",
+      "TRUE": "@VALUES.TRUE"
+    }
+  }
+}

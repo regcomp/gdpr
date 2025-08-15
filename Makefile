@@ -2,14 +2,16 @@ BUILD_TARGETS=./.bin
 SOURCE=./cmd/server/*.go
 TARGET=server
 
-gen-certs:
+gen-tlscerts:
 	@ ${MAKE} -C ./auth/local_certs/ gen_certs
 
-gen-variables:
-	@ go generate ./config/codegen/
+gen-constants:
+	@ go generate ./internal/config/codegen/
 
-build-local: gen-variables
-	@ templ generate
+gen-templ:
+	@ templ generate 
+
+build-local: gen-constants gen-templ
 	@ mkdir $(BUILD_TARGETS) -p
 	@ go build -o $(BUILD_TARGETS)/$(TARGET) $(SOURCE)
 

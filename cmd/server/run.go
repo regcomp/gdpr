@@ -14,13 +14,14 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	certs "github.com/regcomp/gdpr/auth/local_certs"
-	"github.com/regcomp/gdpr/caching"
-	"github.com/regcomp/gdpr/config"
-	"github.com/regcomp/gdpr/logging"
-	"github.com/regcomp/gdpr/routers"
-	"github.com/regcomp/gdpr/secrets"
-	servicecontext "github.com/regcomp/gdpr/service_context"
+
+	certs "github.com/regcomp/gdpr/internal/auth/local_certs"
+	"github.com/regcomp/gdpr/internal/caching"
+	"github.com/regcomp/gdpr/internal/config"
+	"github.com/regcomp/gdpr/internal/routers"
+	"github.com/regcomp/gdpr/internal/secrets"
+	servicecontext "github.com/regcomp/gdpr/internal/servicecontext"
+	"github.com/regcomp/gdpr/pkg/logging"
 )
 
 func run(
@@ -71,10 +72,7 @@ func run(
 	}
 
 	// WARN: FOR DEBUGGING
-	logging.NewRequestTracer(&config.RequestTracerConfig{
-		TracerOn:         true,
-		DisplayResponses: true,
-	})
+	logging.NewRequestTracer(true, true)
 
 	router := routers.CreateRouter(stx)
 

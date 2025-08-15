@@ -1,0 +1,36 @@
+{
+  "name": "gdpr",
+  "version": "1.0.0",
+  "description": "Ensuring automated GDPR compliance",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "typecheck:web": "tsc -p tsconfig.json --noEmit",
+    "typecheck:sw": "tsc -p tsconfig.sw.json --noEmit",
+    "typecheck": "npm run typecheck:web && npm run typecheck:sw",
+    "build:web": "esbuild web/app.ts --bundle --outfile=static/js/app.js --minify --sourcemap",
+    "build:sw": "esbuild \"web/**/*.sw.ts\" --bundle --outdir=static/js --outbase=web --minify --sourcemap",
+    "build": "npm run typecheck && npm run build:web && npm run build:sw",
+    "watch:web": "esbuild web/app.ts --bundle --outfile=static/js/app.js --sourcemap --watch",
+    "watch:sw": "esbuild \"web/**/*.sw.ts\" --bundle --outdir=static/js --outbase=web --sourcemap --watch",
+    "watch": "npm run typecheck && npm run watch:web & npm run watch:sw"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/regcomp/gdpr.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/regcomp/gdpr/issues"
+  },
+  "homepage": "https://github.com/regcomp/gdpr#readme",
+  "devDependencies": {
+    "@alpinejs/csp": "^3.14.9",
+    "@types/alpinejs": "^3.13.11",
+    "typescript": "^5.9.2"
+  }
+}

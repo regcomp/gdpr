@@ -56,29 +56,29 @@ const (
 // config keys
 const (
 	ConfigConfigStoreTypeKey = "CONFIG_STORE_TYPE"
-	ConfigServiceUrlKey = "SERVICE_URL"
 	ConfigDefaultPortKey = "DEFAULT_PORT"
+	ConfigSessionDurationKey = "SESSION_DURATION"
 	ConfigSecretStoreTypeKey = "SECRET_STORE_TYPE"
+	ConfigDatabaseProviderNamesKey = "DATABASE_PROVIDER_NAMES"
+	ConfigServiceUrlKey = "SERVICE_URL"
+	ConfigServiceCacheTypeKey = "SERVICE_CACHE_TYPE"
 	ConfigAuthProviderTypeKey = "AUTH_PROVIDER_TYPE"
 	ConfigRecordsDatabaseTypeKey = "RECORDS_DATABASE_TYPE"
 	ConfigDatabaseProviderTypesKey = "DATABASE_PROVIDER_TYPES"
-	ConfigSessionDurationKey = "SESSION_DURATION"
-	ConfigServiceCacheTypeKey = "SERVICE_CACHE_TYPE"
-	ConfigDatabaseProviderNamesKey = "DATABASE_PROVIDER_NAMES"
 	ConfigDatabaseProviderTableNamesKey = "DATABASE_PROVIDER_TABLE_NAMES"
 )
 
 var ConfigAttrs = []string{
 	ConfigConfigStoreTypeKey,
-	ConfigServiceUrlKey,
 	ConfigDefaultPortKey,
+	ConfigSessionDurationKey,
 	ConfigSecretStoreTypeKey,
+	ConfigDatabaseProviderNamesKey,
+	ConfigServiceUrlKey,
+	ConfigServiceCacheTypeKey,
 	ConfigAuthProviderTypeKey,
 	ConfigRecordsDatabaseTypeKey,
 	ConfigDatabaseProviderTypesKey,
-	ConfigSessionDurationKey,
-	ConfigServiceCacheTypeKey,
-	ConfigDatabaseProviderNamesKey,
 	ConfigDatabaseProviderTableNamesKey,
 }
 // Cookies
@@ -102,7 +102,6 @@ const (
 )
 // query parameters
 const (
-	QueryParamRefreshToken = "refresh-token"
 	QueryParamWorkerPath = "worker-path"
 	QueryParamWorkerScope = "worker-scope"
 	QueryParamLimit = "limit"
@@ -110,6 +109,7 @@ const (
 	QueryParamRedirectUrl = "redirect-url"
 	QueryParamRequestId = "request-id"
 	QueryParamAccessToken = "access-token"
+	QueryParamRefreshToken = "refresh-token"
 )
 // request context keys
 const (
@@ -119,17 +119,17 @@ const (
 )
 // headers
 const (
-	HeaderAuthRetryWorkerRunning = "Auth-Retry-Worker-Running"
 	HeaderNonceToken = "Nonce-Token"
 	HeaderRenewAccessToken = "Renew-Access-Token"
 	HeaderServiceWorkerAllowed = "Service-Worker-Allowed"
+	HeaderAuthRetryWorkerRunning = "Auth-Retry-Worker-Running"
 )
 // values
 const (
-	ValueEntryDelim = ";"
-	ValueNameDelim = ":"
 	ValueItemDelim = ","
 	ValueTrue = "true"
 	ValueLocalType = "LOCAL"
+	ValueEntryDelim = ";"
+	ValueNameDelim = ":"
 )
 

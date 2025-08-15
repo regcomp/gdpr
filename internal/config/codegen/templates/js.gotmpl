@@ -1,7 +1,7 @@
 // This file is auto-generated from config/config.json. Do not edit manually.
 // Shared constants for {{.SubfieldName}}
 
-const {{.ConstantName}} = {
+export const {{.ConstantName}} = {
 {{- range $key, $value := .Data}}
   {{$key}}: "{{$value}}",
 {{- end}}

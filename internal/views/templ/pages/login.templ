@@ -1,0 +1,26 @@
+package pages
+
+import "github.com/regcomp/gdpr/internal/views/templ/components"
+
+templ Login() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			@components.HeadContents("Login")
+		</head>
+		<body>
+			<form action="/auth/login" method="POST">
+				<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center">
+					<div class="text-center">
+						<h1 class="fw-bold text-body mb-4 fade-transition">
+							Mock OAuth Login
+						</h1>
+						<button class="btn btn-primary btn-lg px-4 py-2">
+							Login
+						</button>
+					</div>
+				</div>
+			</form>
+		</body>
+	</html>
+}

@@ -1,0 +1,14 @@
+package components
+
+templ RecordsManagement() {
+	<div id="inner-content">
+		<div
+			id="records-management"
+			x-data="recordsListComponent"
+			x-init="loadRecords"
+			class="h-full flex flex-col"
+		>
+			<pre x-text="rawResults"></pre>
+		</div>
+	</div>
+}

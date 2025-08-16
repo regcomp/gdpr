@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "es6",
+      "webworker"
+    ],
+    "outDir": "./static/js/"
+  },
+  "include": [
+    "web/**/*.sw.ts"
+  ]
+}

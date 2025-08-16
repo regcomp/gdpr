@@ -25,3 +25,21 @@ go.work.sum
 .env
 .bin/
 .secrets
+
+# Node dependencies
+node_modules/
+
+# TypeScript build output
+/static/js/
+/static/css/
+/web/**/*.js
+/web/**/*.js.map
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS junk
+.DS_Store
+Thumbs.db

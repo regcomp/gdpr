@@ -1,9 +1,8 @@
-//go:generate go run ../../constants/generators/gen_shared.go
-
 package main
 
 import (
 	"context"
+	"log"
 	"os"
 )
 
@@ -15,6 +14,7 @@ func main() {
 		os.Stderr,
 	)
 	if err != nil {
+		log.Printf("Server Crash: %s", err.Error())
 		// TODO: log the server crash
 	}
 	// println("tada")

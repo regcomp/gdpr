@@ -14,14 +14,14 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	certs "github.com/regcomp/gdpr/auth/local_certs"
-	"github.com/regcomp/gdpr/caching"
-	"github.com/regcomp/gdpr/config"
-	"github.com/regcomp/gdpr/constants"
-	"github.com/regcomp/gdpr/logging"
-	"github.com/regcomp/gdpr/routers"
-	"github.com/regcomp/gdpr/secrets"
-	servicecontext "github.com/regcomp/gdpr/service_context"
+
+	certs "github.com/regcomp/gdpr/internal/auth/local_certs"
+	"github.com/regcomp/gdpr/internal/caching"
+	"github.com/regcomp/gdpr/internal/config"
+	"github.com/regcomp/gdpr/internal/routers"
+	"github.com/regcomp/gdpr/internal/secrets"
+	servicecontext "github.com/regcomp/gdpr/internal/servicecontext"
+	"github.com/regcomp/gdpr/pkg/logging"
 )
 
 func run(
@@ -29,28 +29,40 @@ func run(
 	getenv func(string) string,
 	outStream io.Writer,
 ) error {
-	if err := godotenv.Load(constants.LocalConfigPath); err != nil {
+	if err := godotenv.Load(config.LocalDefaultConfigPath); err != nil {
 		log.Fatalf("error loading .env: %s", err.Error())
 	}
 
 	// pull in and parse relevant env variables for external secrets store
 	// should be passed in by docker env variables at runtime
-	configStore := config.NewLocalConfigStore(getenv)
+	configStore, err := config.NewConfigStore(getenv, getenv)
+	if err != nil {
+		return err
+	}
 
 	// establish connection to secrets store
-	secretStore, err := secrets.CreateSecretStore(configStore.GetSecretStoreConfig())
+	secretStoreConfig, err := configStore.GetSecretStoreConfig()
+	if err != nil {
+		return err
+	}
+	secretStore, err := secrets.CreateSecretStore(secretStoreConfig)
 	if err != nil {
 		return err
 	}
 
 	// establish connection to/instantiate cache
 	// cache needs secret store to get missing information
-	serviceCache, err := caching.CreateServiceCache(
-		configStore.GetServiceCacheConfig(),
-		secretStore.GetServiceCacheSecrets(),
-	)
+	serviceCacheConfig, err := configStore.GetServiceCacheConfig()
 	if err != nil {
-		// TODO:
+		return err
+	}
+	serviceCacheSecrets, err := secretStore.GetServiceCacheSecrets()
+	if err != nil {
+		return err
+	}
+	serviceCache, err := caching.CreateServiceCache(serviceCacheConfig, serviceCacheSecrets)
+	if err != nil {
+		return err
 	}
 
 	// service context needs cache to pull neccessary data from
@@ -59,21 +71,26 @@ func run(
 		return err
 	}
 
-	logging.NewRequestTracer(configStore.GetTracerConfig())
+	// WARN: FOR DEBUGGING
+	logging.NewRequestTracer(true, true)
 
 	router := routers.CreateRouter(stx)
 
 	cert, err := tls.X509KeyPair(certs.ServerCertPEMBlock, certs.ServerKeyPEMBlock)
 	if err != nil {
-		// TODO:
+		return err
 	}
 
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 	}
 
+	defaultPort, err := configStore.GetDefaultPort()
+	if err != nil {
+		return nil
+	}
 	server := &http.Server{
-		Addr:      ":" + stx.ConfigStore.GetDefaultPort(),
+		Addr:      ":" + defaultPort,
 		Handler:   router,
 		TLSConfig: tlsConfig,
 	}

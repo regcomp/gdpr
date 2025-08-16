@@ -1,0 +1,8 @@
+// This file is auto-generated from config/config.json. Do not edit manually.
+// Shared constants for {{.DependentFilename}}.ts
+
+export const {{.ConstantName}} = {
+{{- range $key, $value := .Data}}
+  {{$key}}: "{{$value}}",
+{{- end}}
+} as const;

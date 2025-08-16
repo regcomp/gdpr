@@ -1,0 +1,33 @@
+{
+  "name": "gdpr",
+  "version": "1.0.0",
+  "description": "Ensuring automated GDPR compliance",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "check:ts": "tsc --noEmit && tsc --noEmit -p tsconfig.sw.json",
+    "build": "npm run check:ts && node esbuild.mjs",
+    "dev": "npm run check:ts && WATCH=true node esbuild.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/regcomp/gdpr.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/regcomp/gdpr/issues"
+  },
+  "homepage": "https://github.com/regcomp/gdpr#readme",
+  "devDependencies": {
+    "@alpinejs/csp": "^3.14.9",
+    "@types/alpinejs": "^3.13.11",
+    "esbuild": "^0.25.9",
+    "stylelint": "^16.23.1",
+    "stylelint-config-standard-scss": "^15.0.1",
+    "typescript": "^5.9.2"
+  }
+}

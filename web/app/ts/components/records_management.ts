@@ -1,4 +1,4 @@
-import Alpine from "alpinejs";
+import Alpine from '@alpinejs/csp';
 
 // Define the shape of the API's JSON response
 interface RecordItem {

@@ -1,0 +1,25 @@
+:root {
+  --navbar-height: 40px;
+}
+
+.navbar {
+  height: var(--navbar-height);
+  min-height: var(--navbar-height);
+  padding: 0.25rem 1rem;
+}
+
+.main-container {
+  margin-top: var(--navbar-height);
+}
+
+.sidebar-height {
+  height: calc(100vh - var(--navbar-height));
+}
+
+.sidebar-nav {
+  margin-bottom: 0.5rem;
+}
+
+.navigable {
+  cursor: pointer;
+}

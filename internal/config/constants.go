@@ -55,31 +55,31 @@ const (
 )
 // config keys
 const (
-	ConfigConfigStoreTypeKey = "CONFIG_STORE_TYPE"
-	ConfigDefaultPortKey = "DEFAULT_PORT"
+	ConfigAuthProviderTypeKey = "AUTH_PROVIDER_TYPE"
+	ConfigDatabaseProviderTypesKey = "DATABASE_PROVIDER_TYPES"
+	ConfigServiceUrlKey = "SERVICE_URL"
 	ConfigSessionDurationKey = "SESSION_DURATION"
 	ConfigSecretStoreTypeKey = "SECRET_STORE_TYPE"
-	ConfigDatabaseProviderNamesKey = "DATABASE_PROVIDER_NAMES"
-	ConfigServiceUrlKey = "SERVICE_URL"
-	ConfigServiceCacheTypeKey = "SERVICE_CACHE_TYPE"
-	ConfigAuthProviderTypeKey = "AUTH_PROVIDER_TYPE"
 	ConfigRecordsDatabaseTypeKey = "RECORDS_DATABASE_TYPE"
-	ConfigDatabaseProviderTypesKey = "DATABASE_PROVIDER_TYPES"
+	ConfigDatabaseProviderNamesKey = "DATABASE_PROVIDER_NAMES"
 	ConfigDatabaseProviderTableNamesKey = "DATABASE_PROVIDER_TABLE_NAMES"
+	ConfigConfigStoreTypeKey = "CONFIG_STORE_TYPE"
+	ConfigDefaultPortKey = "DEFAULT_PORT"
+	ConfigServiceCacheTypeKey = "SERVICE_CACHE_TYPE"
 )
 
 var ConfigAttrs = []string{
-	ConfigConfigStoreTypeKey,
-	ConfigDefaultPortKey,
+	ConfigAuthProviderTypeKey,
+	ConfigDatabaseProviderTypesKey,
+	ConfigServiceUrlKey,
 	ConfigSessionDurationKey,
 	ConfigSecretStoreTypeKey,
-	ConfigDatabaseProviderNamesKey,
-	ConfigServiceUrlKey,
-	ConfigServiceCacheTypeKey,
-	ConfigAuthProviderTypeKey,
 	ConfigRecordsDatabaseTypeKey,
-	ConfigDatabaseProviderTypesKey,
+	ConfigDatabaseProviderNamesKey,
 	ConfigDatabaseProviderTableNamesKey,
+	ConfigConfigStoreTypeKey,
+	ConfigDefaultPortKey,
+	ConfigServiceCacheTypeKey,
 }
 // Cookies
 const (
@@ -102,14 +102,14 @@ const (
 )
 // query parameters
 const (
+	QueryParamRequestId = "request-id"
+	QueryParamAccessToken = "access-token"
+	QueryParamRefreshToken = "refresh-token"
 	QueryParamWorkerPath = "worker-path"
 	QueryParamWorkerScope = "worker-scope"
 	QueryParamLimit = "limit"
 	QueryParamAfter = "after"
 	QueryParamRedirectUrl = "redirect-url"
-	QueryParamRequestId = "request-id"
-	QueryParamAccessToken = "access-token"
-	QueryParamRefreshToken = "refresh-token"
 )
 // request context keys
 const (
@@ -119,17 +119,17 @@ const (
 )
 // headers
 const (
+	HeaderAuthRetryWorkerRunning = "Auth-Retry-Worker-Running"
 	HeaderNonceToken = "Nonce-Token"
 	HeaderRenewAccessToken = "Renew-Access-Token"
 	HeaderServiceWorkerAllowed = "Service-Worker-Allowed"
-	HeaderAuthRetryWorkerRunning = "Auth-Retry-Worker-Running"
 )
 // values
 const (
+	ValueEntryDelim = ";"
+	ValueNameDelim = ":"
 	ValueItemDelim = ","
 	ValueTrue = "true"
 	ValueLocalType = "LOCAL"
-	ValueEntryDelim = ";"
-	ValueNameDelim = ":"
 )
 

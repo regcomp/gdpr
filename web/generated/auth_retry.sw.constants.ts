@@ -1,9 +1,9 @@
 // This file is auto-generated from config/config.json. Do not edit manually.
-// Shared constants for WORKER_AUTH_RETRY
+// Shared constants for auth_retry.sw.ts
 
-export const WORKER_AUTH_RETRY_CONSTANTS = {
+export const AUTH_RETRY_SW_CONSTANTS = {
   RENEW_TOKEN_HEADER: "Renew-Access-Token",
   RENEW_TOKEN_PATH: "/auth/renew-token",
   RETRY_STATUS_HEADER: "Auth-Retry-Worker-Running",
   TRUE: "true",
-};
+} as const;

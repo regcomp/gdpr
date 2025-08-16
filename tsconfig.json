@@ -3,11 +3,12 @@
   "compilerOptions": {
     "rootDir": "./web/",
     "outDir": "./static/js/",
-    "module": "es6",
-    "target": "es6",
+    "module": "esnext",
+    "target": "es2020",
+    "moduleResolution": "bundler",
     "types": [],
     "lib": [
-      "es6",
+      "es2020",
       "dom"
     ],
     "sourceMap": true,
@@ -25,12 +26,17 @@
     // "noPropertyAccessFromIndexSignature": true,
     // Recommended Options
     "strict": true,
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
+    "allowImportingTsExtensions": true,
     // "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "typeRoots": [
+      "./web/types/",
+      "./node_modules/@types/"
+    ]
   },
   "include": [
     "web/**/*.ts",

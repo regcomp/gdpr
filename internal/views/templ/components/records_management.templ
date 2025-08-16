@@ -2,44 +2,6 @@ package components
 
 templ RecordsManagement() {
 	<div id="inner-content">
-		<script>
-      Alpine.data('recordsListComponent', () => ({
-        records: [],
-        rawResults: "",
-        loading: false,
-        error: null,
-        hasMore: true,
-        nextCursor: null,
-
-        async loadRecords(append = false) {
-          const url = new URL("/app/api/records", window.location.origin)
-          url.searchParams.set('limit', '20')
-          const request = new Request(url);
-
-          try {
-            const response = await fetch(request);
-            const body = await response.json()
-
-            if (append) {
-              this.records.push(...body.data);
-            } else {
-              this.records = body.data;
-            }
-
-            this.hasMore = body.pagination.hasMore;
-            this.nextCursor = body.pagination.nextCursor;
-
-            this.rawResults = JSON.stringify(body.data, null, 2)
-
-          } catch (err) {
-            this.error = 'Failed to load users';
-          } finally {
-            this.loading = false;
-          }
-        },
-
-      }));
-    </script>
 		<div
 			id="records-management"
 			x-data="recordsListComponent"

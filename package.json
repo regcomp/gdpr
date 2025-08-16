@@ -7,15 +7,9 @@
     "doc": "docs"
   },
   "scripts": {
-    "typecheck:web": "tsc -p tsconfig.json --noEmit",
-    "typecheck:sw": "tsc -p tsconfig.sw.json --noEmit",
-    "typecheck": "npm run typecheck:web && npm run typecheck:sw",
-    "build:web": "esbuild web/app.ts --bundle --outfile=static/js/app.js --minify --sourcemap",
-    "build:sw": "esbuild \"web/**/*.sw.ts\" --bundle --outdir=static/js --outbase=web --minify --sourcemap",
-    "build": "npm run typecheck && npm run build:web && npm run build:sw",
-    "watch:web": "esbuild web/app.ts --bundle --outfile=static/js/app.js --sourcemap --watch",
-    "watch:sw": "esbuild \"web/**/*.sw.ts\" --bundle --outdir=static/js --outbase=web --sourcemap --watch",
-    "watch": "npm run typecheck && npm run watch:web & npm run watch:sw"
+    "check:ts": "tsc --noEmit && tsc --noEmit -p tsconfig.sw.json",
+    "build": "npm run check:ts && node esbuild.mjs",
+    "dev": "npm run check:ts && WATCH=true node esbuild.mjs"
   },
   "repository": {
     "type": "git",
@@ -31,6 +25,9 @@
   "devDependencies": {
     "@alpinejs/csp": "^3.14.9",
     "@types/alpinejs": "^3.13.11",
+    "esbuild": "^0.25.9",
+    "stylelint": "^16.23.1",
+    "stylelint-config-standard-scss": "^15.0.1",
     "typescript": "^5.9.2"
   }
 }

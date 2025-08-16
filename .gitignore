@@ -31,10 +31,9 @@ node_modules/
 
 # TypeScript build output
 /static/js/
+/static/css/
 /web/**/*.js
 /web/**/*.js.map
-/web/**/*.d.ts
-/web/**/*.d.ts.map
 
 # Logs
 npm-debug.log*

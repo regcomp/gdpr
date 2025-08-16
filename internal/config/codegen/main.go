@@ -16,11 +16,11 @@ const (
 )
 
 const (
-	sourceServiceFile             = "../../config/config.json"
-	targetGoFilePath              = "../../config/constants.go"
-	javascriptSharedDirectoryPath = "../../../static/js/shared/"
-	jsTemplatePath                = "./templates/js.gotmpl"
-	goTemplatePath                = "./templates/go.gotmpl"
+	sourceServiceFile = "../../config/config.json"
+	targetGoFilePath  = "../../config/constants.go"
+	generatedTSPath   = "../../../web/generated"
+	jsTemplatePath    = "./templates/js.gotmpl"
+	goTemplatePath    = "./templates/go.gotmpl"
 )
 
 func main() {
@@ -58,15 +58,15 @@ func main() {
 		return
 	}
 
-	if err := os.MkdirAll(javascriptSharedDirectoryPath, 0755); err != nil {
+	if err := os.MkdirAll(generatedTSPath, 0755); err != nil {
 		log.Fatal("Error creating output directory:", err)
 	}
 
 	// generating all the specified .js files to share constants
 	flattenedMapping := generateFlattenedDataMapping(data)
 	for subfieldName, subfieldData := range data.Shared {
-		filename := strings.ToLower(subfieldName) + "_constants.js"
-		filepath := fmt.Sprintf("%s/%s", javascriptSharedDirectoryPath, filename)
+		filename := strings.ToLower(subfieldName) + ".constants.ts"
+		filepath := fmt.Sprintf("%s/%s", generatedTSPath, filename)
 
 		sharedData := generateSharedDataMapping(flattenedMapping, subfieldData)
 
@@ -90,16 +90,18 @@ func generateSharedDataMapping(flattenedMapping map[string]string, subfieldData 
 }
 
 func generateSingleJSFile(filepath string, subfieldName string, resolvedData map[string]string) {
-	constantName := strings.ToUpper(subfieldName) + "_CONSTANTS"
+	dependentFilename := strings.ToLower(subfieldName)
+	constantName := strings.ReplaceAll(strings.ToUpper(subfieldName), ".", "_") + "_CONSTANTS"
 
+	// NOTE: these field names are coupled with the template
 	templateData := struct {
-		SubfieldName string
-		ConstantName string
-		Data         map[string]string
+		DependentFilename string
+		ConstantName      string
+		Data              map[string]string
 	}{
-		SubfieldName: subfieldName,
-		ConstantName: constantName,
-		Data:         resolvedData,
+		DependentFilename: dependentFilename,
+		ConstantName:      constantName,
+		Data:              resolvedData,
 	}
 
 	template, err := template.ParseFiles(jsTemplatePath)

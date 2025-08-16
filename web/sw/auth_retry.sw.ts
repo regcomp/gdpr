@@ -1,26 +1,26 @@
-try {
-  importScripts("/static/js/shared/worker_auth_retry_constants.js")
-} catch (e) {
-  throw e
-}
+/// <reference lib="webworker" />
 
-const CONSTANTS = WORKER_AUTH_RETRY_CONSTANTS
+import { AUTH_RETRY_SW_CONSTANTS } from "../generated/auth_retry.sw.constants.ts";
 
-self.addEventListener('activate', event => {
-  event.waitUntil(clients.claim());
+const CONSTANTS = AUTH_RETRY_SW_CONSTANTS;
+
+declare const self: ServiceWorkerGlobalScope;
+
+self.addEventListener('activate', (event: ExtendableEvent) => {
+  event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('install', event => {
+self.addEventListener('install', () => {
   console.log('Service worker installing...');
   // Force the waiting service worker to become the active service worker
   self.skipWaiting();
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', (event: FetchEvent) => {
   event.respondWith(handleFetchWithAuth(event.request));
 });
 
-async function handleFetchWithAuth(request) {
+async function handleFetchWithAuth(request: Request): Promise<Response> {
   try {
     const response = await fetch(addHeaderAndClone(request));
 
@@ -34,7 +34,7 @@ async function handleFetchWithAuth(request) {
       }
     }
 
-    return response
+    return response;
 
   } catch (error) {
     console.error('Fetch error in service worker:', error);
@@ -42,7 +42,7 @@ async function handleFetchWithAuth(request) {
   }
 }
 
-async function refreshToken() {
+async function refreshToken(): Promise<boolean> {
   try {
     const refreshResponse = await fetch(CONSTANTS.RENEW_TOKEN_PATH, {
       method: 'POST',
@@ -60,11 +60,21 @@ async function refreshToken() {
   }
 }
 
-function addHeaderAndClone(request) {
+function addHeaderAndClone(request: Request): Request {
   const headers = new Headers(request.headers);
-  headers.set(CONSTANTS.RETRY_STATUS_HEADER, CONSTANTS.TRUE)
+  headers.set(CONSTANTS.RETRY_STATUS_HEADER, CONSTANTS.TRUE);
+
   return new Request(request, {
-    headers: headers,
+    headers,
     credentials: 'include',
-  })
+    method: request.method,
+    body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : null,
+    mode: request.mode,
+    redirect: request.redirect,
+    cache: request.cache,
+    referrer: request.referrer,
+    referrerPolicy: request.referrerPolicy,
+    integrity: request.integrity,
+    keepalive: request.keepalive,
+  });
 }

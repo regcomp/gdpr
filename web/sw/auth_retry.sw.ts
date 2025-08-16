@@ -61,20 +61,25 @@ async function refreshToken(): Promise<boolean> {
 }
 
 function addHeaderAndClone(request: Request): Request {
-  const headers = new Headers(request.headers);
+  let headers = new Headers(request.headers);
   headers.set(CONSTANTS.RETRY_STATUS_HEADER, CONSTANTS.TRUE);
 
+  if (request.mode === "navigate") {
+    return new Request(request.url, {
+      method: request.method,
+      headers: headers,
+      credentials: "include",
+      redirect: request.redirect,
+      cache: request.cache,
+      referrer: request.referrer,
+      referrerPolicy: request.referrerPolicy,
+      integrity: request.integrity,
+      keepalive: request.keepalive
+    });
+  }
+
   return new Request(request, {
-    headers,
-    credentials: 'include',
-    method: request.method,
-    body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : null,
-    mode: request.mode,
-    redirect: request.redirect,
-    cache: request.cache,
-    referrer: request.referrer,
-    referrerPolicy: request.referrerPolicy,
-    integrity: request.integrity,
-    keepalive: request.keepalive,
+    headers: headers,
+    credentials: "include"
   });
 }

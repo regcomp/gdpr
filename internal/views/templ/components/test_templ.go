@@ -29,7 +29,7 @@ func TestComponent() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script>\n\t\tAlpine.data('boop', () => {\n\t\t\treturn {\n\t\t\t\tchirp() {\n\t\t\t\t\tconsole.log('CACAW');\n\t\t\t\t}\n\t\t\t}\n\t\t});\n\t</script><div id=\"content-inner\"><div x-data=\"boop\" x-init=\"chirp\">component 2</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"content-inner\"><div x-data=\"boop\" x-init=\"chirp\">component 2</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

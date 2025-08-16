@@ -35,9 +35,12 @@ async function build() {
 
     await esbuild.build({
       entryPoints: cssEntries,
+      bundle: true,
       minify: true,
+      sourcemap: true,
       outdir: 'static/css',
-      loader: { '.css': 'file' },
+      entryNames: '[name]',
+      resolveExtensions: ['.css'],
     });
 
     if (Object.keys(swEntries).length > 0) {

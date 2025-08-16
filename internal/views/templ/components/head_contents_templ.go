@@ -42,7 +42,7 @@ func HeadContents(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/css/bootstrap.css\"><script>\n    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {\n      document.documentElement.setAttribute('data-bs-theme', 'dark');\n    }\n  </script><script defer src=\"/static/js/alpine-ajax.min.js\"></script><script defer src=\"/static/js/alpine.csp.min.js\"></script><script defer src=\"/static/js/bootstrap.bundle.js\"></script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/vendor/bootstrap.css\"><link rel=\"stylesheet\" href=\"/static/css/app.css\"><script>\n    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {\n      document.documentElement.setAttribute('data-bs-theme', 'dark');\n    }\n  </script><script defer src=\"/static/js/app.js\"></script><script defer src=\"/static/vendor/bootstrap.bundle.js\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

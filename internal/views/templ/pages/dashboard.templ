@@ -7,80 +7,6 @@ templ Dashboard(accessToken, refreshToken, sessionID string) {
 	<html lang="en">
 		<head>
 			@components.HeadContents("Dashboard")
-			<style>
-        :root {
-          --navbar-height: 40px;
-        }
-
-        .navbar {
-          height: var(--navbar-height);
-          min-height: var(--navbar-height);
-          padding: 0.25rem 1rem;
-        }
-
-        .main-container {
-          margin-top: var(--navbar-height);
-        }
-
-        .sidebar-height {
-          height: calc(100vh - var(--navbar-height));
-        }
-
-        .sidebar-nav {
-          margin-bottom: 0.5rem;
-        }
-
-        .navigable {
-          cursor: pointer;
-          tabindex: 0
-        }
-      </style>
-			<script>
-      document.addEventListener('alpine:init', () => {
-        Alpine.data('ajaxButton', () => ({
-          fetchAJAXWithScripts() {
-            const endpoint = this.$el.dataset.endpoint;
-
-            fetch(endpoint)
-              .then(r => r.text())
-              .then(html => {
-                const wrapper = document.createElement('div');
-                wrapper.innerHTML = html;
-
-                // Extract and execute script tags
-                wrapper.querySelectorAll('script').forEach(oldScript => {
-                  const newScript = document.createElement('script');
-
-                  if (oldScript.src) {
-                    // External script — copy src
-                    newScript.src = oldScript.src;
-                    newScript.async = false; // preserve order
-                  } else {
-                    // Inline script
-                    newScript.textContent = oldScript.textContent;
-                  }
-
-                  // Preserve attributes (like type, nonce)
-                  [...oldScript.attributes].forEach(attr => {
-                    newScript.setAttribute(attr.name, attr.value);
-                  });
-
-                  document.body.appendChild(newScript); // executes script
-                  oldScript.remove();
-                });
-
-                // Append remaining HTML
-                const target = document.getElementById('content-inner');
-                target.innerHTML = '';
-                target.append(...wrapper.childNodes);
-
-                // Initialize Alpine
-                Alpine.initTree(target);
-              });
-          }
-        }));
-      });
-    </script>
 		</head>
 		<body>
 			<!-- Top Bar - Full Width -->
@@ -106,7 +32,7 @@ templ Dashboard(accessToken, refreshToken, sessionID string) {
 											class="nav-item nav-link sidebar-nav"
 											x-data="ajaxButton"
 											data-endpoint="/app/client/records"
-											x-on:click="fetchAJAXWithScripts"
+											x-on:click="fetchAJAXContent"
 										>
 											Records Management	
 										</button>
@@ -116,7 +42,7 @@ templ Dashboard(accessToken, refreshToken, sessionID string) {
 											class="nav-item nav-link sidebar-nav"
 											x-data="ajaxButton"
 											data-endpoint="/app/client/test"
-											x-on:click="fetchAJAXWithScripts"
+											x-on:click="fetchAJAXContent"
 										>
 											testing
 										</button>

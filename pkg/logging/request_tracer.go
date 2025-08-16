@@ -51,7 +51,7 @@ type IRequestTracer interface {
 type RequestTracer struct {
 	mu               sync.RWMutex
 	requestIDToTrace map[string]*RequestTrace
-	displayResponses bool
+	responseBody     bool
 }
 
 func NewRequestTracer(enabled, displayResponses bool) {
@@ -66,7 +66,7 @@ func createRequestTracer(displayResponses bool) *RequestTracer {
 	return &RequestTracer{
 		mu:               sync.RWMutex{},
 		requestIDToTrace: make(map[string]*RequestTrace),
-		displayResponses: displayResponses,
+		responseBody:     displayResponses,
 	}
 }
 
@@ -118,7 +118,7 @@ func (rts *RequestTracer) DumpRequestTrace(r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	trace.printTrace(rts.displayResponses)
+	trace.printTrace(rts.responseBody)
 	err = rts.deleteTrace(id)
 	if err != nil {
 		return err
@@ -170,14 +170,14 @@ func (rt *RequestTrace) logCurrentFunction(t string) {
 	rt.trace = append(rt.trace, t)
 }
 
-func (rt *RequestTrace) printTrace(displayResponses bool) {
+func (rt *RequestTrace) printTrace(responseBody bool) {
 	b := &strings.Builder{}
-	rt.constructPrintTraceOutput(b, displayResponses)
+	rt.constructPrintTraceOutput(b, responseBody)
 
 	fmt.Print(b.String())
 }
 
-func (rt *RequestTrace) constructPrintTraceOutput(b *strings.Builder, displayResponses bool) {
+func (rt *RequestTrace) constructPrintTraceOutput(b *strings.Builder, responseBody bool) {
 	fmt.Fprintf(b, "[REQUEST]\n")
 	fmt.Fprintf(b, "%s | %s\n", rt.path, rt.method)
 	fmt.Fprintf(b, "[REQUEST HEADER]\n")
@@ -191,15 +191,15 @@ func (rt *RequestTrace) constructPrintTraceOutput(b *strings.Builder, displayRes
 	for _, call := range rt.trace {
 		fmt.Fprintf(b, "%s\n", call)
 	}
-	if displayResponses {
-		fmt.Fprintf(b, "[RESPONSE HEADER %d]\n", rt.cw.Code)
-		for name, values := range rt.cw.Header() {
-			fmt.Fprintf(b, "%s: %s\n", name, values)
-		}
+	fmt.Fprintf(b, "[RESPONSE HEADER %d]\n", rt.cw.Code)
+	for name, values := range rt.cw.Header() {
+		fmt.Fprintf(b, "%s: %s\n", name, values)
+	}
+	if responseBody {
 		fmt.Fprintf(b, "[BODY]\n")
 		fmt.Fprintf(b, "%s\n", rt.cw.Body.String())
-		fmt.Fprintf(b, "\n")
 	}
+	fmt.Fprintf(b, "\n")
 }
 
 func (rt *RequestTrace) zeroOutTrace() {

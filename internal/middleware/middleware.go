@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/regcomp/gdpr/internal/caching"
 	"github.com/regcomp/gdpr/internal/config"
@@ -28,16 +30,26 @@ func VerifyAuthRetryIsRunning(rm *caching.RequestManager) func(http.Handler) htt
 		config.WorkerAuthRetryScope,
 		config.HeaderAuthRetryWorkerRunning,
 		rm,
+		[]string{"/static", "/favicon.ico", "/healthz"},
 	)
 }
 
 func verifyServiceWorkerIsRunning(
 	workerPath, workerScope, workerHeader string,
 	rm *caching.RequestManager,
+	exempt []string,
 ) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			pkglogging.RT.UpdateRequestTrace(r, "VerifyServiceWorkerIsRunning")
+
+			for _, prefix := range exempt {
+				log.Printf("checking prefix=%s against path=%s\n", prefix, r.URL.Path)
+				if strings.HasPrefix(r.URL.Path, prefix) {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
 
 			if r.Header.Get(workerHeader) != config.ValueTrue {
 				requestID, err := rm.StashRequest(r)

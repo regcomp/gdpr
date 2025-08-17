@@ -1,10 +1,7 @@
-import Alpine from '@alpinejs/csp';
-
-// Define the shape of the API's JSON response
 interface RecordItem {
   id: string;
   name: string;
-  // add other record fields as needed
+  // TODO: finalize the shape of this
 }
 
 interface RecordsApiResponse {
@@ -15,8 +12,17 @@ interface RecordsApiResponse {
   };
 }
 
-// Register Alpine component
-Alpine.data('recordsListComponent', () => ({
+interface RecordsListComponentData {
+  records: RecordItem[];
+  rawResults: string;
+  loading: boolean;
+  error: string | null;
+  hasMore: boolean;
+  nextCursor: string | null;
+  loadRecords(append?: boolean): Promise<void>;
+}
+
+const createRecordsListComponent = (): RecordsListComponentData => ({
   records: [] as RecordItem[],
   rawResults: "" as string,
   loading: false as boolean,
@@ -24,14 +30,21 @@ Alpine.data('recordsListComponent', () => ({
   hasMore: true as boolean,
   nextCursor: null as string | null,
 
-  async loadRecords(append: boolean = false) {
+  async loadRecords(append: boolean = false): Promise<void> {
     this.loading = true;
+    this.error = null; // Clear previous errors
+
     const url = new URL("/app/api/records", window.location.origin);
     url.searchParams.set("limit", "20");
-    const request = new Request(url);
+
+    // Add cursor for pagination if we have one
+    if (append && this.nextCursor) {
+      url.searchParams.set("cursor", this.nextCursor);
+    }
 
     try {
-      const response = await fetch(request);
+      const response = await fetch(url.toString());
+
       if (!response.ok) {
         throw new Error(`HTTP error: ${response.status}`);
       }
@@ -46,13 +59,17 @@ Alpine.data('recordsListComponent', () => ({
 
       this.hasMore = json.pagination.hasMore;
       this.nextCursor = json.pagination.nextCursor;
-
       this.rawResults = JSON.stringify(json.data, null, 2);
+
     } catch (err) {
-      console.error(err);
-      this.error = "Failed to load records";
+      console.error('Failed to load records:', err);
+      this.error = err instanceof Error ? err.message : "Failed to load records";
     } finally {
       this.loading = false;
     }
   }
-}));
+});
+
+document.addEventListener('alpine:init', () => {
+  window.Alpine.data('recordsListComponent', createRecordsListComponent);
+});

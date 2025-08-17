@@ -1,0 +1,34 @@
+openapi: "3.1.1"
+info:
+  title: GDPR compliance private backend
+  summary: "This api handles the service backend for the gdpr compliance tool."
+  version: "0.1"
+paths:
+  "/records":
+    get:
+      description: "Returns filtered responses from the records of deletion requests table"
+      operationId: "getRecordsWithFilters"
+      parameters:
+        - name: "after"
+          in: "query"
+          schema: "ISO 8601 timestamp"
+          description: "The cursor position of the next entry to be recieved from pagination. The value should be in the form of an ISO 8601 timestamp"
+          required: false
+        - name: "limit"
+          in: "query"
+          schema: "int32"
+          description: "The maximum number of records to return from the call"
+          required: false
+      responses:
+        "200":
+          description: "Successful fetching of filtered records"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref: '#components/schemas/record"
+components:
+  schemas:
+    record:
+      

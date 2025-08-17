@@ -40,7 +40,8 @@ func CreateRouter(stx *servicecontext.ServiceContext) *chi.Mux {
 
 	mountRouters(router,
 		CreateStaticRouter(),
-		CreateServiceRouter(stx),
+		CreateAuthProxyRouter(stx),
+		CreateAppRouter(stx),
 	)
 
 	return router

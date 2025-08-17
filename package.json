@@ -24,6 +24,7 @@
   "homepage": "https://github.com/regcomp/gdpr#readme",
   "devDependencies": {
     "@alpinejs/csp": "^3.14.9",
+    "@openapitools/openapi-generator-cli": "^2.22.0",
     "@types/alpinejs": "^3.13.11",
     "esbuild": "^0.25.9",
     "stylelint": "^16.23.1",

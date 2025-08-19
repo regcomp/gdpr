@@ -25,7 +25,7 @@ func makeDummyData(n int) []RecordOfDeletionRequest {
 			CustomerName: strconv.Itoa(i),
 			CreatedAt:    time.Now().UTC(),
 			UpdatedAt:    time.Now().UTC(),
-			RequestedOn:  time.Now().UTC(),
+			RequestedAt:  time.Now().UTC(),
 		})
 	}
 	return records

@@ -7,6 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
+    "generate:openapi": "npx @openapitools/openapi-generator-cli generate -i docs/specs/api/openapi.yaml -g typescript-fetch -o web/generated/openapi",
     "check:ts": "tsc --noEmit && tsc --noEmit -p tsconfig.sw.json",
     "build": "npm run check:ts && node esbuild.mjs",
     "dev": "npm run check:ts && WATCH=true node esbuild.mjs"

@@ -1,34 +1,139 @@
 openapi: "3.1.1"
 info:
   title: GDPR compliance private backend
-  summary: "This api handles the service backend for the gdpr compliance tool."
+  summary: "This API handles the service backend for the GDPR compliance tool."
   version: "0.1"
+
 paths:
-  "/records":
+  /records:
     get:
-      description: "Returns filtered responses from the records of deletion requests table"
-      operationId: "getRecordsWithFilters"
+      tags:
+        - Records
+      summary: "Fetch filtered records"
+      description: "Returns filtered responses from the records of deletion requests table."
+      operationId: getRecordsWithFilters
       parameters:
-        - name: "after"
-          in: "query"
-          schema: "ISO 8601 timestamp"
-          description: "The cursor position of the next entry to be recieved from pagination. The value should be in the form of an ISO 8601 timestamp"
+        - name: after
+          in: query
+          description: "Cursor for pagination, must be an ISO 8601 timestamp."
           required: false
-        - name: "limit"
-          in: "query"
-          schema: "int32"
-          description: "The maximum number of records to return from the call"
+          schema:
+            $ref: "#/components/schemas/timestamp"
+        - name: limit
+          in: query
+          description: "Maximum number of records to return."
           required: false
+          schema:
+            type: integer
+            format: int32
       responses:
         "200":
           description: "Successful fetching of filtered records"
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  "$ref: '#components/schemas/record"
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/record"
+                  pagination:
+                    type: object
+                    required:
+                      - nextCursor
+                      - hasMore
+                    properties:
+                      nextCursor:
+                        $ref: "#/components/schemas/timestamp"
+                      hasMore:
+                        title: Has More
+                        description: "Indicates whether or not there are more results to be paginated through"
+                        type: boolean
+                        
+        "400":
+          description: "Missing or malformed query parameters"
+          content:
+            text/plain:
+              schema:
+                $ref: "#components/schemas/responseError"
+
+  /deletion-queue:
+    post:
+      tags:
+        - Deletion Queue
+      summary: "Append records to the deletion queue"
+      description: "Appends all records to the deletion queue except for the specified ids in the request body."
+      operationId: queueAllRecordsExcept
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  title: IDs
+                  description: "An array of the record IDs to ignore."
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: "Records successfully added to the deletion queue"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  addedCount:
+                    type: integer
+
 components:
   schemas:
     record:
-      
+      title: Record
+      description: "A record of a deletion request."
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        createdAt:
+          $ref: "#/components/schemas/timestamp"
+        updatedAt:
+          $ref: "#/components/schemas/timestamp"
+        requestedAt:
+          $ref: "#/components/schemas/timestamp"
+      required:
+        - id
+        - name
+        - email
+        - createdAt
+        - requestedAt
+
+    timestamp:
+      title: Timestamp
+      description: "ISO 8601 timestamp."
+      type: string
+      format: date-time
+
+    responseError:
+      title: "Response Error"
+      description: "Basic error returned from a failed request"
+      type: string

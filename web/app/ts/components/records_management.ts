@@ -1,74 +1,58 @@
-interface RecordItem {
-  id: string;
-  name: string;
-  // TODO: finalize the shape of this
-}
-
-interface RecordsApiResponse {
-  data: RecordItem[];
-  pagination: {
-    hasMore: boolean;
-    nextCursor: string | null;
-  };
-}
+import { Configuration, RecordsApi, Record, GetRecordsWithFilters200Response } from "../../../generated/openapi";
 
 interface RecordsListComponentData {
-  records: RecordItem[];
+  records: Record[];
   rawResults: string;
   loading: boolean;
   error: string | null;
   hasMore: boolean;
-  nextCursor: string | null;
+  nextCursor: Date;
   loadRecords(append?: boolean): Promise<void>;
+  recordsApi: RecordsApi
 }
 
-const createRecordsListComponent = (): RecordsListComponentData => ({
-  records: [] as RecordItem[],
-  rawResults: "" as string,
-  loading: false as boolean,
-  error: null as string | null,
-  hasMore: true as boolean,
-  nextCursor: null as string | null,
+const createRecordsListComponent = (): RecordsListComponentData => {
+  const recordsApi = new RecordsApi(new Configuration({
+    basePath: "https://localhost:8080/app/api" // TODO: Softcode this string
+  }))
 
-  async loadRecords(append: boolean = false): Promise<void> {
-    this.loading = true;
-    this.error = null; // Clear previous errors
+  return {
+    records: [] as Record[],
+    rawResults: "" as string, // currently just for dosplay purposes
+    loading: false as boolean,
+    error: null as string | null,
+    hasMore: true as boolean,
+    nextCursor: new Date(0),
+    recordsApi: recordsApi,
 
-    const url = new URL("/app/api/records", window.location.origin);
-    url.searchParams.set("limit", "20");
+    async loadRecords(): Promise<void> {
+      this.loading = true;
+      this.error = null; // Clear previous errors
 
-    // Add cursor for pagination if we have one
-    if (append && this.nextCursor) {
-      url.searchParams.set("cursor", this.nextCursor);
-    }
-
-    try {
-      const response = await fetch(url.toString());
-
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
+      if (!this.hasMore) {
+        return
       }
 
-      const json: RecordsApiResponse = await response.json();
-
-      if (append) {
-        this.records.push(...json.data);
-      } else {
-        this.records = json.data;
+      let response: GetRecordsWithFilters200Response;
+      try {
+        response = await this.recordsApi.getRecordsWithFilters({
+          after: this.nextCursor,
+          limit: 20,
+        })
+      } catch (error) {
+        // TODO:
+        return
       }
 
-      this.hasMore = json.pagination.hasMore;
-      this.nextCursor = json.pagination.nextCursor;
-      this.rawResults = JSON.stringify(json.data, null, 2);
+      this.records.push(...response.data)
+      this.rawResults = JSON.stringify(this.records, null, 2);
 
-    } catch (err) {
-      console.error('Failed to load records:', err);
-      this.error = err instanceof Error ? err.message : "Failed to load records";
-    } finally {
-      this.loading = false;
+      this.hasMore = response.pagination.hasMore
+      this.nextCursor = response.pagination.nextCursor
+      this.loading = false
     }
   }
-});
+};
 
 document.addEventListener('alpine:init', () => {
   window.Alpine.data('recordsListComponent', createRecordsListComponent);

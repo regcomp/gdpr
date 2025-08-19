@@ -52,7 +52,6 @@ func GetRecordsWithPagination(dbm *db.DatabaseManager) http.HandlerFunc {
 				helpers.RespondWithError(w, err, http.StatusBadRequest)
 				return
 			}
-
 		}
 
 		// make database call
@@ -76,7 +75,7 @@ func GetRecordsWithPagination(dbm *db.DatabaseManager) http.HandlerFunc {
 			helpers.RespondWithError(w, err, http.StatusInternalServerError)
 		}
 		// respond with that json
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 		w.Header().Add("Content-Type", "application/json")
 		w.Write(data)
 	})

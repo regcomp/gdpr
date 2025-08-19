@@ -34,6 +34,7 @@ node_modules/
 /static/css/
 /web/**/*.js
 /web/**/*.js.map
+/web/generated/
 
 # Logs
 npm-debug.log*

@@ -28,13 +28,13 @@ type IDatabaseProvider interface {
 }
 
 type RecordOfDeletionRequest struct {
-	ID            uuid.UUID
-	CustomerID    uuid.UUID
-	CustomerName  string
-	CustomerEmail string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	RequestedOn   time.Time
+	ID            uuid.UUID `json:"id"`
+	CustomerID    uuid.UUID `json:"customerId"`
+	CustomerName  string    `json:"name"`
+	CustomerEmail string    `json:"email"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	RequestedAt   time.Time `json:"requestedAt"`
 }
 
 type PaginationInfo struct {

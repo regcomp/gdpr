@@ -55,31 +55,31 @@ const (
 )
 // config keys
 const (
-	ConfigDatabaseProviderTypesKey = "DATABASE_PROVIDER_TYPES"
 	ConfigConfigStoreTypeKey = "CONFIG_STORE_TYPE"
+	ConfigSessionDurationKey = "SESSION_DURATION"
 	ConfigServiceCacheTypeKey = "SERVICE_CACHE_TYPE"
 	ConfigRecordsDatabaseTypeKey = "RECORDS_DATABASE_TYPE"
-	ConfigDatabaseProviderNamesKey = "DATABASE_PROVIDER_NAMES"
 	ConfigDatabaseProviderTableNamesKey = "DATABASE_PROVIDER_TABLE_NAMES"
 	ConfigServiceUrlKey = "SERVICE_URL"
 	ConfigDefaultPortKey = "DEFAULT_PORT"
-	ConfigSessionDurationKey = "SESSION_DURATION"
 	ConfigSecretStoreTypeKey = "SECRET_STORE_TYPE"
 	ConfigAuthProviderTypeKey = "AUTH_PROVIDER_TYPE"
+	ConfigDatabaseProviderNamesKey = "DATABASE_PROVIDER_NAMES"
+	ConfigDatabaseProviderTypesKey = "DATABASE_PROVIDER_TYPES"
 )
 
 var ConfigAttrs = []string{
-	ConfigDatabaseProviderTypesKey,
 	ConfigConfigStoreTypeKey,
+	ConfigSessionDurationKey,
 	ConfigServiceCacheTypeKey,
 	ConfigRecordsDatabaseTypeKey,
-	ConfigDatabaseProviderNamesKey,
 	ConfigDatabaseProviderTableNamesKey,
 	ConfigServiceUrlKey,
 	ConfigDefaultPortKey,
-	ConfigSessionDurationKey,
 	ConfigSecretStoreTypeKey,
 	ConfigAuthProviderTypeKey,
+	ConfigDatabaseProviderNamesKey,
+	ConfigDatabaseProviderTypesKey,
 }
 // Cookies
 const (
@@ -102,14 +102,14 @@ const (
 )
 // query parameters
 const (
-	QueryParamAfter = "after"
-	QueryParamRedirectUrl = "redirect-url"
 	QueryParamRequestId = "request-id"
 	QueryParamAccessToken = "access-token"
 	QueryParamRefreshToken = "refresh-token"
 	QueryParamWorkerPath = "worker-path"
 	QueryParamWorkerScope = "worker-scope"
 	QueryParamLimit = "limit"
+	QueryParamAfter = "after"
+	QueryParamRedirectUrl = "redirect-url"
 )
 // request context keys
 const (
@@ -119,10 +119,10 @@ const (
 )
 // headers
 const (
+	HeaderAuthRetryWorkerRunning = "Auth-Retry-Worker-Running"
 	HeaderNonceToken = "Nonce-Token"
 	HeaderRenewAccessToken = "Renew-Access-Token"
 	HeaderServiceWorkerAllowed = "Service-Worker-Allowed"
-	HeaderAuthRetryWorkerRunning = "Auth-Retry-Worker-Running"
 )
 // values
 const (

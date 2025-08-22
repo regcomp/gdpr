@@ -16,13 +16,13 @@ paths:
         - name: after
           in: query
           description: "Cursor for pagination, must be an ISO 8601 timestamp."
-          required: false
+          required: true 
           schema:
             $ref: "#/components/schemas/timestamp"
         - name: limit
           in: query
           description: "Maximum number of records to return."
-          required: false
+          required: true
           schema:
             type: integer
             format: int32

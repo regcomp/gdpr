@@ -9,7 +9,7 @@ import (
 )
 
 func RecordsComponent(w http.ResponseWriter, r *http.Request) {
-	logging.RT.UpdateRequestTrace(r, "TestEndpoint1")
+	logging.RT.UpdateRequestTrace(r, "RecordsComponent")
 	err := views.WriteRecordsManagement(w, r.Context())
 	if err != nil {
 		helpers.RespondWithError(w, err, http.StatusInternalServerError)

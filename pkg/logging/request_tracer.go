@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 
@@ -149,20 +150,22 @@ func (rts *RequestTracer) deleteTrace(id string) error {
 }
 
 type RequestTrace struct {
-	path   string
-	method string
-	header http.Header
-	trace  []string
-	cw     *CustomWriter
+	path    string
+	method  string
+	qParams url.Values
+	header  http.Header
+	trace   []string
+	cw      *CustomWriter
 }
 
 func newRequestTrace(cw *CustomWriter, r *http.Request) *RequestTrace {
 	return &RequestTrace{
-		path:   r.URL.Path,
-		method: r.Method,
-		header: r.Header.Clone(),
-		trace:  make([]string, 0, 32),
-		cw:     cw,
+		path:    r.URL.Path,
+		method:  r.Method,
+		qParams: r.URL.Query(),
+		header:  r.Header.Clone(),
+		trace:   make([]string, 0, 32),
+		cw:      cw,
 	}
 }
 
@@ -178,16 +181,26 @@ func (rt *RequestTrace) printTrace(responseBody bool) {
 }
 
 func (rt *RequestTrace) constructPrintTraceOutput(b *strings.Builder, responseBody bool) {
-	fmt.Fprintf(b, "[REQUEST]\n")
+	fmt.Fprint(b, "[REQUEST]\n")
 	fmt.Fprintf(b, "%s | %s\n", rt.path, rt.method)
-	fmt.Fprintf(b, "[REQUEST HEADER]\n")
+	for k, vs := range rt.qParams {
+		fmt.Fprintf(b, "%s: ", k)
+		for i, v := range vs {
+			fmt.Fprintf(b, "%s", v)
+			if i != len(vs)-1 {
+				fmt.Fprint(b, ",")
+			}
+		}
+		fmt.Fprint(b, "\n")
+	}
+	fmt.Fprint(b, "[REQUEST HEADER]\n")
 	for name, values := range rt.header {
 		if name == "Cookie" {
 			continue
 		}
 		fmt.Fprintf(b, "%s: %s\n", name, values)
 	}
-	fmt.Fprintf(b, "[CALLS]\n")
+	fmt.Fprint(b, "[CALLS]\n")
 	for _, call := range rt.trace {
 		fmt.Fprintf(b, "%s\n", call)
 	}
@@ -196,10 +209,10 @@ func (rt *RequestTrace) constructPrintTraceOutput(b *strings.Builder, responseBo
 		fmt.Fprintf(b, "%s: %s\n", name, values)
 	}
 	if responseBody {
-		fmt.Fprintf(b, "[BODY]\n")
+		fmt.Fprint(b, "[BODY]\n")
 		fmt.Fprintf(b, "%s\n", rt.cw.Body.String())
 	}
-	fmt.Fprintf(b, "\n")
+	fmt.Fprint(b, "\n")
 }
 
 func (rt *RequestTrace) zeroOutTrace() {

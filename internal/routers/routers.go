@@ -84,6 +84,10 @@ func CreateAppRouter(stx *servicecontext.ServiceContext) SubRouter {
 	requiresValidAuth.Use(
 		middleware.RequiresAuthentication(stx.AuthProvider, stx.CookieManager),
 		middleware.HasActiveSession(stx.SessionManager, stx.CookieManager),
+		middleware.SetHSTSPolicy,
+		// TODO: Content policies/CORS/ect... go here
+
+		middleware.VerifyAuthRetryIsRunning(stx.RequestManager),
 	)
 
 	mountRouters(requiresValidAuth,

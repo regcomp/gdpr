@@ -1,6 +1,7 @@
 package database
 
 import (
+	"log"
 	"slices"
 	"strconv"
 	"strings"
@@ -23,9 +24,9 @@ func makeDummyData(n int) []RecordOfDeletionRequest {
 			ID:           uuid.New(),
 			CustomerID:   uuid.New(),
 			CustomerName: strconv.Itoa(i),
-			CreatedAt:    time.Now().UTC(),
-			UpdatedAt:    time.Now().UTC(),
-			RequestedAt:  time.Now().UTC(),
+			CreatedAt:    time.Unix(int64(i), 0),
+			UpdatedAt:    time.Unix(int64(i), 0),
+			RequestedAt:  time.Unix(int64(i), 0),
 		})
 	}
 	return records
@@ -58,6 +59,9 @@ func (lrd *LocalRecordsDatabase) GetRecordsOfDeletionRequest(limit int, start ti
 	endIdx := getEndIdxFromLimit(lrd.records, startIdx, limit)
 	result := slices.Clone(lrd.records[startIdx:endIdx])
 
+	log.Printf("-------\ngetting records, cursor=%s, startIdx=%d, endIdx=%d\n-------\n",
+		start.String(), startIdx, endIdx,
+	)
 	return result, nil
 }
 
@@ -83,12 +87,12 @@ func getIdxFromCreatedAt(records []RecordOfDeletionRequest, start time.Time) int
 	return -1
 }
 
-func getEndIdxFromLimit(recordsFromStartIdx []RecordOfDeletionRequest, startIdx, limit int) int {
-	recordsLenFromStartIdx := len(recordsFromStartIdx[startIdx:])
-	if recordsLenFromStartIdx > limit+1 { // one extra for pagination information
+func getEndIdxFromLimit(records []RecordOfDeletionRequest, startIdx, limit int) int {
+	availableRecords := len(records) - startIdx
+	if availableRecords > limit+1 {
 		return startIdx + limit + 1
 	}
-	return startIdx + recordsLenFromStartIdx
+	return len(records)
 }
 
 type localTable struct {

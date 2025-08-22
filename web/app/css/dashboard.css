@@ -9,6 +9,7 @@
 }
 
 .main-container {
+  height: calc(100vh - var(--navbar-height));
   margin-top: var(--navbar-height);
 }
 
@@ -22,4 +23,37 @@
 
 .navigable {
   cursor: pointer;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden; /* Prevent body scroll */
+}
+
+/* Content area full height with isolated scroll */
+.content-area {
+  height: 100%;
+  overflow: hidden; /* Container doesn't scroll */
+}
+
+.content-inner {
+  height: 100%;
+  overflow-y: auto; /* Only content scrolls */
+}
+
+/* Prevent the main row from scrolling */
+.main-container .row {
+  overflow: hidden;
+}
+
+/* Ensure only the content area scrolls */
+#content-area {
+  overflow: hidden;
+  height: 100%;
+}
+
+#content-inner {
+  height: 100%;
+  overflow: hidden auto;
 }

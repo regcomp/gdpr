@@ -55,31 +55,31 @@ const (
 )
 // config keys
 const (
-	ConfigConfigStoreTypeKey = "CONFIG_STORE_TYPE"
-	ConfigSessionDurationKey = "SESSION_DURATION"
 	ConfigServiceCacheTypeKey = "SERVICE_CACHE_TYPE"
-	ConfigRecordsDatabaseTypeKey = "RECORDS_DATABASE_TYPE"
-	ConfigDatabaseProviderTableNamesKey = "DATABASE_PROVIDER_TABLE_NAMES"
-	ConfigServiceUrlKey = "SERVICE_URL"
-	ConfigDefaultPortKey = "DEFAULT_PORT"
-	ConfigSecretStoreTypeKey = "SECRET_STORE_TYPE"
 	ConfigAuthProviderTypeKey = "AUTH_PROVIDER_TYPE"
+	ConfigRecordsDatabaseTypeKey = "RECORDS_DATABASE_TYPE"
 	ConfigDatabaseProviderNamesKey = "DATABASE_PROVIDER_NAMES"
 	ConfigDatabaseProviderTypesKey = "DATABASE_PROVIDER_TYPES"
+	ConfigConfigStoreTypeKey = "CONFIG_STORE_TYPE"
+	ConfigDefaultPortKey = "DEFAULT_PORT"
+	ConfigSessionDurationKey = "SESSION_DURATION"
+	ConfigSecretStoreTypeKey = "SECRET_STORE_TYPE"
+	ConfigDatabaseProviderTableNamesKey = "DATABASE_PROVIDER_TABLE_NAMES"
+	ConfigServiceUrlKey = "SERVICE_URL"
 )
 
 var ConfigAttrs = []string{
-	ConfigConfigStoreTypeKey,
-	ConfigSessionDurationKey,
 	ConfigServiceCacheTypeKey,
-	ConfigRecordsDatabaseTypeKey,
-	ConfigDatabaseProviderTableNamesKey,
-	ConfigServiceUrlKey,
-	ConfigDefaultPortKey,
-	ConfigSecretStoreTypeKey,
 	ConfigAuthProviderTypeKey,
+	ConfigRecordsDatabaseTypeKey,
 	ConfigDatabaseProviderNamesKey,
 	ConfigDatabaseProviderTypesKey,
+	ConfigConfigStoreTypeKey,
+	ConfigDefaultPortKey,
+	ConfigSessionDurationKey,
+	ConfigSecretStoreTypeKey,
+	ConfigDatabaseProviderTableNamesKey,
+	ConfigServiceUrlKey,
 }
 // Cookies
 const (
@@ -102,6 +102,7 @@ const (
 )
 // query parameters
 const (
+	QueryParamRedirectUrl = "redirect-url"
 	QueryParamRequestId = "request-id"
 	QueryParamAccessToken = "access-token"
 	QueryParamRefreshToken = "refresh-token"
@@ -109,27 +110,26 @@ const (
 	QueryParamWorkerScope = "worker-scope"
 	QueryParamLimit = "limit"
 	QueryParamAfter = "after"
-	QueryParamRedirectUrl = "redirect-url"
 )
 // request context keys
 const (
-	ContextKeyClaims = "claims"
 	ContextKeySessionId = "session-id"
 	ContextKeyNonceToken = "nonce-token"
+	ContextKeyClaims = "claims"
 )
 // headers
 const (
-	HeaderAuthRetryWorkerRunning = "Auth-Retry-Worker-Running"
 	HeaderNonceToken = "Nonce-Token"
 	HeaderRenewAccessToken = "Renew-Access-Token"
 	HeaderServiceWorkerAllowed = "Service-Worker-Allowed"
+	HeaderAuthRetryWorkerRunning = "Auth-Retry-Worker-Running"
 )
 // values
 const (
+	ValueItemDelim = ","
 	ValueTrue = "true"
 	ValueLocalType = "LOCAL"
 	ValueEntryDelim = ";"
 	ValueNameDelim = ":"
-	ValueItemDelim = ","
 )
 

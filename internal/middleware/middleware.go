@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -44,7 +43,6 @@ func verifyServiceWorkerIsRunning(
 			pkglogging.RT.UpdateRequestTrace(r, "VerifyServiceWorkerIsRunning")
 
 			for _, prefix := range exempt {
-				log.Printf("checking prefix=%s against path=%s\n", prefix, r.URL.Path)
 				if strings.HasPrefix(r.URL.Path, prefix) {
 					next.ServeHTTP(w, r)
 					return

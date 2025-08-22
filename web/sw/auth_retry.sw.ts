@@ -61,7 +61,7 @@ async function refreshToken(): Promise<boolean> {
 }
 
 function addHeaderAndClone(request: Request): Request {
-  let headers = new Headers(request.headers);
+  const headers = new Headers(request.headers);
   headers.set(CONSTANTS.RETRY_STATUS_HEADER, CONSTANTS.TRUE);
 
   if (request.mode === "navigate") {

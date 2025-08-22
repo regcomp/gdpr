@@ -39,14 +39,14 @@ func Dashboard(accessToken, refreshToken, sessionID string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</head><body><!-- Top Bar - Full Width --><nav class=\"navbar navbar-expand-lg py-0 border-bottom fixed-top\"><div class=\"container-fluid\"><!-- Logo/Brand --><div class=\"navbar-brand mb-0 h5\">GDPR Compliance Utility</div></div></nav><!-- Main Layout Container - Below Fixed Top Bar --><div class=\"container-fluid p-0 main-container\"><div class=\"row g-0\"><!-- Sidebar --><div class=\"col-md-3 col-lg-2 sidebar border-end\"><div class=\"d-flex flex-column sidebar-height\"><!-- Navigation --><nav class=\"flex-grow-1 p-3\"><ul class=\"nav nav-pills flex-column\"><li><button class=\"nav-item nav-link sidebar-nav\" x-data=\"ajaxButton\" data-endpoint=\"/app/client/records\" x-on:click=\"fetchAJAXContent\">Records Management\t</button></li><li><button class=\"nav-item nav-link sidebar-nav\" x-data=\"ajaxButton\" data-endpoint=\"/app/client/test\" x-on:click=\"fetchAJAXContent\">testing</button></li></ul></nav><!-- Sidebar Footer --><div class=\"p-3 border-top border-secondary\"><div class=\"d-flex align-items-center\"><div class=\"bg-primary rounded-circle d-flex align-items-center justify-content-center me-2\" style=\"width: 32px; height: 32px;\"><small class=\"fw-bold\">ID</small></div><div class=\"flex-grow-1\"><div class=\"small\">Identifier</div><div class=\"text-muted small\">Admin</div></div></div></div></div></div><!-- Main Content Area --><div class=\"col-md-9 col-lg-10\" id=\"content-area\"><div id=\"content-inner\"><main class=\"p-4\"><div class=\"mb-4\"><h2 class=\"mb-1\">Dashboard</h2><div>access token: ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</head><body><!-- Top Bar - Fixed --><nav class=\"navbar navbar-expand-lg border-bottom fixed-top\"><div class=\"container-fluid\"><div class=\"navbar-brand mb-0 h5\">GDPR Compliance Utility</div></div></nav><!-- Main Layout Container --><div class=\"container-fluid p-0 main-container\"><div class=\"row g-0 h-100\"><!-- Sidebar --><div class=\"col-md-3 col-lg-2 sidebar border-end\"><div class=\"d-flex flex-column sidebar-height\"><!-- Navigation --><nav class=\"flex-grow-1 p-3\"><ul class=\"nav nav-pills flex-column\"><li><button class=\"nav-item nav-link sidebar-nav\" x-data=\"ajaxButton\" data-endpoint=\"/app/client/records\" x-on:click=\"fetchAJAXContent\">Records Management</button></li><li><button class=\"nav-item nav-link sidebar-nav\" x-data=\"ajaxButton\" data-endpoint=\"/app/client/test\" x-on:click=\"fetchAJAXContent\">Testing</button></li></ul></nav><!-- Sidebar Footer --><div class=\"p-3 border-top border-secondary\"><div class=\"d-flex align-items-center\"><div class=\"bg-primary rounded-circle d-flex align-items-center justify-content-center me-2\" style=\"width: 32px; height: 32px;\"><small class=\"fw-bold\">ID</small></div><div class=\"flex-grow-1\"><div class=\"small\">Identifier</div><div class=\"text-muted small\">Admin</div></div></div></div></div></div><!-- Main Content Area --><div class=\"col-md-9 col-lg-10 content-area\" id=\"content-area\"><div id=\"content-inner\" class=\"content-inner\"><main class=\"p-4\"><div class=\"mb-4\"><h2 class=\"mb-1\">Dashboard</h2><div>access token: ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(accessToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/templ/pages/dashboard.templ`, Line: 72, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/templ/pages/dashboard.templ`, Line: 71, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -59,7 +59,7 @@ func Dashboard(accessToken, refreshToken, sessionID string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(refreshToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/templ/pages/dashboard.templ`, Line: 73, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/templ/pages/dashboard.templ`, Line: 72, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -72,7 +72,7 @@ func Dashboard(accessToken, refreshToken, sessionID string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(sessionID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/templ/pages/dashboard.templ`, Line: 74, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/templ/pages/dashboard.templ`, Line: 73, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {

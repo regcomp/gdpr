@@ -14,6 +14,10 @@ func CreateAuthProxyRouter(stx *servicecontext.ServiceContext) *chi.Mux {
 
 	mux.Use(
 		middleware.SkipIfAuthenticated(stx.AuthProvider, stx.CookieManager, stx.ConfigStore),
+		middleware.SetHSTSPolicy,
+		// TODO: Content policies/CORS/ect... go here
+
+		middleware.VerifyAuthRetryIsRunning(stx.RequestManager),
 	)
 
 	mux.Get(config.EndpointAuthLogin, handlers.LoginPage)

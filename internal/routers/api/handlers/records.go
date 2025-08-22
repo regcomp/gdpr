@@ -45,7 +45,8 @@ func GetRecordsWithPagination(dbm *db.DatabaseManager) http.HandlerFunc {
 		var queryStart time.Time
 		queryStartString := r.URL.Query().Get(config.QueryParamAfter)
 		if queryStartString == "" {
-			queryStart = time.Time{}
+			helpers.RespondWithError(w, fmt.Errorf("missing next cursor"), http.StatusBadRequest)
+			return
 		} else {
 			queryStart, err = time.Parse(time.RFC3339, queryStartString)
 			if err != nil {

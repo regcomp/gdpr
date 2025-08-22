@@ -72,7 +72,7 @@ func run(
 	}
 
 	// WARN: FOR DEBUGGING
-	logging.NewRequestTracer(true, false)
+	logging.NewRequestTracer(true, true)
 
 	router := routers.CreateRouter(stx)
 

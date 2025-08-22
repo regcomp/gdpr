@@ -29,7 +29,7 @@ func RecordsManagement() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"inner-content\"><div id=\"records-management\" x-data=\"recordsListComponent\" x-init=\"loadRecords\" class=\"h-full flex flex-col\"><pre x-text=\"rawResults\"></pre></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"h-100 d-flex flex-column\"><div id=\"records-management\" x-data=\"recordsListComponent\" class=\"d-flex flex-column h-100\"><!-- Scrollable content area --><div class=\"flex-fill overflow-auto p-2\" x-ref=\"scrollContainer\" x-on:scroll.passive=\"handleScroll\"><template x-for=\"record in records\" :key=\"record.id\"><div class=\"rounded shadow-sm p-4 mb-2 border\"><div class=\"fw-bold\" x-text=\"record.name\"></div><div class=\"text-muted\" x-text=\"record.email\"></div><div class=\"small\">Requested: <span x-text=\"record.formattedRequestedAt\"></span></div></div></template><div x-show=\"isEmpty\" class=\"text-center text-muted py-4\">No records found.</div><div x-show=\"loading\" class=\"text-center text-muted py-4\"><div class=\"spinner-border spinner-border-sm me-2\" role=\"status\" aria-hidden=\"true\"></div>Loading...</div></div><!-- Error display - only show when there's an error --><div x-show=\"showError\" class=\"p-2 border-top\"><div class=\"text-danger small\" x-text=\"error\"></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -38,9 +38,9 @@ type RecordOfDeletionRequest struct {
 }
 
 type PaginationInfo struct {
-	HasMore    bool
-	NextCursor time.Time
-	Total      int
+	HasMore    bool      `json:"hasMore"`
+	NextCursor time.Time `json:"nextCursor"`
+	Total      int       `json:"total"`
 }
 
 type CustomerData struct {
